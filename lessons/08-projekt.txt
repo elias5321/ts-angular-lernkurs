@@ -1,0 +1,1017 @@
+#part projekt | Abschlussprojekt: deine Aufgaben-App | Du baust Schritt für Schritt eine vollständige App: Aufgaben anlegen, abhaken, filtern, löschen – und sie bleiben gespeichert. Alles, was du gelernt hast, kommt zusammen.
+
+=== projekt-start | Planung und Datenschicht | 30
+Du baust jetzt eine komplette kleine App: eine Aufgabenliste. Das klingt bescheiden, enthält aber alles, was auch grosse Apps ausmacht – Datenmodell, Service, mehrere Komponenten, Benutzereingaben, berechnete Werte und Speicherung.
+
+## Was die App können soll
+
+- Aufgaben mit einem Titel anlegen
+- Aufgaben als erledigt markieren (und wieder zurück)
+- Aufgaben löschen
+- anzeigen, wie viele Aufgaben noch offen sind
+- nach «alle», «offen» und «erledigt» filtern
+- die Aufgaben behalten, auch wenn man die Seite neu lädt
+
+## Erst planen, dann programmieren
+
+Bevor du eine Zeile schreibst, beantworte drei Fragen. Das machen auch erfahrene Entwickler so.
+
+**1. Welche Daten gibt es?** Eine Aufgabe hat eine Kennung, einen Titel und einen Zustand:
+
+```ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+```
+
+**2. Wo leben die Daten?** In einem Service. Er besitzt die Liste und bietet Methoden an, um sie zu ändern. Komponenten zeigen nur an.
+
+**3. Welche Komponenten braucht es?**
+
+| Komponente | Aufgabe |
+| --- | --- |
+| `App` | Eingabefeld, Filter, Liste, Zähler |
+| `AufgabeZeile` | eine einzelne Aufgabe mit Haken und Löschen-Knopf |
+
+## Das Projekt anlegen
+
+Erstelle ein frisches Projekt (in einem Terminal ausserhalb von `erste-app`):
+
+```bash
+ng new aufgaben-app
+```
+
+Wieder mit **CSS** und **ohne** SSR. Öffne den Ordner in VS Code und erzeuge die Bausteine:
+
+```bash
+ng generate service aufgaben-speicher
+```
+
+```bash
+ng generate component aufgabe-zeile
+```
+
+Lege ausserdem von Hand die Datei `src/app/aufgabe.ts` an – mit dem Interface und dem Typ `Filter` von oben. Leere dann `src/app/app.html` vollständig.
+
+So sieht `src/app` danach aus:
+
+```text
+src/app/
+  aufgabe.ts                 Datenmodell
+  aufgaben-speicher.ts       Service
+  aufgabe-zeile/             Komponente für eine Zeile
+    aufgabe-zeile.ts
+    aufgabe-zeile.html
+    aufgabe-zeile.css
+  app.ts  app.html  app.css  Wurzelkomponente
+  app.config.ts  app.routes.ts
+```
+
+## Der Service
+
+Der Service ist das Herz der App. Hier kannst du alles anwenden, was du über Signals, Kapselung und «Kopieren statt Verändern» weisst.
+
+Das Schöne: Ein Service enthält kein HTML. Deshalb kann die folgende Übung deinen Code **wirklich ausführen** und sein Verhalten prüfen, nicht nur seinen Aufbau.
+
+--- code projekt-service | Der AufgabenSpeicher
+Schreibe den Service `AufgabenSpeicher` in `aufgaben-speicher.ts`. Das Datenmodell in `aufgabe.ts` ist fertig.
+
+- `liste` – ein **privates** Signal mit einem Array von `Aufgabe`, zu Beginn leer
+- `aufgaben` – die öffentliche, nur lesbare Sicht darauf (`asReadonly()`)
+- `anzahlOffen` – ein `computed`: Anzahl der nicht erledigten Aufgaben
+- `hinzufuegen(titel)` – entfernt Leerzeichen am Rand. Ist der Titel dann leer, passiert nichts. Sonst wird eine neue Aufgabe mit `erledigt: false` angehängt. Jede Aufgabe bekommt eine **eindeutige** `id`: 1, 2, 3 … (auch nach dem Löschen wird keine `id` doppelt vergeben).
+- `umschalten(id)` – kehrt `erledigt` bei der Aufgabe mit dieser `id` um
+- `entfernen(id)` – entfernt die Aufgabe mit dieser `id`
+
+Ändere das Signal immer mit `update` und einem **neuen** Array.
+@flags angular
+@starter aufgaben-speicher.ts
+import { Service, computed, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  // Signal, aufgaben, anzahlOffen
+
+  // hinzufuegen, umschalten, entfernen
+}
+@starter aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@solution aufgaben-speicher.ts
+import { Service, computed, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  // Signal, aufgaben, anzahlOffen
+  private readonly liste = signal<Aufgabe[]>([]);
+  private naechsteId = 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  // hinzufuegen, umschalten, entfernen
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+}
+@solution aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@tests
+src /@Service\s*\(\s*\)\s*export\s+class\s+AufgabenSpeicher/ :: `AufgabenSpeicher` ist ein `@Service()`
+src /private\s+(readonly\s+)?liste\s*=\s*signal\s*<\s*Aufgabe\s*\[\s*\]\s*>\s*\(\s*\[\s*\]\s*\)/ :: `liste` ist ein privates `signal<Aufgabe[]>([])`
+shape AufgabenSpeicher { aufgaben: Signal<Aufgabe[]>; anzahlOffen: Signal<number>; hinzufuegen: (titel: string) => void; umschalten: (id: number) => void; entfernen: (id: number) => void }
+nosrc /\.push\s*\(/ :: Kein `push` – es entstehen immer neue Arrays
+setup const { AufgabenSpeicher: __S } = require("./aufgaben-speicher"); const __neu = () => { const s = new __S(); s.hinzufuegen("Mathe"); s.hinzufuegen("  Deutsch  "); s.hinzufuegen("Sport"); return s; };
+run new __S().aufgaben().length === 0 && new __S().anzahlOffen() === 0 :: Ein neuer Speicher ist leer
+run __neu().aufgaben().length === 3 && __neu().aufgaben()[0].titel === "Mathe" && __neu().aufgaben()[0].erledigt === false :: `hinzufuegen` hängt Aufgaben mit `erledigt: false` an
+run __neu().aufgaben()[1].titel === "Deutsch" :: Leerzeichen am Rand des Titels werden entfernt
+run (() => { const s = new __S(); s.hinzufuegen(""); s.hinzufuegen("   "); return s.aufgaben().length === 0; })() :: Leere Titel werden ignoriert
+run __neu().aufgaben().map((a) => a.id).join(",") === "1,2,3" :: Die IDs sind `1`, `2`, `3`
+run (() => { const s = __neu(); s.entfernen(3); s.hinzufuegen("Musik"); const ids = s.aufgaben().map((a) => a.id); return new Set(ids).size === ids.length && ids.length === 3 && !ids.includes(3); })() :: Nach dem Löschen wird keine `id` wiederverwendet ?? `liste().length + 1` reicht nicht: Nach dem Löschen käme dieselbe Zahl nochmal. Merke dir die nächste freie `id` in einer eigenen Eigenschaft.
+run (() => { const s = __neu(); const vorher = s.aufgaben(); s.umschalten(2); const a = s.aufgaben(); return a[1].erledigt === true && a[0].erledigt === false && a[2].erledigt === false && vorher[1].erledigt === false && a !== vorher; })() :: `umschalten(2)` hakt nur Aufgabe 2 ab – und verändert das alte Array nicht
+run (() => { const s = __neu(); s.umschalten(2); s.umschalten(2); return s.aufgaben()[1].erledigt === false; })() :: Zweimal `umschalten` stellt den alten Zustand wieder her
+run (() => { const s = __neu(); s.umschalten(1); return s.anzahlOffen() === 2; })() :: `anzahlOffen` zählt nur nicht erledigte Aufgaben
+run (() => { const s = __neu(); s.entfernen(1); const a = s.aufgaben(); return a.length === 2 && a[0].id === 2 && a[1].id === 3; })() :: `entfernen(1)` entfernt genau diese Aufgabe
+run (() => { const s = __neu(); s.entfernen(99); s.umschalten(99); return s.aufgaben().length === 3 && s.anzahlOffen() === 3; })() :: Unbekannte IDs ändern nichts
+@hints
+- Die Daten: `private readonly liste = signal<Aufgabe[]>([]);`, `readonly aufgaben = this.liste.asReadonly();` und `readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);`
+- Für die IDs: eine Eigenschaft `private naechsteId = 1;`. In `hinzufuegen` verwendest du sie und erhöhst sie danach um 1.
+- `umschalten`: `this.liste.update((alt) => alt.map((a) => a.id === id ? { ...a, erledigt: !a.erledigt } : a));`
+- `entfernen`: `this.liste.update((alt) => alt.filter((a) => a.id !== id));`
+@after
+Die drei Handgriffe aus der Lektion «Auspacken und Kopieren» – Spread, `map`, `filter` – in einem echten Service. Die Prüfung hat ihn gerade in vielen Situationen ausgeführt, einschliesslich der Sonderfälle: leere Titel, unbekannte IDs, Löschen und neu Anlegen.
+
+--- task projekt-start-task | Projekt anlegen
+Lege das Projekt auf deinem Computer an und übernimm deinen Service.
+[ ] `ng new aufgaben-app` ist durchgelaufen, der Ordner ist in VS Code geöffnet.
+[ ] `src/app/aufgabe.ts` enthält `Aufgabe` und `Filter`.
+[ ] `ng generate service aufgaben-speicher` ist ausgeführt und die Datei enthält deinen Service.
+[ ] `ng generate component aufgabe-zeile` ist ausgeführt.
+[ ] `src/app/app.html` ist geleert, `ng serve` läuft ohne Fehler.
+
+=== projekt-anzeige | Die Aufgaben anzeigen | 30
+Der Service steht. Jetzt bekommt die App ein Gesicht: eine Komponente für eine einzelne Aufgabe und die Wurzelkomponente, die alles zusammensetzt.
+
+## Die Zeile: Daten rein, Ereignisse raus
+
+`AufgabeZeile` ist eine reine Anzeige-Komponente. Sie kennt den Service nicht. Sie bekommt eine Aufgabe als Input und meldet über Outputs, was der Benutzer will:
+
+| | Name | Typ |
+| --- | --- | --- |
+| Input | `aufgabe` | `Aufgabe` (Pflicht) |
+| Output | `umschalten` | ohne Wert |
+| Output | `loeschen` | ohne Wert |
+
+Für den Haken verwendest du eine Checkbox. Ihr Zustand wird mit `[checked]` gebunden, und auf Änderungen reagierst du mit `(change)`:
+
+```html
+<input type="checkbox" [checked]="aufgabe().erledigt" (change)="umschalten.emit()" />
+```
+
+Die Checkbox ändert die Aufgabe **nicht selbst**. Sie meldet nur den Wunsch. Erst wenn der Service das Signal ändert, kommt über den Input eine neue Aufgabe an, und `[checked]` zeigt den neuen Zustand. So bleibt der Service die einzige Quelle der Wahrheit.
+
+## Die App: alles verbinden
+
+`App` holt den Service mit `inject`, zeigt mit `@for` für jede Aufgabe eine Zeile an und leitet die Ereignisse an den Service weiter:
+
+```html
+@for (aufgabe of speicher.aufgaben(); track aufgabe.id) {
+  <app-aufgabe-zeile
+    [aufgabe]="aufgabe"
+    (umschalten)="speicher.umschalten(aufgabe.id)"
+    (loeschen)="speicher.entfernen(aufgabe.id)"
+  />
+}
+```
+
+Hier siehst du den ganzen Kreislauf: Service → Signal → `@for` → Input → Anzeige → Klick → Output → Service.
+
+--- code projekt-zeile | Zeile und Liste
+Diese Übung hat mehrere Reiter. `aufgabe.ts` und `aufgaben-speicher.ts` sind fertig und dienen zum Nachschauen.
+
+**`aufgabe-zeile/aufgabe-zeile.ts`:** Lege den Pflicht-Input `aufgabe` und die Outputs `umschalten` und `loeschen` (beide ohne Wert) an.
+
+**`aufgabe-zeile/aufgabe-zeile.html`:**
+
+- eine Checkbox, die den Zustand `erledigt` anzeigt und bei `(change)` das Ereignis `umschalten` auslöst
+- ein `<span>` mit dem Titel; er bekommt die CSS-Klasse `erledigt`, wenn die Aufgabe erledigt ist
+- ein Knopf, der `loeschen` auslöst
+
+**`app.ts`:** Hole den Service in die Eigenschaft `speicher` und trage `AufgabeZeile` bei `imports` ein.
+
+**`app.html`:** Zeige die Anzahl offener Aufgaben und mit `@for` die Zeilen. Verbinde Input und Outputs wie oben. Bei leerer Liste erscheint über `@empty` ein Hinweis in einem `<p>`.
+@flags angular norun
+@starter aufgabe-zeile/aufgabe-zeile.ts
+import { Component, input, output } from '@angular/core';
+import { Aufgabe } from '../aufgabe';
+
+@Component({
+  selector: 'app-aufgabe-zeile',
+  templateUrl: './aufgabe-zeile.html',
+})
+export class AufgabeZeile {
+  // Input und Outputs
+}
+@starter aufgabe-zeile/aufgabe-zeile.html
+<!-- Checkbox, Titel, Löschen-Knopf -->
+@starter app.ts
+import { Component, inject } from '@angular/core';
+import { AufgabenSpeicher } from './aufgaben-speicher';
+import { AufgabeZeile } from './aufgabe-zeile/aufgabe-zeile';
+
+@Component({
+  selector: 'app-root',
+  imports: [],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // Service holen
+}
+@starter app.html
+<h1>Meine Aufgaben</h1>
+<p>Noch offen: </p>
+
+<!-- @for mit app-aufgabe-zeile, @empty -->
+@starter aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@starter aufgaben-speicher.ts
+import { Service, computed, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  private readonly liste = signal<Aufgabe[]>([]);
+  private naechsteId = 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+}
+@solution aufgabe-zeile/aufgabe-zeile.ts
+import { Component, input, output } from '@angular/core';
+import { Aufgabe } from '../aufgabe';
+
+@Component({
+  selector: 'app-aufgabe-zeile',
+  templateUrl: './aufgabe-zeile.html',
+})
+export class AufgabeZeile {
+  // Input und Outputs
+  readonly aufgabe = input.required<Aufgabe>();
+  readonly umschalten = output<void>();
+  readonly loeschen = output<void>();
+}
+@solution aufgabe-zeile/aufgabe-zeile.html
+<!-- Checkbox, Titel, Löschen-Knopf -->
+<input type="checkbox" [checked]="aufgabe().erledigt" (change)="umschalten.emit()" />
+<span [class.erledigt]="aufgabe().erledigt">{{ aufgabe().titel }}</span>
+<button (click)="loeschen.emit()">Löschen</button>
+@solution app.ts
+import { Component, inject } from '@angular/core';
+import { AufgabenSpeicher } from './aufgaben-speicher';
+import { AufgabeZeile } from './aufgabe-zeile/aufgabe-zeile';
+
+@Component({
+  selector: 'app-root',
+  imports: [AufgabeZeile],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // Service holen
+  readonly speicher = inject(AufgabenSpeicher);
+}
+@solution app.html
+<h1>Meine Aufgaben</h1>
+<p>Noch offen: {{ speicher.anzahlOffen() }}</p>
+
+<!-- @for mit app-aufgabe-zeile, @empty -->
+@for (aufgabe of speicher.aufgaben(); track aufgabe.id) {
+  <app-aufgabe-zeile
+    [aufgabe]="aufgabe"
+    (umschalten)="speicher.umschalten(aufgabe.id)"
+    (loeschen)="speicher.entfernen(aufgabe.id)"
+  />
+} @empty {
+  <p>Noch keine Aufgaben. Leg los!</p>
+}
+@solution aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@solution aufgaben-speicher.ts
+import { Service, computed, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  private readonly liste = signal<Aufgabe[]>([]);
+  private naechsteId = 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+}
+@tests
+shape AufgabeZeile { aufgabe: InputSignal<Aufgabe>; umschalten: OutputEmitterRef<void>; loeschen: OutputEmitterRef<void> }
+src /aufgabe\s*=\s*input\s*\.\s*required\s*<\s*Aufgabe\s*>\s*\(/ :: `aufgabe` ist ein Pflicht-Input: `input.required<Aufgabe>()`
+tpl /<input[^>]*type\s*=\s*"checkbox"[^>]*>/ :: Die Zeile enthält eine Checkbox
+tpl /<input[^>]*\[checked\]\s*=\s*"aufgabe\(\)\.erledigt"/ :: Die Checkbox zeigt den Zustand: `[checked]="aufgabe().erledigt"`
+tpl /<input[^>]*\(change\)\s*=\s*"umschalten\.emit\(\)"/ :: Die Checkbox löst bei `(change)` das Ereignis `umschalten` aus
+tpl /<span[^>]*\[class\.erledigt\]\s*=\s*"aufgabe\(\)\.erledigt"[^>]*>\s*\{\{\s*aufgabe\(\)\.titel\s*\}\}/ :: Der Titel steht in einem `<span>` mit `[class.erledigt]`
+tpl /<button[^>]*\(click\)\s*=\s*"loeschen\.emit\(\)"/ :: Der Knopf löst `loeschen` aus
+shape App { speicher: AufgabenSpeicher }
+src /speicher\s*=\s*inject\s*\(\s*AufgabenSpeicher\s*\)/ :: `App` holt den Service mit `inject(AufgabenSpeicher)`
+src /imports\s*:\s*\[[^\]]*\bAufgabeZeile\b[^\]]*\]/ :: `AufgabeZeile` steht im `imports`-Array von `App`
+tpl /\{\{\s*speicher\.anzahlOffen\(\)\s*\}\}/ :: Die Anzahl offener Aufgaben wird angezeigt
+tpl /@for\s*\(\s*(\w+)\s+of\s+speicher\.aufgaben\(\)\s*;\s*track\s+\1\.id\s*\)\s*\{[\s\S]*?<app-aufgabe-zeile\b[^>]*\[aufgabe\]\s*=\s*"\1"/ :: `@for` übergibt jede Aufgabe an `<app-aufgabe-zeile [aufgabe]="…">`
+tpl /<app-aufgabe-zeile\b[^>]*\(umschalten\)\s*=\s*"speicher\.umschalten\(\s*\w+\.id\s*\)"/ :: `(umschalten)` ruft `speicher.umschalten(….id)` auf
+tpl /<app-aufgabe-zeile\b[^>]*\(loeschen\)\s*=\s*"speicher\.entfernen\(\s*\w+\.id\s*\)"/ :: `(loeschen)` ruft `speicher.entfernen(….id)` auf
+tpl /\}\s*@empty\s*\{[^}]*<p[\s>]/ :: `@empty` zeigt einen Hinweis in einem `<p>`
+@hints
+- In der Zeile: `readonly aufgabe = input.required<Aufgabe>();`, `readonly umschalten = output<void>();`, `readonly loeschen = output<void>();`
+- Das Template der Zeile besteht aus drei Elementen: `<input type="checkbox" [checked]="aufgabe().erledigt" (change)="umschalten.emit()" />`, dem `<span [class.erledigt]="aufgabe().erledigt">{{ aufgabe().titel }}</span>` und dem Knopf mit `(click)="loeschen.emit()"`.
+- In `App`: `readonly speicher = inject(AufgabenSpeicher);` und `imports: [AufgabeZeile],`
+- In `app.html` steht das `@for` aus dem Text oben, gefolgt von `@empty { <p>...</p> }`.
+@after
+Jetzt arbeiten alle Teile zusammen: Der Service besitzt die Daten, `App` verteilt sie, `AufgabeZeile` zeigt sie an und meldet Wünsche zurück. Keine Komponente verändert die Daten selbst.
+
+--- task projekt-anzeige-task | Im Browser ansehen
+Übernimm den Code in dein Projekt `aufgaben-app`. Die Liste ist noch leer – zum Testen gibst du dem Signal im Service vorübergehend ein paar Startwerte.
+[ ] `AufgabeZeile` und `App` sind übernommen, `ng serve` meldet keine Fehler.
+[ ] Zum Testen steht im Service vorübergehend `signal<Aufgabe[]>([{ id: 1, titel: 'Test', erledigt: false }])` und `naechsteId = 2`.
+[ ] Im Browser lässt sich die Test-Aufgabe abhaken und löschen, und der Zähler «Noch offen» stimmt.
+[ ] In `aufgabe-zeile.css` hast du `.erledigt { text-decoration: line-through; color: gray; }` ergänzt.
+
+=== projekt-eingabe | Aufgaben anlegen und filtern | 30
+Zwei Dinge fehlen noch: ein Feld für neue Aufgaben und der Filter.
+
+## Neue Aufgaben
+
+Das kennst du aus der Lektion über Eingaben: ein Feld mit Template-Variable, Enter zum Abschicken, danach das Feld leeren.
+
+```html
+<input
+  #feld
+  type="text"
+  placeholder="Was ist zu tun?"
+  (keydown.enter)="speicher.hinzufuegen(feld.value); feld.value = ''"
+/>
+```
+
+Ob der Titel leer ist, prüft der Service – darum muss sich das Template nicht kümmern.
+
+## Der Filter
+
+Der Filter ist ein Zustand der **Anzeige**, nicht der Daten. Deshalb lebt er in der Komponente `App`, nicht im Service:
+
+```ts nocheck
+readonly filter = signal<Filter>('alle');
+```
+
+Der Typ `Filter` ist die Union `'alle' | 'offen' | 'erledigt'`. TypeScript verhindert damit, dass irgendwo ein Tippfehler wie `'ofen'` gesetzt wird.
+
+Die sichtbaren Aufgaben sind ein klassischer Fall für `computed`: Sie ergeben sich aus zwei Quellen – der Liste im Service und dem gewählten Filter. Ändert sich eine davon, wird neu berechnet.
+
+```ts nocheck
+readonly sichtbare = computed(() => {
+  const alle = this.speicher.aufgaben();
+  switch (this.filter()) {
+    case 'offen':
+      return alle.filter((a) => !a.erledigt);
+    case 'erledigt':
+      return alle.filter((a) => a.erledigt);
+    case 'alle':
+      return alle;
+  }
+});
+```
+
+Mit `switch` über eine Union prüft TypeScript, dass du keinen Fall vergessen hast – wie in der Lektion über Narrowing.
+
+Im Template gibt es für jeden Filter einen Knopf. Der aktive bekommt eine CSS-Klasse:
+
+```html
+<button [class.aktiv]="filter() === 'offen'" (click)="filter.set('offen')">Offen</button>
+```
+
+Und das `@for` läuft jetzt über `sichtbare()` statt über `speicher.aufgaben()`.
+
+--- code projekt-filter | Eingabefeld und Filter
+Erweitere `App`. Alle anderen Dateien sind fertig.
+
+**`app.ts`:**
+
+- ein Signal `filter` vom Typ `Filter` mit dem Startwert `'alle'`
+- ein `computed` namens `sichtbare`, das je nach Filter alle, nur die offenen oder nur die erledigten Aufgaben liefert
+
+**`app.html`:**
+
+- ein Eingabefeld mit `#feld`: Enter ruft `speicher.hinzufuegen(feld.value)` auf und leert danach das Feld
+- drei Knöpfe, die den Filter auf `'alle'`, `'offen'` und `'erledigt'` setzen; der aktive Knopf bekommt die Klasse `aktiv`
+- das `@for` zeigt `sichtbare()` statt aller Aufgaben
+@flags angular norun
+@starter app.ts
+import { Component, computed, inject, signal } from '@angular/core';
+import { Aufgabe, Filter } from './aufgabe';
+import { AufgabenSpeicher } from './aufgaben-speicher';
+import { AufgabeZeile } from './aufgabe-zeile/aufgabe-zeile';
+
+@Component({
+  selector: 'app-root',
+  imports: [AufgabeZeile],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly speicher = inject(AufgabenSpeicher);
+
+  // filter und sichtbare
+}
+@starter app.html
+<h1>Meine Aufgaben</h1>
+
+<!-- Eingabefeld -->
+
+<p>Noch offen: {{ speicher.anzahlOffen() }}</p>
+
+<!-- drei Filter-Knöpfe -->
+
+@for (aufgabe of speicher.aufgaben(); track aufgabe.id) {
+  <app-aufgabe-zeile
+    [aufgabe]="aufgabe"
+    (umschalten)="speicher.umschalten(aufgabe.id)"
+    (loeschen)="speicher.entfernen(aufgabe.id)"
+  />
+} @empty {
+  <p>Hier gibt es nichts zu sehen.</p>
+}
+@starter aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@starter aufgaben-speicher.ts
+import { Service, computed, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  private readonly liste = signal<Aufgabe[]>([]);
+  private naechsteId = 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+}
+@starter aufgabe-zeile/aufgabe-zeile.ts
+import { Component, input, output } from '@angular/core';
+import { Aufgabe } from '../aufgabe';
+
+@Component({
+  selector: 'app-aufgabe-zeile',
+  templateUrl: './aufgabe-zeile.html',
+})
+export class AufgabeZeile {
+  readonly aufgabe = input.required<Aufgabe>();
+  readonly umschalten = output<void>();
+  readonly loeschen = output<void>();
+}
+@starter aufgabe-zeile/aufgabe-zeile.html
+<input type="checkbox" [checked]="aufgabe().erledigt" (change)="umschalten.emit()" />
+<span [class.erledigt]="aufgabe().erledigt">{{ aufgabe().titel }}</span>
+<button (click)="loeschen.emit()">Löschen</button>
+@solution app.ts
+import { Component, computed, inject, signal } from '@angular/core';
+import { Aufgabe, Filter } from './aufgabe';
+import { AufgabenSpeicher } from './aufgaben-speicher';
+import { AufgabeZeile } from './aufgabe-zeile/aufgabe-zeile';
+
+@Component({
+  selector: 'app-root',
+  imports: [AufgabeZeile],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly speicher = inject(AufgabenSpeicher);
+
+  // filter und sichtbare
+  readonly filter = signal<Filter>('alle');
+
+  readonly sichtbare = computed((): Aufgabe[] => {
+    const alle = this.speicher.aufgaben();
+    switch (this.filter()) {
+      case 'offen':
+        return alle.filter((a) => !a.erledigt);
+      case 'erledigt':
+        return alle.filter((a) => a.erledigt);
+      case 'alle':
+        return alle;
+    }
+  });
+}
+@solution app.html
+<h1>Meine Aufgaben</h1>
+
+<!-- Eingabefeld -->
+<input
+  #feld
+  type="text"
+  placeholder="Was ist zu tun?"
+  (keydown.enter)="speicher.hinzufuegen(feld.value); feld.value = ''"
+/>
+
+<p>Noch offen: {{ speicher.anzahlOffen() }}</p>
+
+<!-- drei Filter-Knöpfe -->
+<button [class.aktiv]="filter() === 'alle'" (click)="filter.set('alle')">Alle</button>
+<button [class.aktiv]="filter() === 'offen'" (click)="filter.set('offen')">Offen</button>
+<button [class.aktiv]="filter() === 'erledigt'" (click)="filter.set('erledigt')">Erledigt</button>
+
+@for (aufgabe of sichtbare(); track aufgabe.id) {
+  <app-aufgabe-zeile
+    [aufgabe]="aufgabe"
+    (umschalten)="speicher.umschalten(aufgabe.id)"
+    (loeschen)="speicher.entfernen(aufgabe.id)"
+  />
+} @empty {
+  <p>Hier gibt es nichts zu sehen.</p>
+}
+@solution aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@solution aufgaben-speicher.ts
+import { Service, computed, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  private readonly liste = signal<Aufgabe[]>([]);
+  private naechsteId = 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+}
+@solution aufgabe-zeile/aufgabe-zeile.ts
+import { Component, input, output } from '@angular/core';
+import { Aufgabe } from '../aufgabe';
+
+@Component({
+  selector: 'app-aufgabe-zeile',
+  templateUrl: './aufgabe-zeile.html',
+})
+export class AufgabeZeile {
+  readonly aufgabe = input.required<Aufgabe>();
+  readonly umschalten = output<void>();
+  readonly loeschen = output<void>();
+}
+@solution aufgabe-zeile/aufgabe-zeile.html
+<input type="checkbox" [checked]="aufgabe().erledigt" (change)="umschalten.emit()" />
+<span [class.erledigt]="aufgabe().erledigt">{{ aufgabe().titel }}</span>
+<button (click)="loeschen.emit()">Löschen</button>
+@tests
+shape App { filter: WritableSignal<Filter>; sichtbare: Signal<Aufgabe[]> }
+src /filter\s*=\s*signal\s*<\s*Filter\s*>\s*\(\s*['"]alle['"]\s*\)/ :: `filter` ist ein `signal<Filter>('alle')`
+src /sichtbare\s*=\s*computed\s*\(/ :: `sichtbare` ist ein `computed`
+src /sichtbare\s*=\s*computed\s*\([\s\S]*this\s*\.\s*filter\s*\(\s*\)/ :: `sichtbare` liest den Filter: `this.filter()`
+src /sichtbare\s*=\s*computed\s*\([\s\S]*this\s*\.\s*speicher\s*\.\s*aufgaben\s*\(\s*\)/ :: `sichtbare` liest die Aufgaben aus dem Service
+src /!\s*\w+\s*\.\s*erledigt/ :: Für «offen» werden die nicht erledigten Aufgaben herausgefiltert
+tpl /<input[^>]*#feld\b/ :: Das Eingabefeld hat die Template-Variable `#feld`
+tpl /\(keydown\.enter\)\s*=\s*"\s*speicher\.hinzufuegen\(\s*feld\.value\s*\)\s*;\s*feld\.value\s*=\s*''\s*;?\s*"/ :: Enter ruft `speicher.hinzufuegen(feld.value)` auf und leert das Feld
+tpl /<button[^>]*\(click\)\s*=\s*"filter\.set\('alle'\)"/ :: Ein Knopf setzt den Filter auf `'alle'`
+tpl /<button[^>]*\(click\)\s*=\s*"filter\.set\('offen'\)"/ :: Ein Knopf setzt den Filter auf `'offen'`
+tpl /<button[^>]*\(click\)\s*=\s*"filter\.set\('erledigt'\)"/ :: Ein Knopf setzt den Filter auf `'erledigt'`
+tpl /\[class\.aktiv\]\s*=\s*"filter\(\)\s*===\s*'offen'"/ :: Der aktive Knopf bekommt die Klasse `aktiv`, z. B. `[class.aktiv]="filter() === 'offen'"`
+tpl /@for\s*\(\s*\w+\s+of\s+sichtbare\(\)\s*;/ :: Das `@for` läuft über `sichtbare()`
+@hints
+- `readonly filter = signal<Filter>('alle');`
+- `sichtbare`: Hole zuerst `const alle = this.speicher.aufgaben();` und entscheide dann mit `switch (this.filter())` oder `if`, was zurückgegeben wird.
+- Ein Filter-Knopf: `<button [class.aktiv]="filter() === 'offen'" (click)="filter.set('offen')">Offen</button>`
+- Im `@for` ersetzt du `speicher.aufgaben()` durch `sichtbare()`.
+@after
+Der Filter ist ein Signal, die sichtbare Liste ein `computed` aus zwei Quellen. Du hast nirgends geschrieben, **wann** die Liste neu berechnet werden muss – das ergibt sich von selbst.
+
+--- task projekt-eingabe-task | Die App benutzen
+Übernimm den Stand in `aufgaben-app` und entferne die Test-Aufgabe aus dem Service.
+[ ] Du kannst im Browser Aufgaben anlegen, abhaken und löschen.
+[ ] Die drei Filter funktionieren, der aktive ist erkennbar (CSS-Klasse `aktiv` in `app.css` gestalten).
+[ ] Leere Eingaben erzeugen keine Aufgabe.
+[ ] Du hast die Seite neu geladen und gesehen: Die Aufgaben sind weg. Das behebst du in der nächsten Lektion.
+
+=== projekt-speichern | Aufgaben dauerhaft speichern | 25
+Im Moment vergisst die App alles, sobald die Seite neu geladen wird. Die Aufgaben leben nur im Arbeitsspeicher. Jetzt speicherst du sie im Browser.
+
+## localStorage
+
+Jeder Browser bietet einen kleinen Speicher pro Webseite: `localStorage`. Er behält Daten auch nach dem Schliessen des Browsers. Speichern kann er nur **Texte**, jeweils unter einem Namen:
+
+```ts nocheck
+localStorage.setItem('name', 'Mia');     // speichern
+const name = localStorage.getItem('name'); // lesen: 'Mia' – oder null, wenn nichts da ist
+localStorage.removeItem('name');          // löschen
+```
+
+## Objekte in Text verwandeln: JSON
+
+Ein Array von Aufgaben ist kein Text. Mit `JSON.stringify` wird daraus einer, mit `JSON.parse` wieder ein Array:
+
+```ts
+const aufgaben = [{ id: 1, titel: 'Mathe', erledigt: false }];
+
+const text = JSON.stringify(aufgaben);
+console.log(text); // [{"id":1,"titel":"Mathe","erledigt":false}]
+
+const zurueck = JSON.parse(text) as { id: number; titel: string; erledigt: boolean }[];
+console.log(zurueck[0].titel); // Mathe
+```
+
+`JSON.parse` liefert den Typ `any` – TypeScript kann nicht wissen, was in dem Text steckt. Mit `as Typ` sagst du: «Behandle das als diesen Typ.» Das ist dieselbe Art von Versprechen wie bei `httpResource<...>`: keine Prüfung, nur eine Zusage von dir.
+
+## Automatisch speichern: effect
+
+Du könntest in jeder Methode des Service von Hand speichern. Sicherer ist: **immer speichern, wenn sich die Liste ändert**. Genau dafür gibt es `effect`.
+
+```ts nocheck
+constructor() {
+  effect(() => {
+    localStorage.setItem('aufgaben', JSON.stringify(this.liste()));
+  });
+}
+```
+
+Ein `effect` ist eine Funktion, die Angular einmal zu Beginn ausführt und danach **jedes Mal wieder, wenn sich ein darin gelesenes Signal ändert**. Hier wird `this.liste()` gelesen – also läuft der Effekt bei jeder Änderung der Liste und speichert.
+
+Der Unterschied zu `computed`:
+
+| | `computed` | `effect` |
+| --- | --- | --- |
+| Zweck | einen **Wert** berechnen | etwas **tun** (speichern, protokollieren) |
+| Ergebnis | ein Signal | nichts |
+| Einsatz | sehr oft | selten |
+
+> [!WARN] Sparsam mit effect
+> Nimm `effect` nur für Dinge, die ausserhalb von Angular passieren: speichern, protokollieren, eine fremde Bibliothek ansteuern. Um aus Signals andere Werte abzuleiten, ist immer `computed` das richtige Werkzeug. Setze in einem `effect` keine anderen Signals.
+
+`effect` wird im `constructor` angelegt. Das ist einer der wenigen Fälle, in denen ein Angular-Service einen Constructor braucht.
+
+## Beim Start laden
+
+Beim Erzeugen des Service liest du den gespeicherten Stand und verwendest ihn als Startwert des Signals:
+
+```ts nocheck
+private readonly liste = signal<Aufgabe[]>(this.laden());
+
+private laden(): Aufgabe[] {
+  const text = localStorage.getItem('aufgaben');
+  if (text === null) {
+    return [];
+  }
+  return JSON.parse(text) as Aufgabe[];
+}
+```
+
+Beim allerersten Besuch ist noch nichts gespeichert, und `getItem` liefert `null`. Dieser Fall muss abgefangen werden – TypeScript erinnert dich daran, weil `JSON.parse` keinen `null`-Wert annimmt.
+
+Noch eine Kleinigkeit: Die nächste freie `id` darf nach dem Laden nicht wieder bei 1 beginnen, sonst gäbe es doppelte IDs. Sie muss grösser sein als alle vorhandenen.
+
+--- code projekt-speicher-laden | Speichern und Laden
+Erweitere den Service. Die Methoden `hinzufuegen`, `umschalten` und `entfernen` sind fertig.
+
+- Schreibe die private Methode `laden()`: Sie liest den Eintrag `'aufgaben'` aus `localStorage`. Gibt es keinen, liefert sie ein leeres Array, sonst das mit `JSON.parse` zurückverwandelte Array.
+- Das Signal `liste` startet mit dem Ergebnis von `this.laden()`.
+- `naechsteId` startet mit der grössten vorhandenen `id` plus 1 (bei leerer Liste mit 1). Tipp: `Math.max(0, ...ids)` liefert die grösste Zahl oder 0.
+- Im `constructor` sorgt ein `effect` dafür, dass die Liste bei jeder Änderung als JSON unter `'aufgaben'` gespeichert wird.
+@flags angular
+@starter aufgaben-speicher.ts
+import { Service, computed, effect, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  private readonly liste = signal<Aufgabe[]>([]);
+  private naechsteId = 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  // constructor mit effect
+
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+
+  // private Methode laden()
+}
+@starter aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@solution aufgaben-speicher.ts
+import { Service, computed, effect, signal } from '@angular/core';
+import { Aufgabe } from './aufgabe';
+
+@Service()
+export class AufgabenSpeicher {
+  private readonly liste = signal<Aufgabe[]>(this.laden());
+  private naechsteId = Math.max(0, ...this.liste().map((a) => a.id)) + 1;
+
+  readonly aufgaben = this.liste.asReadonly();
+  readonly anzahlOffen = computed(() => this.liste().filter((a) => !a.erledigt).length);
+
+  // constructor mit effect
+  constructor() {
+    effect(() => {
+      localStorage.setItem('aufgaben', JSON.stringify(this.liste()));
+    });
+  }
+
+  hinzufuegen(titel: string): void {
+    const sauber = titel.trim();
+    if (sauber === '') {
+      return;
+    }
+    const neu: Aufgabe = { id: this.naechsteId, titel: sauber, erledigt: false };
+    this.naechsteId++;
+    this.liste.update((alt) => [...alt, neu]);
+  }
+
+  umschalten(id: number): void {
+    this.liste.update((alt) => alt.map((a) => (a.id === id ? { ...a, erledigt: !a.erledigt } : a)));
+  }
+
+  entfernen(id: number): void {
+    this.liste.update((alt) => alt.filter((a) => a.id !== id));
+  }
+
+  // private Methode laden()
+  private laden(): Aufgabe[] {
+    const text = localStorage.getItem('aufgaben');
+    if (text === null) {
+      return [];
+    }
+    return JSON.parse(text) as Aufgabe[];
+  }
+}
+@solution aufgabe.ts
+export interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+export type Filter = 'alle' | 'offen' | 'erledigt';
+@tests
+src /constructor\s*\(\s*\)\s*\{[\s\S]*?effect\s*\(/ :: Im `constructor` wird ein `effect` angelegt
+src /localStorage\s*\.\s*setItem\s*\(\s*['"]aufgaben['"]\s*,\s*JSON\s*\.\s*stringify\s*\(/ :: Gespeichert wird mit `localStorage.setItem('aufgaben', JSON.stringify(...))`
+src /localStorage\s*\.\s*getItem\s*\(\s*['"]aufgaben['"]\s*\)/ :: Geladen wird mit `localStorage.getItem('aufgaben')`
+src /private\s+laden\s*\(\s*\)\s*:\s*Aufgabe\s*\[\s*\]/ :: `laden()` ist privat und gibt `Aufgabe[]` zurück
+setup const { AufgabenSpeicher: __S } = require("./aufgaben-speicher");
+setup localStorage.clear(); const __a = new __S(); await __tick();
+run __a.aufgaben().length === 0 :: Ohne gespeicherte Daten startet der Speicher leer
+setup __a.hinzufuegen("Mathe"); __a.hinzufuegen("Sport"); __a.umschalten(2); await __tick();
+run (() => { const t = localStorage.getItem("aufgaben"); if (t === null) return false; const d = JSON.parse(t); return d.length === 2 && d[0].titel === "Mathe" && d[1].erledigt === true; })() :: Nach Änderungen steht die aktuelle Liste als JSON im `localStorage`
+setup const __b = new __S(); await __tick();
+run __b.aufgaben().length === 2 && __b.aufgaben()[0].titel === "Mathe" && __b.aufgaben()[1].erledigt === true :: Ein neuer Speicher lädt die gespeicherten Aufgaben
+run __b.anzahlOffen() === 1 :: `anzahlOffen` stimmt auch nach dem Laden
+setup __b.hinzufuegen("Musik"); await __tick();
+run (() => { const ids = __b.aufgaben().map((a) => a.id); return ids.length === 3 && new Set(ids).size === 3 && ids[2] === 3; })() :: Nach dem Laden bekommt die nächste Aufgabe die `id` 3 – keine doppelten IDs ?? `naechsteId` muss nach dem Laden grösser sein als jede vorhandene `id`.
+setup __b.entfernen(1); __b.entfernen(2); __b.entfernen(3); await __tick();
+run localStorage.getItem("aufgaben") === "[]" :: Auch die leere Liste wird gespeichert
+@hints
+- `laden()`: `const text = localStorage.getItem('aufgaben'); if (text === null) { return []; } return JSON.parse(text) as Aufgabe[];`
+- Das Signal: `private readonly liste = signal<Aufgabe[]>(this.laden());`
+- Die ID: `private naechsteId = Math.max(0, ...this.liste().map((a) => a.id)) + 1;` – diese Zeile muss **nach** `liste` stehen.
+- Der Constructor: `constructor() { effect(() => { localStorage.setItem('aufgaben', JSON.stringify(this.liste())); }); }`
+@after
+Ein `effect`, eine Lade-Methode, ein angepasster Startwert – und die App vergisst nichts mehr. Keine der drei Methoden zum Ändern musste dafür angefasst werden: Sie ändern das Signal, der Effekt speichert.
+
+--- task projekt-speichern-task | Fertigstellen
+Übernimm den Service in `aufgaben-app` und probiere es aus.
+[ ] Aufgaben bleiben erhalten, wenn du die Seite neu lädst.
+[ ] Du hast im Browser [[F12]] gedrückt und unter «Anwendung» (Application) → «Lokaler Speicher» den Eintrag `aufgaben` gefunden.
+[ ] Die App ist mit CSS gestaltet: `src/styles.css` für die Seite, `app.css` und `aufgabe-zeile.css` für die Komponenten.
+[ ] In `aufgabe-zeile.css` sorgt `:host { display: flex; gap: 8px; align-items: center; }` dafür, dass jede Aufgabe auf einer eigenen Zeile steht.
+
+=== projekt-abschluss | Veröffentlichen und wie es weitergeht | 20
+Deine App läuft – bisher aber nur auf deinem Computer und nur, solange `ng serve` aktiv ist. Zum Schluss lernst du, wie daraus etwas wird, das man anderen zeigen kann, und wo du weiterlernst.
+
+## Die App bauen
+
+```bash
+ng build
+```
+
+Dieser Befehl erzeugt die fertige App im Ordner `dist/aufgaben-app/browser`. Dabei passiert einiges:
+
+- TypeScript wird geprüft und in JavaScript übersetzt.
+- Die Templates werden in schnellen Code umgewandelt.
+- Alles wird in wenige, stark verkleinerte Dateien verpackt.
+
+Übrig bleiben gewöhnliche Dateien: `index.html`, etwas JavaScript, etwas CSS. Kein Node.js, kein TypeScript, kein Angular-Werkzeug ist mehr nötig, um sie auszuliefern.
+
+> [!NOTE] Der Build ist streng
+> `ng build` bricht ab, wenn es einen einzigen Typfehler gibt – auch in einem Template. Fehler, die du während `ng serve` übersehen hast, tauchen spätestens hier auf.
+
+## Die App ins Internet stellen
+
+Der Inhalt von `dist/aufgaben-app/browser` muss auf einen Webserver. Für kleine Projekte gibt es kostenlose Dienste, bei denen du den Ordner hochlädst oder ein Git-Projekt verbindest – zum Beispiel GitHub Pages, Netlify, Vercel, Cloudflare Pages oder Firebase Hosting. Die aktuelle Anleitung von Angular dazu findest du unter [angular.dev/tools/cli/deployment](https://angular.dev/tools/cli/deployment).
+
+Verwendet deine App Routing mit mehreren Seiten, muss der Server so eingestellt sein, dass er bei jeder unbekannten Adresse `index.html` ausliefert. Die genannten Dienste bieten dafür eine Einstellung.
+
+## Was du jetzt kannst
+
+Schau kurz zurück. Du hast gelernt:
+
+- **TypeScript:** Variablen, Typen, Funktionen, Arrays, Objekte, Interfaces, Unions, Narrowing, Generics, Klassen, Module, `async`/`await`, Fehlerbehandlung.
+- **Werkzeuge:** VS Code, Terminal, npm, Fehlermeldungen lesen, Debugger.
+- **Angular:** Komponenten, Templates, Signals, `computed`, `effect`, `@if`/`@for`, Inputs, Outputs, Services, Formulare, Routing, HTTP, Pipes.
+
+Und du hast eine vollständige App geplant und gebaut. Das ist eine solide Grundlage.
+
+## Ideen zum Weiterbauen
+
+Am meisten lernst du jetzt, indem du eigene Ideen umsetzt. Vorschläge für deine Aufgaben-App, nach Schwierigkeit geordnet:
+
+1. Ein Knopf «Erledigte löschen».
+2. Eine Anzeige «3 von 7 erledigt» mit Fortschrittsbalken (`computed` und `[style.width.%]`).
+3. Aufgaben bearbeiten: Doppelklick auf den Titel macht ihn zu einem Eingabefeld.
+4. Eine Priorität pro Aufgabe (`'hoch' | 'mittel' | 'tief'`) mit Sortierung.
+5. Ein Fälligkeitsdatum mit der `date`-Pipe; überfällige Aufgaben werden rot.
+6. Eine zweite Seite «Statistik» mit Routing.
+7. Mehrere Listen (Schule, Zuhause, Hobby) mit einer Detailseite pro Liste (`/liste/:id`).
+
+## Wo du weiterlernst
+
+- **[angular.dev](https://angular.dev)** – die offizielle Dokumentation mit Tutorials und einem Spielplatz im Browser. Immer aktuell.
+- **[typescriptlang.org/docs](https://www.typescriptlang.org/docs/)** – das TypeScript-Handbuch. Gut zum Nachschlagen.
+- **[developer.mozilla.org](https://developer.mozilla.org/de/)** – das Nachschlagewerk für HTML, CSS und JavaScript, vieles auf Deutsch.
+
+Themen, die als Nächstes sinnvoll sind:
+
+| Thema | Wozu |
+| --- | --- |
+| HTML und CSS vertiefen (Flexbox, Grid) | damit deine Apps gut aussehen |
+| Git und GitHub | Versionen sichern, zusammenarbeiten, veröffentlichen |
+| Tests (`ng test`) | automatisch prüfen, dass nichts kaputtgeht |
+| `HttpClient` und Observables | Daten an einen Server senden |
+| Lazy Loading im Router | grosse Apps schnell halten |
+| Angular Material | fertige, schöne Bausteine für die Oberfläche |
+
+> [!TIP] Der beste Rat zum Schluss
+> Bau etwas, das **du** benutzen willst: einen Vokabeltrainer, einen Stundenplan, eine Rangliste für dein Lieblingsspiel. Du wirst auf Probleme stossen, die in keinem Kurs vorkommen – und genau beim Lösen dieser Probleme wirst du richtig gut.
+
+--- quiz quiz-build
+Was ist das Ergebnis von `ng build`?
+( ) Ein Programm, das man mit Node.js auf dem Server starten muss. :: Nein – heraus kommen gewöhnliche Dateien für den Browser.
+(x) Ein Ordner mit HTML-, JavaScript- und CSS-Dateien, den jeder Webserver ausliefern kann. :: Genau. TypeScript und Angular-Werkzeuge braucht es danach nicht mehr.
+( ) Eine einzelne `.ts`-Datei mit dem gesamten Code. :: Der Browser versteht kein TypeScript. Beim Build wird alles in JavaScript übersetzt.
+
+--- quiz quiz-rueckblick
+Du willst in deiner App die Anzahl erledigter Aufgaben anzeigen. Wie machst du das am besten?
+( ) Ein zusätzliches Signal `anzahlErledigt`, das in `umschalten`, `hinzufuegen` und `entfernen` von Hand angepasst wird. :: Das funktioniert, bis du es an einer Stelle vergisst. Dann zeigt die App eine falsche Zahl.
+(x) Ein `computed`, das die erledigten Aufgaben aus der Liste zählt. :: Richtig. Die Zahl folgt aus der Liste – also wird sie abgeleitet, nicht gespeichert. Eine Quelle der Wahrheit.
+( ) Ein `effect`, der bei jeder Änderung ein Signal `anzahlErledigt` setzt. :: `effect` ist für Dinge ausserhalb von Angular gedacht. Um Werte aus Signals abzuleiten, nimmt man `computed`.
+
+--- task projekt-abschluss-task | Dein Abschluss
+[ ] `ng build` läuft ohne Fehler durch.
+[ ] Du hast dir den Inhalt von `dist/aufgaben-app/browser` angesehen.
+[ ] Du hast mindestens eine Idee aus der Liste «Ideen zum Weiterbauen» umgesetzt.
+[ ] Du hast dir auf angular.dev das offizielle Tutorial angesehen.
