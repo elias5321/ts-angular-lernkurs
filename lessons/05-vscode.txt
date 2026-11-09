@@ -1,0 +1,317 @@
+#part vscode | Arbeiten in VS Code | Fehlermeldungen lesen, die besten Handgriffe im Editor und Fehlersuche. Diese drei Lektionen sparen dir später am meisten Zeit.
+
+=== fehler-lesen | Fehlermeldungen lesen lernen | 20
+Anfänger erschrecken vor roten Linien. Profis lesen sie – denn fast immer steht die Lösung schon in der Meldung. In dieser Lektion lernst du, TypeScript-Meldungen systematisch zu entziffern.
+
+## Der Aufbau einer Meldung
+
+Im Terminal (nach `npx tsc`) sieht eine Meldung so aus:
+
+```text
+src/main.ts(12,7): error TS2322: Type 'string' is not assignable to type 'number'.
+```
+
+| Teil | Bedeutung |
+| --- | --- |
+| `src/main.ts` | die Datei |
+| `(12,7)` | Zeile 12, Spalte 7 |
+| `TS2322` | die Fehlernummer – gut zum Suchen im Internet |
+| der Rest | die Beschreibung |
+
+In VS Code steht dieselbe Meldung, wenn du mit der Maus über die rote Linie fährst, und im Bereich **Probleme**.
+
+## Drei Regeln
+
+1. **Immer beim ersten Fehler anfangen.** Ein einziger Tippfehler kann zehn Folgefehler auslösen. Behebst du den ersten, verschwinden die anderen oft von selbst.
+2. **Die Stelle ist ein Hinweis, kein Beweis.** Bei fehlenden Klammern oder Anführungszeichen bemerkt TypeScript das Problem oft erst eine oder mehrere Zeilen **später**. Schau dann auch darüber.
+3. **Lange Meldungen von unten lesen.** Manche Meldungen sind verschachtelt und erklären Schritt für Schritt, warum etwas nicht passt. Die konkreteste Aussage steht meist in der **letzten** Zeile.
+
+## Die häufigsten Meldungen
+
+| Meldung (gekürzt) | Bedeutet | Typische Ursache |
+| --- | --- | --- |
+| `Type 'X' is not assignable to type 'Y'` | Wert passt nicht zum Typ | falscher Wert oder falsche Typangabe |
+| `Argument of type 'X' is not assignable to parameter of type 'Y'` | falscher Wert beim Funktionsaufruf | Reihenfolge vertauscht, Text statt Zahl |
+| `Cannot find name 'x'` | Name unbekannt | Tippfehler, `const` vergessen, Import fehlt |
+| `Property 'x' does not exist on type 'Y'` | Eigenschaft gibt es nicht | Tippfehler, fehlt im Interface |
+| `'x' is possibly 'undefined'` | Wert könnte fehlen | Prüfung mit `if`, `?.` oder `??` fehlt |
+| `Expected 2 arguments, but got 1` | falsche Anzahl Argumente | Argument vergessen |
+| `Property 'x' is missing in type …` | Pflicht-Eigenschaft fehlt | im Objekt vergessen |
+| `Cannot assign to 'x' because it is a constant` | `const` wird geändert | sollte `let` sein |
+| `Parameter 'x' implicitly has an 'any' type` | Parameter ohne Typ | Typangabe ergänzen |
+| `';' expected`, `'}' expected` | Zeichen fehlt | Klammer oder Anführungszeichen nicht geschlossen |
+
+> [!TIP] Wenn du eine Meldung nicht verstehst
+> Kopiere sie (ohne deine eigenen Variablennamen) zusammen mit der Fehlernummer in eine Suchmaschine: `TS2322 Type string is not assignable to type number`. Du bist garantiert nicht die erste Person mit diesem Fehler.
+
+--- code fehler-jagd | Fehlerjagd
+Dieses Programm enthält **fünf** Fehler. Geh sie der Reihe nach durch – immer den obersten zuerst – und behebe sie, bis das Programm `Lena hat 3 Bücher, 2 davon gelesen.` ausgibt.
+
+Ändere nichts am Interface und nichts an der letzten Zeile.
+@starter
+interface Buch {
+  titel: string;
+  seiten: number;
+  gelesen: boolean;
+}
+
+const buecher: Buch[] = [
+  { titel: "Momo", seiten: 304, gelesen: true },
+  { titel: "Krabat", seiten: "256", gelesen: true },
+  { titel: "Tintenherz", gelesen: false },
+];
+
+function zaehleGelesene(liste: Buch[]): number {
+  return liste.filter((buch) => buch.geleesen).length;
+}
+
+const besitzerin = "Lena";
+const gelesen = zaehleGelesene();
+
+console.log(`${besitzerin} hat ${bücher.length} Bücher, ${gelesen} davon gelesen.`);
+@solution
+interface Buch {
+  titel: string;
+  seiten: number;
+  gelesen: boolean;
+}
+
+const buecher: Buch[] = [
+  { titel: "Momo", seiten: 304, gelesen: true },
+  { titel: "Krabat", seiten: 256, gelesen: true },
+  { titel: "Tintenherz", seiten: 576, gelesen: false },
+];
+
+function zaehleGelesene(liste: Buch[]): number {
+  return liste.filter((buch) => buch.gelesen).length;
+}
+
+const besitzerin = "Lena";
+const gelesen = zaehleGelesene(buecher);
+
+console.log(`${besitzerin} hat ${buecher.length} Bücher, ${gelesen} davon gelesen.`);
+@tests
+shape Buch { titel: string; seiten: number; gelesen: boolean }
+run buecher.length === 3 && buecher.every((b) => typeof b.seiten === "number") :: Alle drei Bücher haben eine Seitenzahl als Zahl
+out Lena hat 3 Bücher, 2 davon gelesen.
+src /zaehleGelesene\s*\(\s*buecher\s*\)/ :: `zaehleGelesene` wird mit `buecher` aufgerufen
+@hints
+- Fehler 1 (TS2322): `"256"` ist ein Text. `seiten` ist laut Interface eine Zahl.
+- Fehler 2 (TS2741): Beim dritten Buch fehlt die Pflicht-Eigenschaft `seiten`. Trag irgendeine Zahl ein.
+- Fehler 3 (TS2551): `geleesen` ist ein Tippfehler – TypeScript schlägt dir sogar die richtige Schreibweise vor.
+- Fehler 4 (TS2554): `zaehleGelesene` erwartet ein Argument. Fehler 5 (TS2304): Die Variable heisst `buecher`, nicht `bücher`.
+@after
+Fünf Fehler, fünf verschiedene Meldungen – und jede hat dir ziemlich genau gesagt, was zu tun ist. Genau so arbeitest du in VS Code: Meldung lesen, beheben, nächste.
+
+--- quiz quiz-erster-fehler
+Nach einer Änderung zeigt VS Code plötzlich 14 Fehler an. Was tust du zuerst?
+( ) Die Änderung rückgängig machen und es ganz anders versuchen. :: Nicht nötig. Viele Fehler auf einmal bedeuten fast nie 14 verschiedene Probleme.
+(x) Den obersten Fehler lesen und beheben, dann schauen, wie viele übrig sind. :: Genau. Oft ist es eine einzige Ursache – etwa eine fehlende Klammer –, und die restlichen Meldungen sind Folgefehler.
+( ) Mit dem untersten Fehler beginnen, weil der am neuesten ist. :: Die Reihenfolge entspricht der Position in der Datei. Folgefehler stehen weiter unten, die Ursache steht oben.
+
+=== vscode-werkzeuge | Die wichtigsten Handgriffe in VS Code | 20
+VS Code versteht deinen TypeScript-Code. Daraus ergeben sich Werkzeuge, die dir viel Tipparbeit und viele Fehler ersparen. Diese Lektion hat keine Programmieraufgabe – stattdessen probierst du alles in deinem Projekt `ts-lernen` aus.
+
+Die Tastenkürzel gelten für Windows und Linux. Auf dem Mac nimmst du statt [[Strg]] die Taste [[Cmd]].
+
+## Vorschläge (IntelliSense)
+
+Während du tippst, schlägt VS Code passende Namen vor. Mit [[↑]] [[↓]] wählst du, mit [[Tab]] oder [[Enter]] übernimmst du. Mit [[Strg]] + [[Leertaste]] holst du die Liste jederzeit von Hand.
+
+Besonders nützlich: Tippe nach einem Objekt einen **Punkt**. Du siehst sofort alle Eigenschaften und Methoden, die es dort gibt.
+
+## Informationen beim Überfahren
+
+Fahre mit der Maus über irgendeinen Namen. VS Code zeigt den **Typ** an – bei Funktionen auch Parameter und Rückgabetyp. Das ist der schnellste Weg, um zu verstehen, was ein Stück Code tut.
+
+## Umbenennen: F2
+
+Setze den Cursor auf einen Namen und drücke [[F2]]. Tippe den neuen Namen und bestätige mit [[Enter]]. VS Code ändert den Namen **überall**, wo er benutzt wird – auch in anderen Dateien. Niemals von Hand mit Suchen und Ersetzen umbenennen.
+
+## Zur Definition springen: F12
+
+Cursor auf einen Namen, [[F12]] drücken (oder [[Strg]] + Klick): Du landest dort, wo die Funktion, Klasse oder Variable definiert ist. Mit [[Alt]] + [[←]] kommst du zurück.
+
+## Schnelle Reparaturen: Strg + .
+
+Steht der Cursor auf einer rot oder gelb markierten Stelle, zeigt [[Strg]] + [[.]] eine Liste von Reparaturvorschlägen: fehlenden Import ergänzen, Tippfehler korrigieren, fehlende Eigenschaften eintragen. Oft löst das ein Problem mit einem Tastendruck.
+
+## Formatieren
+
+[[Shift]] + [[Alt]] + [[F]] bringt die Datei in Form. Besser: einmal einstellen, dass das bei jedem Speichern automatisch passiert.
+
+1. Öffne die Einstellungen mit [[Strg]] + [[,]].
+2. Suche nach `format on save` und setze den Haken.
+3. Suche nach `default formatter` und wähle **Prettier**.
+
+## Schnell eine Datei öffnen: Strg + P
+
+[[Strg]] + [[P]] öffnet ein Suchfeld. Tippe ein paar Buchstaben des Dateinamens und drücke [[Enter]]. In Angular-Projekten mit vielen Dateien ist das der normale Weg zu navigieren.
+
+## Die Befehlspalette: Strg + Shift + P
+
+Alles, was VS Code kann, findest du über [[Strg]] + [[Shift]] + [[P]]. Du musst dir keine Menüs merken – tippe einfach, was du suchst.
+
+## Übersicht
+
+| Was | Windows / Linux | Mac |
+| --- | --- | --- |
+| Vorschläge anzeigen | [[Strg]] + [[Leertaste]] | [[Ctrl]] + [[Leertaste]] |
+| Umbenennen | [[F2]] | [[F2]] |
+| Zur Definition | [[F12]] | [[F12]] |
+| Schnelle Reparatur | [[Strg]] + [[.]] | [[Cmd]] + [[.]] |
+| Formatieren | [[Shift]] + [[Alt]] + [[F]] | [[Shift]] + [[Option]] + [[F]] |
+| Datei öffnen | [[Strg]] + [[P]] | [[Cmd]] + [[P]] |
+| Befehlspalette | [[Strg]] + [[Shift]] + [[P]] | [[Cmd]] + [[Shift]] + [[P]] |
+| Zeile auskommentieren | [[Strg]] + [[#]] | [[Cmd]] + [[Shift]] + [[7]] |
+| Zeile verschieben | [[Alt]] + [[↑]] / [[↓]] | [[Option]] + [[↑]] / [[↓]] |
+| Terminal ein/aus | Menü **Terminal** | Menü **Terminal** |
+| Rückgängig | [[Strg]] + [[Z]] | [[Cmd]] + [[Z]] |
+
+Die Kürzel für «auskommentieren» hängen von der Tastaturbelegung ab. Wenn sie bei dir nicht funktionieren: Im Menü **Bearbeiten → Zeilenkommentar umschalten** steht das richtige Kürzel daneben.
+
+--- task vscode-task | Handgriffe ausprobieren
+Öffne dein Projekt `ts-lernen` und probiere jeden Handgriff mindestens einmal aus – am besten in den Dateien vom Notenbuch.
+[ ] «Format On Save» ist eingeschaltet und Prettier als Standard-Formatierer gewählt.
+[ ] Du hast eine Methode mit [[F2]] umbenannt und gesehen, dass sich der Name auch in `main.ts` geändert hat.
+[ ] Du bist mit [[F12]] von einem Aufruf zur Definition gesprungen.
+[ ] Du hast mit der Maus über eine Variable gefahren und ihren Typ gelesen.
+[ ] Du hast einen Import gelöscht und ihn mit [[Strg]] + [[.]] wieder einfügen lassen.
+[ ] Du hast eine Datei mit [[Strg]] + [[P]] geöffnet.
+
+--- quiz quiz-umbenennen
+Du willst die Funktion `berechne` in `berechneSumme` umbenennen. Sie wird in fünf Dateien benutzt. Wie gehst du vor?
+( ) In jeder Datei von Hand ändern. :: Das funktioniert, aber du übersiehst leicht eine Stelle – und brauchst zehnmal so lange.
+( ) Mit Suchen und Ersetzen im ganzen Projekt. :: Riskant: Das ersetzt auch `berechne` in anderen Namen wie `berechneDurchschnitt` oder in Kommentaren.
+(x) Cursor auf den Namen, [[F2]] drücken, neuen Namen eingeben. :: Genau. VS Code kennt dank TypeScript jede Stelle, an der wirklich **diese** Funktion gemeint ist, und ändert nur dort.
+
+=== debuggen | Fehler suchen: Debugging | 20
+TypeScript findet Typfehler. Es findet aber nicht, wenn dein Programm zwar läuft, aber **das Falsche tut**: falsches Ergebnis, falsche Reihenfolge, eine Bedingung verkehrt herum. Solche Denkfehler musst du selbst aufspüren. Das nennt man **Debugging**.
+
+## Methode 1: Hineinschauen mit console.log
+
+Die einfachste und meistgenutzte Methode: an verdächtigen Stellen Werte ausgeben.
+
+```ts
+function durchschnitt(zahlen: number[]): number {
+  let summe = 0;
+  for (const zahl of zahlen) {
+    summe += zahl;
+    console.log("zahl:", zahl, "summe:", summe); // Zwischenstand prüfen
+  }
+  return summe / zahlen.length;
+}
+
+console.log(durchschnitt([4, 5, 6]));
+```
+
+Schreibe immer ein Etikett dazu (`"summe:"`), sonst weisst du bei zehn Ausgaben nicht mehr, welche Zahl was ist. Eine praktische Kurzform: Mit geschweiften Klammern gibst du Name und Wert zusammen aus.
+
+```ts
+const punkte = 42;
+const name = "Mia";
+console.log({ punkte, name }); // { punkte: 42, name: 'Mia' }
+```
+
+Vergiss nicht, die Ausgaben danach wieder zu entfernen.
+
+## Methode 2: Systematisch eingrenzen
+
+Raten ist langsam. Besser:
+
+1. **Was erwarte ich?** Formuliere es konkret: «Für `[4, 5, 6]` sollte 5 herauskommen.»
+2. **Was kommt tatsächlich?** Programm ausführen, Ergebnis vergleichen.
+3. **Wo weicht es zum ersten Mal ab?** Gib Zwischenwerte aus und finde die erste Stelle, an der etwas anders ist als gedacht.
+4. **Warum?** Jetzt erst die Ursache suchen – in einem kleinen Stück Code statt im ganzen Programm.
+
+## Methode 3: Der Debugger von VS Code
+
+Mit dem Debugger hältst du dein Programm an einer beliebigen Zeile an und schaust dir **alle** Variablen an – ohne ein einziges `console.log`.
+
+1. Klicke links neben eine Zeilennummer. Es erscheint ein roter Punkt: ein **Haltepunkt** (Breakpoint).
+2. Öffne die Befehlspalette ([[Strg]] + [[Shift]] + [[P]]) und wähle **Debug: JavaScript Debug Terminal**. Es öffnet sich ein besonderes Terminal.
+3. Starte dein Programm dort wie gewohnt: `node src/main.ts`.
+4. Das Programm hält am Haltepunkt an. Links siehst du alle Variablen mit ihren aktuellen Werten. Oder fahre im Code mit der Maus über einen Namen.
+
+Oben erscheint eine kleine Leiste mit Knöpfen:
+
+| Knopf | Taste | Wirkung |
+| --- | --- | --- |
+| Weiter | [[F5]] | bis zum nächsten Haltepunkt laufen |
+| Prozedurschritt (Step Over) | [[F10]] | eine Zeile ausführen |
+| Einzelschritt (Step Into) | [[F11]] | in die aufgerufene Funktion hineingehen |
+| Beenden | [[Shift]] + [[F5]] | Programm stoppen |
+
+Mit [[F10]] gehst du dein Programm Zeile für Zeile durch und siehst zu, wie sich die Werte ändern. Für Schleifen und verschachtelte Bedingungen ist das unschlagbar.
+
+## Automatisch neu starten
+
+Zwei Befehle, die das ständige Neustarten überflüssig machen. Öffne dafür zwei Terminals (mit dem **+** oben rechts im Terminal-Bereich):
+
+```bash
+node --watch src/main.ts
+```
+
+Führt die Datei bei jedem Speichern automatisch neu aus.
+
+```bash
+npx tsc --watch
+```
+
+Prüft das ganze Projekt bei jedem Speichern neu. Beide beendest du mit [[Strg]] + [[C]].
+
+--- code debug-rabatt | Einen Denkfehler finden
+Diese Funktion soll den Gesamtpreis eines Warenkorbs berechnen. Ab einem Zwischentotal von **100 Franken oder mehr** gibt es 10 % Rabatt.
+
+TypeScript meldet keinen Fehler – aber die Ergebnisse stimmen nicht. In der Funktion stecken **zwei** Denkfehler. Finde sie, zum Beispiel mit `console.log`, und korrigiere sie.
+
+Erwartet: `gesamtpreis([40, 60])` ergibt `90`, `gesamtpreis([10, 20])` ergibt `30`.
+@starter
+function gesamtpreis(preise: number[]): number {
+  let total = 0;
+  for (const preis of preise) {
+    total = preis;
+  }
+  if (total > 100) {
+    total = total * 0.9;
+  }
+  return total;
+}
+
+console.log(gesamtpreis([40, 60]));
+console.log(gesamtpreis([10, 20]));
+@solution
+function gesamtpreis(preise: number[]): number {
+  let total = 0;
+  for (const preis of preise) {
+    total += preis;
+  }
+  if (total >= 100) {
+    total = total * 0.9;
+  }
+  return total;
+}
+
+console.log(gesamtpreis([40, 60]));
+console.log(gesamtpreis([10, 20]));
+@tests
+fn gesamtpreis(number[]): number
+run gesamtpreis([10, 20]) === 30 :: `gesamtpreis([10, 20])` ergibt `30` (kein Rabatt)
+run gesamtpreis([40, 60]) === 90 :: `gesamtpreis([40, 60])` ergibt `90` (genau 100 → Rabatt) ?? «100 oder mehr» schliesst die 100 mit ein.
+run gesamtpreis([50, 49]) === 99 :: `gesamtpreis([50, 49])` ergibt `99` (knapp kein Rabatt)
+run gesamtpreis([200]) === 180 && gesamtpreis([]) === 0 :: Auch `[200]` und der leere Warenkorb stimmen
+noout total: :: Die Hilfsausgaben sind wieder entfernt
+@hints
+- Gib in der Schleife `total` aus: `console.log("total:", total);`. Wird wirklich aufsummiert?
+- Fehler 1: `total = preis;` **ersetzt** das Total jedes Mal. Gemeint ist «dazuzählen».
+- Fehler 2: «100 oder mehr» heisst `>=`, nicht `>`. Genau solche Grenzfälle sollte man immer eigens testen.
+@after
+Zwei Klassiker: `=` statt `+=`, und `>` statt `>=`. TypeScript kann solche Fehler nicht finden, weil der Code technisch völlig in Ordnung ist. Dagegen hilft nur: mit konkreten Beispielen testen – besonders an den Grenzen.
+
+--- task debug-task | Den Debugger ausprobieren
+Probiere den Debugger einmal in `ts-lernen` aus. Wer ihn einmal benutzt hat, greift später viel schneller dazu.
+[ ] Du hast in einer Schleife einen Haltepunkt gesetzt (roter Punkt links neben der Zeilennummer).
+[ ] Du hast das «JavaScript Debug Terminal» geöffnet und dein Programm dort gestartet.
+[ ] Das Programm hat am Haltepunkt angehalten und du hast die Variablen angesehen.
+[ ] Du bist mit [[F10]] einige Zeilen weitergegangen.
+[ ] Du hast `node --watch src/main.ts` ausprobiert und mit [[Strg]] + [[C]] wieder beendet.
