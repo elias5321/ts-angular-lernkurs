@@ -1,0 +1,344 @@
+#part start | Los geht's | Wie der Kurs funktioniert, was TypeScript und Angular überhaupt sind, und wie du deinen Computer einrichtest.
+
+=== willkommen | Willkommen – so funktioniert der Kurs | 10
+Schön, dass du da bist. In diesem Kurs lernst du Schritt für Schritt **TypeScript** und danach **Angular** – so, dass du am Ende eine eigene kleine Web-App in VS Code bauen kannst.
+
+Du musst dafür fast nichts können. Wenn du in der Schule gerade mit JavaScript angefangen hast, reicht das völlig. Alles Wichtige wird hier noch einmal von vorn erklärt.
+
+## So ist jede Lektion aufgebaut
+
+1. **Erklärung:** ein kurzer Text mit Beispielen.
+2. **Übung:** Du schreibst selbst Code, direkt hier auf der Seite.
+3. **Rückmeldung:** Ein Klick auf «Ausführen & prüfen» zeigt dir sofort, was stimmt, was noch fehlt und was du schöner lösen könntest.
+
+Links siehst du den Kursplan. Ein grüner Haken bedeutet: Lektion abgeschlossen. Du kannst jederzeit springen, aber am meisten lernst du, wenn du der Reihe nach vorgehst – jede Lektion baut auf der vorherigen auf.
+
+## Der Editor
+
+Der Editor in den Übungen verhält sich ähnlich wie VS Code:
+
+- Fehler werden schon **beim Tippen** rot unterschlängelt.
+- Unter «Probleme» steht, was TypeScript stört – auf Deutsch erklärt.
+- Unter «Ausgabe» siehst du, was dein Programm ausgibt.
+- Mit [[Strg]] + [[Enter]] (Mac: [[Cmd]] + [[Enter]]) startest du die Prüfung ohne Maus.
+
+> [!TIP] Wenn du nicht weiterkommst
+> Jede Übung hat **Tipps**, die du nacheinander aufdecken kannst. Erst wenn die nicht helfen, lohnt sich ein Blick in die **Lösung**. Und falls unter der Übung ein Feld «Claude um Feedback bitten» erscheint, kannst du dort Fragen zu deinem Code stellen.
+
+## Dein erstes Programm
+
+Der Befehl `console.log(...)` gibt etwas aus. Was in den Klammern steht, erscheint in der Ausgabe. Text schreibt man dabei in Anführungszeichen:
+
+```ts
+console.log("Guten Morgen!");
+console.log(3 + 4);
+```
+
+Fährst du mit der Maus über ein Beispiel, erscheint der Knopf «In der Spielwiese öffnen». Die Spielwiese ist ein leeres Blatt, auf dem du alles gefahrlos ausprobieren kannst.
+
+--- code hallo-welt | Hallo Welt
+Ändere den Text so, dass dein Programm genau `Hallo Welt!` ausgibt. Klicke dann auf «Ausführen & prüfen».
+@starter
+console.log("...");
+@solution
+console.log("Hallo Welt!");
+@tests
+out Hallo Welt!
+@hints
+- Ersetze die drei Punkte zwischen den Anführungszeichen durch `Hallo Welt!`. Achte auf das grosse H, das grosse W und das Ausrufezeichen.
+@after
+`console.log(...)` ist dein wichtigstes Werkzeug zum Nachschauen: Damit machst du sichtbar, was in deinem Programm gerade passiert.
+
+--- text
+## Fehler sind normal
+
+Programmieren heisst: Fehler machen, Meldung lesen, verbessern. Das geht Profis genauso. Der grosse Vorteil von TypeScript ist, dass es dir viele Fehler zeigt, **bevor** das Programm überhaupt läuft.
+
+In der nächsten Übung steckt absichtlich ein Fehler. Schau dir an, wie der Editor ihn markiert, und lies die Erklärung unter «Probleme».
+
+--- code erster-fehler | Deinen ersten Fehler beheben
+In diesem Programm soll `lieblingszahl` eine **Zahl** sein. Jemand hat aber einen Text hineingeschrieben.
+
+Sorge dafür, dass `lieblingszahl` den Wert `7` hat (als Zahl, ohne Anführungszeichen).
+@starter
+const lieblingszahl: number = "sieben";
+console.log(lieblingszahl);
+@solution
+const lieblingszahl: number = 7;
+console.log(lieblingszahl);
+@tests
+var lieblingszahl: number
+out 7
+@hints
+- `: number` bedeutet: «Hier gehört eine Zahl hinein.» `"sieben"` ist aber ein Text, weil es in Anführungszeichen steht.
+- Ersetze `"sieben"` durch `7` – ganz ohne Anführungszeichen.
+@after
+Das war schon der Kern von TypeScript: Du sagst, **welche Art von Wert** irgendwo hingehört (hier `number`), und TypeScript passt auf, dass du dich daran hältst. Wie das genau geht, lernst du ab Teil 2.
+
+=== was-ist-typescript | Was sind TypeScript und Angular? | 10
+Bevor du loslegst, ein kurzer Überblick: Was lernst du hier eigentlich, und wie hängt das zusammen?
+
+## JavaScript
+
+JavaScript ist die Sprache, die jeder Browser versteht. Damit macht man Webseiten lebendig: Knöpfe reagieren, Listen werden gefiltert, Daten werden nachgeladen.
+
+JavaScript ist sehr locker. Es lässt fast alles durchgehen und meldet Fehler oft erst, wenn das Programm schon läuft – manchmal sogar gar nicht:
+
+```js
+let preis = 20;
+preis = "zwanzig";        // erlaubt, obwohl es jetzt ein Text ist
+console.log(preis * 2);   // NaN ("keine Zahl") – aber keine Fehlermeldung
+```
+
+## TypeScript
+
+TypeScript ist **JavaScript plus Typen**. Ein Typ beschreibt, was für ein Wert etwas ist: eine Zahl, ein Text, eine Liste von Namen …
+
+Derselbe Code in TypeScript:
+
+```ts error
+let preis = 20;
+preis = "zwanzig";
+console.log(preis * 2);
+```
+
+Hier meldet TypeScript sofort: In `preis` steckt eine Zahl, also darfst du keinen Text hineinlegen. Der Fehler wird gefunden, **während du tippst** – nicht erst, wenn jemand deine Webseite benutzt.
+
+Wichtig zu wissen:
+
+- Alles, was du in JavaScript lernst, gilt auch in TypeScript. Du lernst also nichts doppelt.
+- Der Browser versteht kein TypeScript. Deshalb wird TypeScript vor dem Ausführen in JavaScript **übersetzt** (man sagt auch «kompiliert»). Dabei werden die Typen einfach entfernt.
+- Die Typen helfen also nur dir beim Schreiben – aber da helfen sie enorm. VS Code kann dir dank der Typen Vorschläge machen, Tippfehler finden und Dinge automatisch umbenennen.
+
+## Angular
+
+Angular ist ein **Framework** für Web-Apps, entwickelt von Google. Ein Framework ist ein Baukasten: Es gibt dir fertige Teile und eine feste Ordnung vor, damit du grosse Anwendungen bauen kannst, ohne im Chaos zu versinken.
+
+Angular wird komplett in TypeScript geschrieben. Darum lernst du zuerst TypeScript – und zwar gründlich. Wer TypeScript kann, findet Angular später viel leichter.
+
+| Begriff | Was es ist | Wofür du es brauchst |
+| --- | --- | --- |
+| JavaScript | Programmiersprache des Browsers | Grundlage von allem |
+| TypeScript | JavaScript + Typen | Fehler früh finden, bessere Hilfe im Editor |
+| Angular | Framework für Web-Apps | Ganze Anwendungen aus Bausteinen bauen |
+| VS Code | Editor (Programm zum Code-Schreiben) | Dein Werkzeug auf dem Computer |
+| Node.js | Führt JavaScript ausserhalb des Browsers aus | Wird für die Werkzeuge von TypeScript und Angular gebraucht |
+
+--- quiz quiz-ts-1
+Was passiert mit den Typen, wenn TypeScript in JavaScript übersetzt wird?
+( ) Sie werden in spezielle JavaScript-Befehle umgewandelt, die im Browser mitlaufen. :: Nein – der Browser bekommt die Typen nie zu sehen. Sie werden beim Übersetzen einfach entfernt.
+(x) Sie werden entfernt. Übrig bleibt normales JavaScript. :: Genau. Typen sind eine Hilfe beim Schreiben. Im laufenden Programm gibt es sie nicht mehr.
+( ) Der Browser prüft sie, während das Programm läuft. :: Nein, der Browser versteht nur JavaScript. Die Prüfung passiert vorher, in deinem Editor und beim Übersetzen.
+
+--- quiz quiz-ts-2
+Warum lernst du in diesem Kurs zuerst TypeScript und erst danach Angular?
+( ) Weil Angular nur ein anderes Wort für TypeScript ist. :: Nein. TypeScript ist eine Sprache, Angular ein Baukasten für Web-Apps, der diese Sprache benutzt.
+( ) Weil man TypeScript-Programme ohne Angular gar nicht ausführen kann. :: Doch, das geht – du machst das hier im Kurs ständig.
+(x) Weil Angular-Apps in TypeScript geschrieben werden. :: Richtig. Angular setzt TypeScript voraus. Mit einer sicheren Grundlage in der Sprache musst du später nur noch den Baukasten lernen.
+
+=== einrichten | Deinen Computer einrichten | 25
+Alle Übungen kannst du hier im Browser lösen. Trotzdem solltest du **von Anfang an auch auf deinem eigenen Computer** arbeiten: Dort entstehen später deine echten Projekte, und nur dort läuft Angular.
+
+Du brauchst zwei Programme. Beide sind kostenlos.
+
+## 1. Node.js installieren
+
+Node.js führt JavaScript ausserhalb des Browsers aus. Die Werkzeuge von TypeScript und Angular brauchen es. Mit Node.js kommt automatisch **npm** mit – ein Programm, das Pakete (fertigen Code anderer Leute) herunterlädt.
+
+1. Öffne [nodejs.org](https://nodejs.org).
+2. Lade die Version herunter, bei der **LTS** steht. LTS bedeutet «Long Term Support», also die stabile Version.
+3. Starte die heruntergeladene Datei und klicke dich durch die Installation. Die Standard-Einstellungen passen.
+
+## 2. Visual Studio Code installieren
+
+VS Code ist der Editor, mit dem die meisten Leute TypeScript und Angular schreiben.
+
+1. Öffne [code.visualstudio.com](https://code.visualstudio.com).
+2. Lade VS Code für dein Betriebssystem herunter und installiere es.
+
+> [!TIP] VS Code auf Deutsch
+> VS Code ist zuerst auf Englisch. Wenn du es lieber auf Deutsch hast: Drücke [[Strg]] + [[Shift]] + [[P]] (Mac: [[Cmd]] + [[Shift]] + [[P]]), tippe `Configure Display Language` und wähle Deutsch. In diesem Kurs stehen die Menünamen auf Deutsch, die englischen in Klammern dahinter.
+
+## 3. Das Terminal kennenlernen
+
+Das Terminal ist ein Fenster, in dem du Befehle eintippst, statt zu klicken. Das wirkt am Anfang altmodisch, ist aber der normale Weg, um Projekte zu erstellen und zu starten.
+
+In VS Code öffnest du es über das Menü **Terminal → Neues Terminal** (New Terminal). Es erscheint unten im Fenster.
+
+Tippe dort diese beiden Befehle ein, jeweils gefolgt von [[Enter]]:
+
+```bash
+node --version
+```
+
+```bash
+npm --version
+```
+
+Wenn bei beiden eine Versionsnummer erscheint (zum Beispiel `v24.11.0`), ist alles richtig installiert. Die genaue Nummer ist egal; bei Node.js sollte vorne mindestens eine 22 stehen.
+
+> [!WARN] Erscheint «Befehl nicht gefunden»?
+> Dann hat das Terminal noch nicht mitbekommen, dass Node.js installiert wurde. Schliesse VS Code **komplett** und öffne es neu. Hilft das nicht, starte den Computer neu.
+
+> [!WARN] Windows: «Die Ausführung von Skripts ist auf diesem System deaktiviert»
+> Diese Meldung kommt auf manchen Windows-Computern bei `npm` oder später bei `ng`. Tippe dann einmalig diesen Befehl ins Terminal und bestätige mit [[Enter]]:
+>
+> ```bash
+> Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+> ```
+>
+> Danach funktionieren die Befehle. Auf einem Schul-Computer kann das gesperrt sein – frag dann deine Lehrperson.
+
+## 4. Nützliche Erweiterungen
+
+VS Code lässt sich mit Erweiterungen (Extensions) ausbauen. Links in der Seitenleiste gibt es dafür ein Symbol mit vier Quadraten. Suche dort nach diesen beiden und klicke auf «Installieren»:
+
+- **Prettier – Code formatter:** bringt deinen Code automatisch in eine saubere Form (Einrückung, Leerzeichen).
+- **Angular Language Service:** hilft dir später in Angular-Dateien. Du kannst sie jetzt schon installieren.
+
+TypeScript selbst musst du in VS Code nicht installieren: VS Code versteht TypeScript von Haus aus.
+
+## Die wichtigsten Terminal-Befehle
+
+| Befehl | Bedeutung |
+| --- | --- |
+| `cd ordnername` | in einen Ordner wechseln («change directory») |
+| `cd ..` | einen Ordner nach oben |
+| `ls` (Windows auch `dir`) | Inhalt des aktuellen Ordners anzeigen |
+| `mkdir ordnername` | neuen Ordner erstellen |
+| [[Strg]] + [[C]] | ein laufendes Programm im Terminal beenden |
+| [[↑]] | den letzten Befehl zurückholen |
+
+--- task einrichten-task | Programme installieren
+Richte jetzt deinen Computer ein. Das dauert etwa 15 Minuten.
+[ ] Node.js (LTS) ist installiert.
+[ ] VS Code ist installiert.
+[ ] Im VS-Code-Terminal zeigt `node --version` eine Versionsnummer an.
+[ ] Im VS-Code-Terminal zeigt `npm --version` eine Versionsnummer an.
+[ ] Die Erweiterungen «Prettier» und «Angular Language Service» sind installiert.
+
+--- quiz quiz-terminal
+Du hast Node.js gerade installiert, aber im Terminal von VS Code kommt bei `node --version` die Meldung, der Befehl sei nicht bekannt. Was probierst du als Erstes?
+( ) Node.js sofort noch einmal installieren. :: Das ist meistens nicht nötig. Das Terminal war nur schon offen, bevor Node.js installiert wurde, und kennt den neuen Befehl noch nicht.
+(x) VS Code komplett schliessen und neu öffnen. :: Genau. Ein Terminal merkt sich beim Start, welche Programme es gibt. Nach einer Installation muss es neu gestartet werden.
+( ) Den Befehl in Grossbuchstaben schreiben. :: Nein, Befehle schreibt man klein. Die Schreibweise war richtig.
+
+=== erstes-projekt | Dein erstes TypeScript-Projekt in VS Code | 25
+Jetzt erstellst du auf deinem Computer ein kleines TypeScript-Projekt. In diesem Projekt kannst du während des ganzen Kurses alles nachbauen, was du hier im Browser lernst.
+
+## Schritt 1: Projektordner erstellen
+
+Erstelle irgendwo (zum Beispiel in «Dokumente») einen Ordner namens `ts-lernen`. Öffne ihn in VS Code über **Datei → Ordner öffnen** (Open Folder).
+
+> [!WARN] Immer den Ordner öffnen, nicht einzelne Dateien
+> VS Code arbeitet mit ganzen Ordnern. Wenn du nur eine einzelne Datei öffnest, funktionieren viele Dinge nicht richtig – zum Beispiel findet das Terminal dein Projekt nicht.
+
+## Schritt 2: Projekt vorbereiten
+
+Öffne das Terminal (**Terminal → Neues Terminal**) und führe nacheinander diese drei Befehle aus:
+
+```bash
+npm init -y
+```
+
+Das erstellt die Datei `package.json`. Sie ist der «Ausweis» deines Projekts: Name, Version und welche Pakete es braucht.
+
+```bash
+npm pkg set type=module
+```
+
+Das trägt in `package.json` ein, dass dein Projekt die moderne Art von JavaScript-Dateien verwendet (Module – dazu später mehr).
+
+```bash
+npm install --save-dev typescript
+```
+
+Das lädt TypeScript herunter. Es landet im Ordner `node_modules`. Diesen Ordner fasst du nie von Hand an – er gehört npm.
+
+## Schritt 3: TypeScript einstellen
+
+Erstelle im Projektordner eine neue Datei mit dem Namen `tsconfig.json` (links im Explorer: Rechtsklick → Neue Datei). In dieser Datei steht, wie TypeScript deinen Code prüfen soll. Kopiere das hinein:
+
+```json title=tsconfig.json
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "nodenext",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src"]
+}
+```
+
+Du musst das jetzt nicht im Detail verstehen. Das Wichtigste:
+
+- `"strict": true` schaltet die gründliche Prüfung ein. Genau so prüft auch dieser Kurs und später Angular.
+- `"noEmit": true` heisst: nur prüfen, keine JavaScript-Dateien erzeugen.
+- `"include": ["src"]` heisst: Dein Code liegt im Ordner `src`.
+- Die beiden letzten Einstellungen sorgen dafür, dass das Importieren zwischen Dateien später genau so geprüft wird, wie Node.js es braucht.
+
+## Schritt 4: Die erste Datei
+
+Erstelle einen Ordner `src` und darin die Datei `hallo.ts`. Die Endung `.ts` steht für TypeScript. Schreibe hinein:
+
+```ts title=src/hallo.ts
+const name: string = "Welt";
+console.log(`Hallo ${name}!`);
+```
+
+Speichere mit [[Strg]] + [[S]] (Mac: [[Cmd]] + [[S]]).
+
+## Schritt 5: Ausführen
+
+```bash
+node src/hallo.ts
+```
+
+Im Terminal erscheint `Hallo Welt!`. Aktuelle Versionen von Node.js können TypeScript-Dateien direkt ausführen: Sie werfen die Typen einfach weg und führen den Rest aus.
+
+## Schritt 6: Prüfen
+
+Achtung: `node` führt nur aus, es **prüft keine Typen**. Dafür ist der TypeScript-Compiler `tsc` da:
+
+```bash
+npx tsc
+```
+
+Erscheint nichts, ist alles in Ordnung. Baue jetzt absichtlich einen Fehler ein – ändere die erste Zeile zu `const name: string = 42;` – und führe `npx tsc` nochmal aus. Du bekommst eine Meldung wie:
+
+```text
+src/hallo.ts(1,7): error TS2322: Type 'number' is not assignable to type 'string'.
+```
+
+So liest du sie: Datei `src/hallo.ts`, Zeile 1, Spalte 7, Fehlernummer TS2322, und dann die Beschreibung: «Typ `number` kann dem Typ `string` nicht zugewiesen werden.» Dieselbe Meldung zeigt dir VS Code auch direkt im Editor als rote Schlangenlinie. Fahre mit der Maus darüber, um sie zu lesen.
+
+> [!VSCODE] Alle Probleme auf einen Blick
+> Unten in VS Code gibt es den Bereich **Probleme** (Problems). Du öffnest ihn mit [[Strg]] + [[Shift]] + [[M]] (Mac: [[Cmd]] + [[Shift]] + [[M]]). Dort stehen alle Fehler des Projekts in einer Liste – genau wie hier im Kurs unter «Probleme».
+
+> [!NOTE] Fehlermeldungen auf Englisch
+> Die Meldungen von TypeScript sind auf Englisch (ausser du hast VS Code auf Deutsch gestellt). In diesem Kurs siehst du immer beides: die deutsche Erklärung und das englische Original. So gewöhnst du dich nebenbei an die englischen Begriffe, die du auch beim Suchen im Internet brauchst.
+
+--- task erstes-projekt-task | Projekt «ts-lernen» anlegen
+Baue das Projekt jetzt auf deinem Computer nach.
+[ ] Der Ordner `ts-lernen` ist in VS Code geöffnet.
+[ ] `npm init -y`, `npm pkg set type=module` und `npm install --save-dev typescript` sind ausgeführt.
+[ ] Die Datei `tsconfig.json` existiert mit dem Inhalt von oben.
+[ ] `node src/hallo.ts` gibt `Hallo Welt!` aus.
+[ ] Du hast absichtlich einen Fehler eingebaut, ihn mit `npx tsc` gesehen und wieder behoben.
+
+--- quiz quiz-node-tsc
+Du führst `node src/hallo.ts` aus und das Programm läuft ohne Meldung durch. Heisst das, dass dein Code keine Typfehler hat?
+( ) Ja – sonst hätte Node.js eine Fehlermeldung ausgegeben. :: Leider nein. Node.js entfernt die Typen nur und führt den Rest aus. Geprüft wird dabei nichts.
+(x) Nein. Node.js prüft keine Typen. Dafür brauche ich `npx tsc` oder die roten Linien in VS Code. :: Richtig. Ausführen und Prüfen sind zwei verschiedene Dinge. VS Code prüft laufend im Hintergrund, `npx tsc` prüft das ganze Projekt auf Befehl.
+( ) Das kommt darauf an, ob die Datei gespeichert war. :: Speichern ist wichtig, hat aber nichts mit der Typprüfung zu tun.
+
+--- text
+> [!MERKE] Dein Arbeitsablauf ab jetzt
+> 1. Lektion hier im Browser durcharbeiten.
+> 2. Das Gelernte in deinem Projekt `ts-lernen` in einer neuen Datei unter `src` ausprobieren.
+> 3. Mit `node src/dateiname.ts` ausführen, mit `npx tsc` prüfen.
+>
+> Wer beides macht, lernt deutlich schneller: Im Browser bekommst du die Rückmeldung, in VS Code die Routine.
