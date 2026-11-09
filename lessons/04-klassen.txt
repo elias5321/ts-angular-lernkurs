@@ -1,0 +1,1331 @@
+#part klassen | Klassen, Module und Warten | Die letzten Bausteine vor Angular: Klassen (daraus besteht jede Angular-Komponente), Code auf mehrere Dateien verteilen und mit Dingen umgehen, die Zeit brauchen.
+
+=== klassen | Klassen | 20
+Bisher hast du Daten (Objekte) und Verhalten (Funktionen) getrennt geschrieben. Eine **Klasse** fasst beides zusammen: Sie ist ein Bauplan für Objekte, die Daten **und** dazugehörige Funktionen haben.
+
+Für Angular ist das zentral: Jede Komponente, also jeder Baustein deiner App, ist eine Klasse.
+
+## Eine Klasse schreiben
+
+```ts
+class Zaehler {
+  wert: number = 0;
+
+  erhoehe(): void {
+    this.wert++;
+  }
+}
+
+const klicks = new Zaehler();
+klicks.erhoehe();
+klicks.erhoehe();
+console.log(klicks.wert); // 2
+```
+
+Was hier passiert:
+
+- `class Zaehler { ... }` definiert den Bauplan. Klassennamen beginnen gross.
+- `wert: number = 0;` ist eine **Eigenschaft** (englisch «property») mit Typ und Startwert. Davor steht kein `let` oder `const`.
+- `erhoehe(): void { ... }` ist eine **Methode**: eine Funktion, die zur Klasse gehört. Davor steht kein `function`.
+- `new Zaehler()` baut nach dem Bauplan ein Objekt. Man nennt es eine **Instanz**.
+
+## this
+
+Innerhalb einer Klasse greifst du mit `this.` auf die eigenen Eigenschaften und Methoden zu. `this` bedeutet «dieses Objekt hier».
+
+Das `this.` darf nicht fehlen. Nur `wert++` zu schreiben, ist ein Fehler – TypeScript sucht dann nach einer gewöhnlichen Variable namens `wert` und findet keine.
+
+Jede Instanz hat ihre eigenen Werte:
+
+```ts
+class Zaehler {
+  wert: number = 0;
+
+  erhoehe(): void {
+    this.wert++;
+  }
+}
+
+const a = new Zaehler();
+const b = new Zaehler();
+a.erhoehe();
+console.log(a.wert, b.wert); // 1 0
+```
+
+## Der constructor
+
+Oft braucht ein Objekt beim Erstellen Startwerte. Dafür gibt es eine besondere Methode namens `constructor`. Sie läuft automatisch bei `new`:
+
+```ts
+class Spieler {
+  name: string;
+  punkte: number = 0;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  gewinnePunkte(anzahl: number): void {
+    this.punkte += anzahl;
+  }
+
+  beschreibung(): string {
+    return `${this.name}: ${this.punkte} Punkte`;
+  }
+}
+
+const mia = new Spieler("Mia");
+mia.gewinnePunkte(50);
+console.log(mia.beschreibung()); // Mia: 50 Punkte
+```
+
+Die Zeile `this.name = name;` sieht seltsam aus, ist aber logisch: Links steht die Eigenschaft des Objekts (`this.name`), rechts der Parameter des Constructors (`name`).
+
+TypeScript prüft, dass jede Eigenschaft einen Wert bekommt – entweder direkt bei der Deklaration (`punkte: number = 0`) oder im Constructor (`this.name = name`). Vergisst du das, erscheint die Meldung *«Property has no initializer»*.
+
+## Eine Klasse ist auch ein Typ
+
+Der Klassenname lässt sich wie ein Interface als Typ verwenden:
+
+```ts
+class Spieler {
+  name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+function begruesse(spieler: Spieler): string {
+  return `Willkommen, ${spieler.name}!`;
+}
+
+const team: Spieler[] = [new Spieler("Mia"), new Spieler("Noah")];
+console.log(begruesse(team[0]));
+```
+
+## Interface oder Klasse?
+
+- **Interface:** nur die Form von Daten, ohne Verhalten. Verschwindet beim Übersetzen. Ideal für Daten wie `Buch` oder `Todo`.
+- **Klasse:** Daten **mit** Methoden. Existiert auch im laufenden Programm. In Angular sind Komponenten und Services Klassen.
+
+--- code klasse-zaehler | Deine erste Klasse
+Schreibe eine Klasse `Punktestand` mit:
+
+- einer Eigenschaft `punkte` (Zahl, Startwert `0`)
+- einer Methode `treffer()`, die `punkte` um 10 erhöht
+- einer Methode `zuruecksetzen()`, die `punkte` wieder auf 0 setzt
+@starter
+// Schreibe hier die Klasse Punktestand
+
+const stand = new Punktestand();
+stand.treffer();
+stand.treffer();
+console.log(stand.punkte);
+@solution
+// Schreibe hier die Klasse Punktestand
+class Punktestand {
+  punkte: number = 0;
+
+  treffer(): void {
+    this.punkte += 10;
+  }
+
+  zuruecksetzen(): void {
+    this.punkte = 0;
+  }
+}
+
+const stand = new Punktestand();
+stand.treffer();
+stand.treffer();
+console.log(stand.punkte);
+@tests
+exists class Punktestand
+shape Punktestand { punkte: number; treffer: () => void; zuruecksetzen: () => void }
+run new Punktestand().punkte === 0 :: Ein neuer `Punktestand` beginnt bei `0`
+run (() => { const p = new Punktestand(); p.treffer(); p.treffer(); p.treffer(); return p.punkte === 30; })() :: Drei Treffer ergeben `30`
+run (() => { const p = new Punktestand(); p.treffer(); p.zuruecksetzen(); return p.punkte === 0; })() :: `zuruecksetzen()` setzt auf `0`
+run (() => { const a = new Punktestand(); const b = new Punktestand(); a.treffer(); return b.punkte === 0; })() :: Zwei Instanzen beeinflussen sich nicht
+@hints
+- Die Eigenschaft: `punkte: number = 0;` (ohne `let`).
+- Eine Methode: `treffer(): void { this.punkte += 10; }` (ohne `function`).
+- Vergiss das `this.` nicht – ohne findet TypeScript `punkte` nicht.
+@after
+Eigenschaften ohne `let`, Methoden ohne `function`, Zugriff mit `this.` – das sind die drei Dinge, die bei Klassen anders sind als bisher.
+
+--- code klasse-rechteck | Eine Klasse mit constructor
+Schreibe eine Klasse `Rechteck`:
+
+- Der Constructor bekommt `breite` und `hoehe` (Zahlen) und speichert sie in gleichnamigen Eigenschaften.
+- `flaeche()` gibt Breite mal Höhe zurück.
+- `istQuadrat()` gibt zurück, ob Breite und Höhe gleich sind.
+@starter
+// Schreibe hier die Klasse Rechteck
+
+const r = new Rechteck(4, 5);
+console.log(r.flaeche(), r.istQuadrat());
+@solution
+// Schreibe hier die Klasse Rechteck
+class Rechteck {
+  breite: number;
+  hoehe: number;
+
+  constructor(breite: number, hoehe: number) {
+    this.breite = breite;
+    this.hoehe = hoehe;
+  }
+
+  flaeche(): number {
+    return this.breite * this.hoehe;
+  }
+
+  istQuadrat(): boolean {
+    return this.breite === this.hoehe;
+  }
+}
+
+const r = new Rechteck(4, 5);
+console.log(r.flaeche(), r.istQuadrat());
+@tests
+exists class Rechteck
+shape Rechteck { breite: number; hoehe: number; flaeche: () => number; istQuadrat: () => boolean }
+run new Rechteck(4, 5).breite === 4 && new Rechteck(4, 5).hoehe === 5 :: Der Constructor speichert `breite` und `hoehe`
+run new Rechteck(4, 5).flaeche() === 20 :: `new Rechteck(4, 5).flaeche()` ergibt `20`
+run new Rechteck(3, 3).istQuadrat() === true && new Rechteck(4, 5).istQuadrat() === false :: `istQuadrat()` stimmt für 3×3 und 4×5
+@hints
+- Deklariere zuerst die Eigenschaften: `breite: number;` und `hoehe: number;`
+- Im Constructor weist du sie zu: `constructor(breite: number, hoehe: number) { this.breite = breite; this.hoehe = hoehe; }`
+- Die Methoden benutzen `this.breite` und `this.hoehe`.
+@after
+Der Constructor nimmt Startwerte entgegen und legt sie im Objekt ab. Danach können alle Methoden über `this` darauf zugreifen.
+
+--- quiz quiz-this
+In einer Klasse steht `name: string = "Mia";` und eine Methode `hallo(): string { return "Hallo " + name; }`. Was stimmt?
+( ) Das funktioniert, weil `name` in derselben Klasse steht. :: Leider nein. Anders als in manchen anderen Sprachen muss man in TypeScript immer `this.` schreiben.
+(x) Das ist ein Fehler. Es muss `this.name` heissen. :: Richtig. Ohne `this.` sucht TypeScript nach einer gewöhnlichen Variable `name` – die Eigenschaft der Klasse findet es so nicht.
+( ) Das ist ein Fehler, weil Methoden keine Texte zurückgeben dürfen. :: Methoden dürfen alles zurückgeben, was auch Funktionen zurückgeben dürfen.
+
+=== sichtbarkeit | Sichtbarkeit: private, protected und readonly | 15
+Nicht alles in einer Klasse soll von aussen erreichbar sein. Ein Bankkonto soll seinen Kontostand nicht einfach überschreiben lassen – Änderungen sollen nur über `einzahlen` und `abheben` möglich sein. Dafür gibt es **Zugriffsmodifizierer**.
+
+## public, private, protected
+
+| Wort | Wer darf zugreifen? |
+| --- | --- |
+| `public` | alle (das ist der Standard, wenn nichts dasteht) |
+| `private` | nur die Klasse selbst |
+| `protected` | die Klasse selbst und Klassen, die von ihr erben (nächste Lektion) |
+
+```ts
+class Konto {
+  private stand: number = 0;
+
+  einzahlen(betrag: number): void {
+    if (betrag > 0) {
+      this.stand += betrag;
+    }
+  }
+
+  kontostand(): number {
+    return this.stand;
+  }
+}
+
+const konto = new Konto();
+konto.einzahlen(100);
+console.log(konto.kontostand()); // 100
+```
+
+Ein direkter Zugriff von aussen wird abgelehnt:
+
+```ts error
+class Konto {
+  private stand: number = 0;
+}
+
+const konto = new Konto();
+konto.stand = 1000000;
+```
+
+So kann niemand den Kontostand an den Regeln vorbei verändern. Die Klasse behält die Kontrolle über ihre Daten. Dieses Prinzip heisst **Kapselung**.
+
+## readonly
+
+`readonly` kennst du von Interfaces. In Klassen bedeutet es: Die Eigenschaft bekommt ihren Wert bei der Deklaration oder im Constructor – und danach nie wieder einen anderen.
+
+```ts
+class Konto {
+  readonly inhaber: string;
+  private stand: number = 0;
+
+  constructor(inhaber: string) {
+    this.inhaber = inhaber;
+  }
+
+  kontostand(): number {
+    return this.stand;
+  }
+}
+
+const konto = new Konto("Mia");
+console.log(konto.inhaber, konto.kontostand());
+```
+
+## Getter: Methoden, die wie Eigenschaften aussehen
+
+Mit `get` schreibst du eine Methode, die man **ohne Klammern** liest. Das eignet sich für berechnete Werte:
+
+```ts
+class Rechteck {
+  breite: number;
+  hoehe: number;
+
+  constructor(breite: number, hoehe: number) {
+    this.breite = breite;
+    this.hoehe = hoehe;
+  }
+
+  get flaeche(): number {
+    return this.breite * this.hoehe;
+  }
+}
+
+const r = new Rechteck(4, 5);
+console.log(r.flaeche); // 20 – ohne Klammern
+```
+
+## Die Kurzschreibweise im Constructor
+
+In vielen Projekten (und in älterem Angular-Code) siehst du diese Abkürzung:
+
+```ts nocheck
+class Konto {
+  constructor(readonly inhaber: string, private stand: number = 0) {}
+}
+```
+
+Steht im Constructor vor einem Parameter `public`, `private`, `protected` oder `readonly`, erzeugt TypeScript automatisch eine gleichnamige Eigenschaft und weist sie zu. Das spart drei Zeilen pro Eigenschaft.
+
+> [!NOTE] Hinweis für dein Projekt ts-lernen
+> Diese Kurzschreibweise ist reines TypeScript ohne Entsprechung in JavaScript. Wenn du eine solche Datei direkt mit `node datei.ts` startest, bekommst du eine Fehlermeldung, weil Node.js hier nicht einfach die Typen wegstreichen kann. Starte die Datei dann mit `node --experimental-transform-types datei.ts` – oder schreib die Eigenschaften aus, wie du es oben gelernt hast.
+
+## So sieht es in Angular aus
+
+In Angular-Komponenten wirst du `protected` und `readonly` oft zusammen sehen:
+
+```ts nocheck
+export class App {
+  protected readonly titel = signal('Meine App');
+}
+```
+
+Du kannst das jetzt lesen: eine Eigenschaft `titel`, die nur die Klasse selbst (und ihr Template) benutzen darf und die nie durch etwas anderes ersetzt wird.
+
+--- code klasse-konto | Ein sicheres Konto
+Schreibe eine Klasse `Konto`:
+
+- `inhaber` – ein Text, **schreibgeschützt**, wird im Constructor übergeben
+- `stand` – eine Zahl, **privat**, Startwert `0`
+- `einzahlen(betrag)` – erhöht den Stand, aber nur wenn der Betrag grösser als 0 ist
+- `abheben(betrag)` – verringert den Stand, aber nur wenn genug Geld da ist. Gibt `true` zurück, wenn es geklappt hat, sonst `false`.
+- `kontostand()` – gibt den aktuellen Stand zurück
+@starter
+// Schreibe hier die Klasse Konto
+
+const konto = new Konto("Mia");
+konto.einzahlen(100);
+console.log(konto.abheben(30), konto.kontostand());
+console.log(konto.abheben(500), konto.kontostand());
+@solution
+// Schreibe hier die Klasse Konto
+class Konto {
+  readonly inhaber: string;
+  private stand: number = 0;
+
+  constructor(inhaber: string) {
+    this.inhaber = inhaber;
+  }
+
+  einzahlen(betrag: number): void {
+    if (betrag > 0) {
+      this.stand += betrag;
+    }
+  }
+
+  abheben(betrag: number): boolean {
+    if (betrag > this.stand) {
+      return false;
+    }
+    this.stand -= betrag;
+    return true;
+  }
+
+  kontostand(): number {
+    return this.stand;
+  }
+}
+
+const konto = new Konto("Mia");
+konto.einzahlen(100);
+console.log(konto.abheben(30), konto.kontostand());
+console.log(konto.abheben(500), konto.kontostand());
+@tests
+shape Konto { readonly inhaber: string; einzahlen: (betrag: number) => void; abheben: (betrag: number) => boolean; kontostand: () => number }
+src /private\s+stand\b/ :: `stand` ist `private`
+run new Konto("Mia").inhaber === "Mia" && new Konto("Mia").kontostand() === 0 :: Ein neues Konto hat den Inhaber und den Stand `0`
+run (() => { const k = new Konto("A"); k.einzahlen(100); k.einzahlen(-50); k.einzahlen(0); return k.kontostand() === 100; })() :: `einzahlen` ignoriert 0 und negative Beträge
+run (() => { const k = new Konto("A"); k.einzahlen(100); return k.abheben(30) === true && k.kontostand() === 70; })() :: `abheben(30)` bei Stand 100 gibt `true` zurück, Stand danach `70`
+run (() => { const k = new Konto("A"); k.einzahlen(100); return k.abheben(500) === false && k.kontostand() === 100; })() :: `abheben(500)` bei Stand 100 gibt `false` zurück, Stand bleibt `100`
+run (() => { const k = new Konto("A"); k.einzahlen(100); return k.abheben(100) === true && k.kontostand() === 0; })() :: Den ganzen Betrag abzuheben ist erlaubt
+@hints
+- Die Eigenschaften: `readonly inhaber: string;` und `private stand: number = 0;`
+- `einzahlen`: `if (betrag > 0) { this.stand += betrag; }`
+- `abheben`: Wenn `betrag > this.stand`, sofort `return false;`. Sonst abziehen und `return true;`
+@after
+Von aussen gibt es keinen Weg, `stand` direkt zu ändern. Jede Änderung geht durch eine Methode, die die Regeln prüft. Genau so arbeiten später deine Angular-Services.
+
+=== vererbung | Vererbung und implements | 15
+Manchmal sind Klassen miteinander verwandt: Ein Auto und ein Velo sind beides Fahrzeuge. Gemeinsames schreibt man dann nur einmal – in einer Elternklasse – und die anderen Klassen **erben** davon.
+
+In Angular schreibst du selten eigene Vererbung. Du solltest das Konzept aber kennen, weil du die Wörter `extends`, `super` und `implements` in fremdem Code antreffen wirst.
+
+## extends
+
+```ts
+class Tier {
+  name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  vorstellen(): string {
+    return `Ich bin ${this.name}.`;
+  }
+}
+
+class Hund extends Tier {
+  bellen(): string {
+    return "Wuff!";
+  }
+}
+
+const rex = new Hund("Rex");
+console.log(rex.vorstellen()); // von Tier geerbt
+console.log(rex.bellen());     // eigene Methode
+```
+
+`Hund extends Tier` bedeutet: Ein Hund kann alles, was ein Tier kann – und zusätzlich bellen.
+
+## Methoden überschreiben
+
+Eine Unterklasse kann eine geerbte Methode durch eine eigene Version ersetzen. Das kennzeichnest du mit `override`. Mit `super.` rufst du die Version der Elternklasse auf:
+
+```ts
+class Tier {
+  name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  vorstellen(): string {
+    return `Ich bin ${this.name}.`;
+  }
+}
+
+class Katze extends Tier {
+  override vorstellen(): string {
+    return `${super.vorstellen()} Miau!`;
+  }
+}
+
+console.log(new Katze("Luna").vorstellen()); // Ich bin Luna. Miau!
+```
+
+## Eigener constructor in der Unterklasse
+
+Braucht die Unterklasse zusätzliche Startwerte, schreibt sie einen eigenen Constructor. Darin **muss** als Erstes `super(...)` stehen – das ruft den Constructor der Elternklasse auf:
+
+```ts
+class Tier {
+  name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+class Vogel extends Tier {
+  spannweite: number;
+
+  constructor(name: string, spannweite: number) {
+    super(name);
+    this.spannweite = spannweite;
+  }
+}
+
+const adler = new Vogel("Adler", 2.2);
+console.log(adler.name, adler.spannweite);
+```
+
+## implements: ein Versprechen abgeben
+
+Mit `implements` verspricht eine Klasse, die Form eines Interfaces zu erfüllen. TypeScript prüft, ob sie das Versprechen hält:
+
+```ts
+interface Druckbar {
+  alsText(): string;
+}
+
+class Rechnung implements Druckbar {
+  betrag: number;
+
+  constructor(betrag: number) {
+    this.betrag = betrag;
+  }
+
+  alsText(): string {
+    return `Rechnung über ${this.betrag} Franken`;
+  }
+}
+
+console.log(new Rechnung(50).alsText());
+```
+
+Fehlt `alsText()`, gibt es einen Fehler. In Angular begegnet dir das zum Beispiel als `export class Profil implements OnInit` – die Klasse verspricht damit, eine Methode `ngOnInit()` zu haben.
+
+--- code vererbung-fahrzeug | Eine Klasse erweitern
+Die Klasse `Fahrzeug` ist gegeben. Schreibe eine Klasse `Auto`, die von `Fahrzeug` erbt:
+
+- Der Constructor bekommt `marke` (Text) und `tueren` (Zahl). `marke` gibt er an die Elternklasse weiter, `tueren` speichert er selbst.
+- `beschreibung()` wird überschrieben: Sie liefert die Beschreibung der Elternklasse und hängt ` mit 5 Türen` an (mit der richtigen Anzahl).
+
+Beispiel: `new Auto("Fiat", 5).beschreibung()` ergibt `Fahrzeug der Marke Fiat mit 5 Türen`.
+@starter
+class Fahrzeug {
+  marke: string;
+
+  constructor(marke: string) {
+    this.marke = marke;
+  }
+
+  beschreibung(): string {
+    return `Fahrzeug der Marke ${this.marke}`;
+  }
+}
+
+// Schreibe hier die Klasse Auto
+
+console.log(new Auto("Fiat", 5).beschreibung());
+@solution
+class Fahrzeug {
+  marke: string;
+
+  constructor(marke: string) {
+    this.marke = marke;
+  }
+
+  beschreibung(): string {
+    return `Fahrzeug der Marke ${this.marke}`;
+  }
+}
+
+// Schreibe hier die Klasse Auto
+class Auto extends Fahrzeug {
+  tueren: number;
+
+  constructor(marke: string, tueren: number) {
+    super(marke);
+    this.tueren = tueren;
+  }
+
+  override beschreibung(): string {
+    return `${super.beschreibung()} mit ${this.tueren} Türen`;
+  }
+}
+
+console.log(new Auto("Fiat", 5).beschreibung());
+@tests
+src /class\s+Auto\s+extends\s+Fahrzeug/ :: `Auto` erbt von `Fahrzeug` (`extends`)
+shape Auto { marke: string; tueren: number; beschreibung: () => string }
+run new Auto("Fiat", 5).marke === "Fiat" && new Auto("Fiat", 5).tueren === 5 :: Der Constructor setzt `marke` und `tueren`
+run new Auto("Fiat", 5).beschreibung() === "Fahrzeug der Marke Fiat mit 5 Türen" :: Die Beschreibung lautet `Fahrzeug der Marke Fiat mit 5 Türen`
+run new Auto("VW", 3).beschreibung() === "Fahrzeug der Marke VW mit 3 Türen" :: Auch mit anderen Werten stimmt sie
+src /super\s*\.\s*beschreibung\s*\(/ :: Die Beschreibung der Elternklasse wird mit `super.beschreibung()` wiederverwendet
+@hints
+- Der Rahmen: `class Auto extends Fahrzeug { tueren: number; ... }`
+- Der Constructor ruft zuerst die Elternklasse auf: `super(marke);` – danach `this.tueren = tueren;`
+- Überschreiben: `` override beschreibung(): string { return `${super.beschreibung()} mit ${this.tueren} Türen`; } ``
+@after
+`extends` zum Erben, `super(...)` im Constructor, `override` und `super.methode()` beim Überschreiben. Mehr steckt hinter Vererbung im Alltag nicht.
+
+--- quiz quiz-implements
+Was bedeutet `class Liste implements Sortierbar`?
+( ) `Liste` erbt allen Code von `Sortierbar`. :: Erben wäre `extends`. Ein Interface enthält gar keinen Code, den man erben könnte.
+(x) `Liste` verspricht, alles zu haben, was das Interface `Sortierbar` verlangt – und TypeScript prüft das. :: Genau. `implements` ist ein überprüftes Versprechen. Der Code muss trotzdem in der Klasse selbst stehen.
+( ) `Sortierbar` wird automatisch in `Liste` eingefügt. :: Nein, es wird nichts eingefügt. Fehlt etwas, bekommst du einen Fehler.
+
+=== module | Module: Code auf Dateien verteilen | 20
+Bis jetzt stand alles in einer Datei. Eine echte App besteht aus Dutzenden oder Hunderten von Dateien. Damit eine Datei benutzen kann, was in einer anderen steht, gibt es **Module** – und die zwei Wörter `export` und `import`.
+
+Jede Angular-Datei beginnt mit `import`-Zeilen. Nach dieser Lektion weisst du genau, was sie bedeuten.
+
+## export: etwas freigeben
+
+Jede Datei ist ein eigenes Modul. Was darin steht, ist zunächst **nur dort** sichtbar. Mit `export` gibst du etwas für andere Dateien frei:
+
+```ts title=mathe.ts
+export const PI = 3.14159;
+
+export function quadrat(zahl: number): number {
+  return zahl * zahl;
+}
+
+function hilfsfunktion(): void {
+  // nicht exportiert: nur in dieser Datei sichtbar
+}
+```
+
+Exportieren kannst du alles, was einen Namen hat: Funktionen, Variablen, Klassen, Interfaces und Typen.
+
+## import: etwas hereinholen
+
+```ts nocheck title=main.ts
+import { PI, quadrat } from "./mathe";
+
+console.log(quadrat(4));
+console.log(PI);
+```
+
+So liest du die erste Zeile: «Hole `PI` und `quadrat` aus der Datei `mathe` im selben Ordner.»
+
+- In den geschweiften Klammern stehen die Namen – genau so geschrieben wie beim `export`. (Das ist dieselbe Schreibweise wie beim Destructuring.)
+- Hinter `from` steht der **Pfad** zur Datei, in Anführungszeichen.
+
+## Pfade verstehen
+
+| Pfad | Bedeutung |
+| --- | --- |
+| `"./mathe"` | Datei `mathe.ts` im **selben** Ordner |
+| `"./daten/buch"` | Datei `buch.ts` im Unterordner `daten` |
+| `"../mathe"` | Datei `mathe.ts` einen Ordner **weiter oben** |
+| `"@angular/core"` | kein Pfad, sondern ein installiertes **Paket** aus `node_modules` |
+
+Der Unterschied ist wichtig: Beginnt der Pfad mit `./` oder `../`, ist es eine eigene Datei. Beginnt er mit einem Namen, ist es ein Paket, das mit npm installiert wurde.
+
+> [!WARN] Mit oder ohne Endung?
+> In Angular-Projekten (und hier im Kurs) schreibt man den Pfad **ohne** `.ts`: `from "./mathe"`. In deinem Projekt `ts-lernen`, das du direkt mit Node.js startest, musst du die Endung **mitschreiben**: `from "./mathe.ts"`. Das liegt daran, dass Node.js die Datei selbst suchen muss, während bei Angular ein Werkzeug die Dateien vorher zusammenbaut.
+
+## Typen importieren
+
+Interfaces und Typen werden genauso exportiert und importiert:
+
+```ts title=todo.ts
+export interface Todo {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+```
+
+```ts nocheck title=main.ts
+import { Todo } from "./todo";
+
+const erstes: Todo = { id: 1, titel: "Mathe", erledigt: false };
+```
+
+Üblich ist: ein Interface oder eine Klasse pro Datei, und die Datei heisst wie der Inhalt (kleingeschrieben).
+
+> [!VSCODE] Imports automatisch einfügen
+> Du musst Import-Zeilen fast nie von Hand schreiben. Tippe einfach den Namen (zum Beispiel `quadrat`) und wähle ihn aus der Vorschlagsliste – VS Code fügt die passende `import`-Zeile oben in der Datei selbst ein. Fehlt ein Import, hilft [[Strg]] + [[.]] (Mac: [[Cmd]] + [[.]]) auf dem rot markierten Namen: «Import hinzufügen».
+
+## Standard-Export
+
+Manchmal siehst du einen Import **ohne** geschweifte Klammern: `import express from "express";`. Das ist ein «Default Export»: Die Datei gibt genau eine Hauptsache frei. In Angular kommt das selten vor. Merke dir nur: mit Klammern = benannter Export (der Normalfall), ohne Klammern = Standard-Export.
+
+--- code module-export | Exportieren und importieren
+Diese Übung hat **zwei Dateien** – oben im Editor siehst du zwei Reiter.
+
+1. In `preise.ts`: Gib die Konstante `MWST` und die Funktion `brutto` für andere Dateien frei.
+2. In `main.ts`: Importiere beide aus `./preise`. Berechne dann `endpreis` als `brutto(100)` und gib ihn aus.
+@starter preise.ts
+const MWST = 0.081;
+
+function brutto(netto: number): number {
+  return netto * (1 + MWST);
+}
+@starter main.ts
+// Importiere MWST und brutto aus "./preise"
+
+const endpreis = 0;
+
+console.log(`Mit ${MWST * 100} % Mehrwertsteuer: ${endpreis}`);
+@solution preise.ts
+export const MWST = 0.081;
+
+export function brutto(netto: number): number {
+  return netto * (1 + MWST);
+}
+@solution main.ts
+// Importiere MWST und brutto aus "./preise"
+import { MWST, brutto } from "./preise";
+
+const endpreis = brutto(100);
+
+console.log(`Mit ${MWST * 100} % Mehrwertsteuer: ${endpreis}`);
+@tests
+run require("./preise").MWST === 0.081 :: `preise.ts` exportiert `MWST`
+run typeof require("./preise").brutto === "function" :: `preise.ts` exportiert `brutto`
+src /import\s*\{[^}]*\bbrutto\b[^}]*\}\s*from\s*["']\.\/preise["']/ :: `main.ts` importiert `brutto` aus `"./preise"`
+src /import\s*\{[^}]*\bMWST\b[^}]*\}\s*from\s*["']\.\/preise["']/ :: `main.ts` importiert `MWST` aus `"./preise"`
+run Math.abs(endpreis - 108.1) < 1e-9 :: `endpreis` ist `brutto(100)`, also `108.1`
+src /endpreis\s*=\s*brutto\s*\(\s*100\s*\)/ :: `endpreis` wird mit `brutto(100)` berechnet
+@hints
+- In `preise.ts` schreibst du einfach `export` vor `const` und vor `function`.
+- In `main.ts` kommt ganz oben: `import { MWST, brutto } from "./preise";`
+- Danach: `const endpreis = brutto(100);`
+@after
+`export` vor die Deklaration, `import { ... } from "./datei"` in der anderen Datei – das ist das ganze Modulsystem. Der rote Reiter mit Punkt zeigt dir übrigens, in welcher Datei noch ein Problem steckt.
+
+--- quiz quiz-import-pfad
+Was ist der Unterschied zwischen `from "./todo"` und `from "@angular/core"`?
+( ) Keiner – der Punkt und der Schrägstrich sind freiwillig. :: Doch, der Unterschied ist entscheidend. Ohne `./` sucht TypeScript nicht in deinem Ordner.
+(x) `"./todo"` ist eine eigene Datei im selben Ordner, `"@angular/core"` ist ein installiertes Paket. :: Genau. `./` und `../` führen zu deinen eigenen Dateien, alles andere wird in `node_modules` gesucht.
+( ) `"./todo"` importiert einen Typ, `"@angular/core"` importiert eine Funktion. :: Der Pfad sagt nichts darüber, **was** importiert wird – nur **woher**.
+
+=== promises | Warten können: Promises und async/await | 25
+Manche Dinge brauchen Zeit: Daten von einem Server laden, eine Datei lesen, auf eine Eingabe warten. Würde das Programm dabei einfach stehen bleiben, wäre die ganze Webseite eingefroren. Deshalb läuft so etwas **asynchron**: Das Programm stösst die Aufgabe an, macht weiter – und kümmert sich um das Ergebnis, sobald es da ist.
+
+## Erst später: setTimeout
+
+Die einfachste asynchrone Funktion ist `setTimeout`. Sie ruft eine Funktion nach einer Wartezeit (in Millisekunden) auf:
+
+```ts
+console.log("1. Start");
+
+setTimeout(() => {
+  console.log("3. Eine halbe Sekunde später");
+}, 500);
+
+console.log("2. Ende des Programms");
+```
+
+Achte auf die Reihenfolge der Ausgabe: 1, 2, 3. Das Programm wartet **nicht** auf den Timer. Es merkt sich nur «in 500 ms diese Funktion aufrufen» und läuft sofort weiter.
+
+## Promise: ein Versprechen auf einen Wert
+
+Eine Funktion, die etwas Langsames tut, kann ihr Ergebnis nicht sofort zurückgeben. Stattdessen gibt sie ein **Promise** zurück – ein Versprechen: «Den Wert habe ich noch nicht, aber du bekommst ihn.»
+
+Der Typ dafür ist generisch: `Promise<string>` ist das Versprechen auf einen Text, `Promise<Benutzer>` das Versprechen auf einen Benutzer.
+
+Für die Beispiele hier simulieren wir einen langsamen Server:
+
+```ts
+function ladeName(): Promise<string> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve("Mia"), 300);
+  });
+}
+
+const versprechen = ladeName();
+console.log(versprechen); // Promise { <pending> } – noch kein Name!
+```
+
+Wie man selbst ein Promise baut (`new Promise(...)`), musst du selten wissen. In der Praxis **benutzt** du fast immer Promises, die dir jemand anderes liefert. Wichtig ist nur: `ladeName()` gibt nicht `"Mia"` zurück, sondern ein Versprechen darauf.
+
+## await: auf das Ergebnis warten
+
+Um an den Wert zu kommen, schreibst du `await` vor das Promise. Das bedeutet: «Warte hier, bis das Versprechen eingelöst ist, und gib mir dann den Wert.»
+
+`await` darf nur in Funktionen stehen, die mit `async` markiert sind:
+
+```ts
+function ladeName(): Promise<string> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve("Mia"), 300);
+  });
+}
+
+async function begruesse(): Promise<void> {
+  console.log("Lade ...");
+  const name = await ladeName(); // wartet 300 ms
+  console.log(`Hallo ${name}!`); // name ist ein ganz normaler string
+}
+
+begruesse();
+```
+
+Dank `await` liest sich der Code von oben nach unten wie normaler Code – obwohl zwischendurch gewartet wird. Und das Beste: Nur diese eine Funktion pausiert. Der Rest der App läuft weiter.
+
+## async-Funktionen geben immer ein Promise zurück
+
+Eine `async`-Funktion kann ja selbst nicht sofort fertig sein. Deshalb ist ihr Rückgabetyp immer ein `Promise`:
+
+```ts
+function ladePunkte(): Promise<number> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(120), 200);
+  });
+}
+
+async function doppeltePunkte(): Promise<number> {
+  const punkte = await ladePunkte();
+  return punkte * 2; // du gibst eine number zurück – TypeScript verpackt sie in ein Promise
+}
+
+async function start(): Promise<void> {
+  const ergebnis = await doppeltePunkte();
+  console.log(ergebnis); // 240
+}
+
+start();
+```
+
+Wer eine `async`-Funktion aufruft, muss also wieder `await` davorschreiben, um an den Wert zu kommen. Das zieht sich durch: «async steckt an».
+
+> [!WARN] Der häufigste Fehler: await vergessen
+> Ohne `await` bekommst du nicht den Wert, sondern das Promise. TypeScript hilft dir meistens: Wenn du mit einem `Promise<number>` rechnen willst, gibt es einen Typfehler. Siehst du in einer Meldung `Promise<...>`, wo du einen normalen Wert erwartest, fehlt fast sicher ein `await`.
+
+## Mehreres gleichzeitig: Promise.all
+
+Mit `await` nacheinander zu warten, dauert so lange wie alle Wartezeiten zusammen. Sind die Aufgaben unabhängig, startest du sie gleichzeitig und wartest mit `Promise.all` auf alle:
+
+```ts
+function ladeZahl(zahl: number): Promise<number> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(zahl), 200);
+  });
+}
+
+async function start(): Promise<void> {
+  const ergebnisse = await Promise.all([ladeZahl(1), ladeZahl(2), ladeZahl(3)]);
+  console.log(ergebnisse); // [ 1, 2, 3 ] – nach 200 ms, nicht nach 600
+}
+
+start();
+```
+
+## Die ältere Schreibweise: then
+
+Vor `async`/`await` hat man das Ergebnis mit `.then(...)` abgeholt. Du wirst es in fremdem Code noch sehen:
+
+```ts
+function ladeName(): Promise<string> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve("Mia"), 300);
+  });
+}
+
+ladeName().then((name) => {
+  console.log(`Hallo ${name}!`);
+});
+```
+
+Das tut dasselbe wie `const name = await ladeName();`. Für neuen Code nimmst du `async`/`await` – es ist leichter zu lesen.
+
+--- code async-laden | Auf Daten warten
+Die Funktion `ladeBenutzer` simuliert einen Server: Sie liefert nach kurzer Wartezeit einen Benutzer.
+
+Schreibe eine `async`-Funktion `begruessung`, die eine `id` bekommt, den Benutzer mit `ladeBenutzer` lädt und den Text `Hallo Mia!` (mit dem richtigen Namen) zurückgibt.
+@starter
+interface Benutzer {
+  id: number;
+  name: string;
+}
+
+function ladeBenutzer(id: number): Promise<Benutzer> {
+  const namen = ["Mia", "Noah", "Lena"];
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ id, name: namen[id - 1] }), 150);
+  });
+}
+
+// Schreibe hier die Funktion begruessung
+
+async function start(): Promise<void> {
+  console.log(await begruessung(1));
+  console.log(await begruessung(2));
+}
+
+start();
+@solution
+interface Benutzer {
+  id: number;
+  name: string;
+}
+
+function ladeBenutzer(id: number): Promise<Benutzer> {
+  const namen = ["Mia", "Noah", "Lena"];
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ id, name: namen[id - 1] }), 150);
+  });
+}
+
+// Schreibe hier die Funktion begruessung
+async function begruessung(id: number): Promise<string> {
+  const benutzer = await ladeBenutzer(id);
+  return `Hallo ${benutzer.name}!`;
+}
+
+async function start(): Promise<void> {
+  console.log(await begruessung(1));
+  console.log(await begruessung(2));
+}
+
+start();
+@tests
+fn begruessung(number): Promise<string>
+has AwaitExpression :: Es wird `await` benutzt
+run (await begruessung(1)) === "Hallo Mia!" :: `await begruessung(1)` ergibt `"Hallo Mia!"`
+run (await begruessung(3)) === "Hallo Lena!" :: `await begruessung(3)` ergibt `"Hallo Lena!"`
+out Hallo Noah!
+@hints
+- Die Funktion beginnt mit `async function begruessung(id: number): Promise<string> {`
+- Lade den Benutzer und warte darauf: `const benutzer = await ladeBenutzer(id);`
+- Danach ist `benutzer` ein normales Objekt: `` return `Hallo ${benutzer.name}!`; ``
+@after
+`async` vor die Funktion, `await` vor das Promise, Rückgabetyp `Promise<...>`. Lass probehalber das `await` weg und lies die Fehlermeldung – so sieht es aus, wenn man es vergisst.
+
+--- code async-alle | Mehrere Dinge gleichzeitig laden
+Schreibe eine `async`-Funktion `ladeNamen`, die ein Array von IDs bekommt und ein Array mit den **Namen** der Benutzer zurückgibt (in derselben Reihenfolge).
+
+Die Benutzer sollen **gleichzeitig** geladen werden: Mache aus den IDs mit `map` ein Array von Promises und warte mit `Promise.all` auf alle.
+@starter
+interface Benutzer {
+  id: number;
+  name: string;
+}
+
+function ladeBenutzer(id: number): Promise<Benutzer> {
+  const namen = ["Mia", "Noah", "Lena"];
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ id, name: namen[id - 1] }), 150);
+  });
+}
+
+// Schreibe hier die Funktion ladeNamen
+
+async function start(): Promise<void> {
+  console.log(await ladeNamen([3, 1]));
+}
+
+start();
+@solution
+interface Benutzer {
+  id: number;
+  name: string;
+}
+
+function ladeBenutzer(id: number): Promise<Benutzer> {
+  const namen = ["Mia", "Noah", "Lena"];
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({ id, name: namen[id - 1] }), 150);
+  });
+}
+
+// Schreibe hier die Funktion ladeNamen
+async function ladeNamen(ids: number[]): Promise<string[]> {
+  const benutzer = await Promise.all(ids.map((id) => ladeBenutzer(id)));
+  return benutzer.map((b) => b.name);
+}
+
+async function start(): Promise<void> {
+  console.log(await ladeNamen([3, 1]));
+}
+
+start();
+@tests
+fn ladeNamen(number[]): Promise<string[]>
+src /Promise\s*\.\s*all\s*\(/ :: Es wird `Promise.all` benutzt
+run (await ladeNamen([3, 1])).join(",") === "Lena,Mia" :: `await ladeNamen([3, 1])` ergibt `["Lena", "Mia"]`
+run (await ladeNamen([])).length === 0 :: Keine IDs ergeben ein leeres Array
+run await (async () => { const t = Date.now(); await ladeNamen([1, 2, 3]); return Date.now() - t < 400; })() :: Drei Benutzer werden gleichzeitig geladen (dauert etwa 150 ms, nicht 450)
+@hints
+- `ids.map((id) => ladeBenutzer(id))` ergibt ein Array von Promises.
+- Darauf wartest du mit `await Promise.all(...)` – das Ergebnis ist ein `Benutzer[]`.
+- Am Ende die Namen herausziehen: `return benutzer.map((b) => b.name);`
+@after
+`Promise.all` macht aus «vielen Versprechen» ein einziges Versprechen auf ein Array. Die Reihenfolge der Ergebnisse entspricht der Reihenfolge der Promises – egal, welches zuerst fertig wird.
+
+--- quiz quiz-await
+Was steht in `ergebnis`, wenn `ladePunkte()` den Typ `Promise<number>` hat?
+
+```ts nocheck
+const ergebnis = ladePunkte();
+```
+( ) Die Zahl mit den Punkten. :: Dafür fehlt das `await`. Ohne bekommst du das Versprechen, nicht den Wert.
+(x) Ein Promise – also noch nicht die Zahl selbst. :: Richtig. Erst `await ladePunkte()` (in einer `async`-Funktion) liefert die Zahl.
+( ) `undefined`, weil die Daten noch nicht da sind. :: Nicht `undefined`, sondern ein Promise-Objekt. Das ist ein Unterschied: Auf ein Promise kann man warten.
+
+=== fehlerbehandlung | Wenn etwas schiefgeht: try und catch | 20
+Typfehler findet TypeScript, bevor das Programm läuft. Aber manches kann erst **während** des Laufs schiefgehen: Der Server antwortet nicht, eine Datei fehlt, eine Eingabe ist unbrauchbar. Solche Fehler heissen **Laufzeitfehler**.
+
+## Fehler auslösen: throw
+
+Mit `throw` meldest du selbst einen Fehler. Die Funktion wird sofort abgebrochen:
+
+```ts
+function teile(a: number, b: number): number {
+  if (b === 0) {
+    throw new Error("Durch null kann man nicht teilen.");
+  }
+  return a / b;
+}
+
+console.log(teile(10, 2)); // 5
+```
+
+`new Error("...")` erzeugt ein Fehlerobjekt mit einer Meldung. Wird ein solcher Fehler nirgends abgefangen, stürzt das Programm ab und die Meldung erscheint in der Konsole.
+
+## Fehler abfangen: try / catch
+
+```ts
+function teile(a: number, b: number): number {
+  if (b === 0) {
+    throw new Error("Durch null kann man nicht teilen.");
+  }
+  return a / b;
+}
+
+try {
+  console.log(teile(10, 0));
+  console.log("Diese Zeile wird übersprungen.");
+} catch (fehler) {
+  console.log("Das hat nicht geklappt.");
+}
+
+console.log("Das Programm läuft weiter.");
+```
+
+Der Code im `try`-Block wird ausgeführt. Tritt irgendwo darin ein Fehler auf, springt das Programm sofort in den `catch`-Block. Danach geht es normal weiter – kein Absturz.
+
+## Was ist fehler für ein Typ?
+
+Die Variable im `catch` hat den Typ `unknown`. Das ist richtig so: In JavaScript kann man mit `throw` alles werfen, nicht nur Fehlerobjekte. Um an die Meldung zu kommen, prüfst du mit `instanceof`, ob es ein `Error` ist:
+
+```ts
+try {
+  throw new Error("Server nicht erreichbar");
+} catch (fehler) {
+  if (fehler instanceof Error) {
+    console.log(`Fehler: ${fehler.message}`);
+  } else {
+    console.log("Unbekannter Fehler");
+  }
+}
+```
+
+`instanceof` fragt «Wurde dieses Objekt mit dieser Klasse gebaut?» – und ist damit eine weitere Art von Narrowing.
+
+## Fehler bei async/await
+
+Ein Promise kann auch scheitern (man sagt: es wird «rejected»). Mit `await` wird daraus ein ganz normaler Fehler, den du mit `try`/`catch` abfängst:
+
+```ts
+function ladeDaten(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => reject(new Error("Zeitüberschreitung")), 200);
+  });
+}
+
+async function start(): Promise<void> {
+  try {
+    const daten = await ladeDaten();
+    console.log(daten);
+  } catch (fehler) {
+    console.log("Laden fehlgeschlagen.");
+  }
+}
+
+start();
+```
+
+Das ist der grosse Vorteil von `async`/`await`: Fehler behandelst du genauso wie bei normalem Code.
+
+> [!MERKE] Wann try/catch?
+> Nicht um jede Zeile ein `try` bauen. Sinnvoll ist es dort, wo etwas **von aussen** kommt und schiefgehen kann – Netzwerk, Speicher, Benutzereingaben – und wo du sinnvoll **reagieren** kannst, zum Beispiel mit einer Meldung für den Benutzer.
+
+--- code fehler-werfen | Fehler werfen und abfangen
+1. Schreibe eine Funktion `alterPruefen`, die eine Zahl bekommt. Ist die Zahl kleiner als 0 oder grösser als 150, wirft sie einen `Error` mit der Meldung `Ungültiges Alter`. Sonst gibt sie die Zahl unverändert zurück.
+2. Schreibe eine Funktion `sicheresAlter`, die `alterPruefen` in einem `try`/`catch` aufruft. Klappt es, gibt sie das Alter zurück; wird ein Fehler geworfen, gibt sie `null` zurück.
+@starter
+// 1. alterPruefen
+
+// 2. sicheresAlter
+
+console.log(sicheresAlter(15), sicheresAlter(-3));
+@solution
+// 1. alterPruefen
+function alterPruefen(alter: number): number {
+  if (alter < 0 || alter > 150) {
+    throw new Error("Ungültiges Alter");
+  }
+  return alter;
+}
+
+// 2. sicheresAlter
+function sicheresAlter(alter: number): number | null {
+  try {
+    return alterPruefen(alter);
+  } catch {
+    return null;
+  }
+}
+
+console.log(sicheresAlter(15), sicheresAlter(-3));
+@tests
+fn alterPruefen(number): number
+run alterPruefen(15) === 15 && alterPruefen(0) === 0 && alterPruefen(150) === 150 :: Gültige Alter (0, 15, 150) werden zurückgegeben
+run (() => { try { alterPruefen(-1); return false; } catch (e) { return e instanceof Error && e.message === "Ungültiges Alter"; } })() :: `alterPruefen(-1)` wirft einen `Error` mit der Meldung `Ungültiges Alter`
+run (() => { try { alterPruefen(151); return false; } catch (e) { return e instanceof Error; } })() :: `alterPruefen(151)` wirft ebenfalls
+fn sicheresAlter(number): number | null
+has TryStatement :: Es gibt ein `try`/`catch`
+run sicheresAlter(15) === 15 && sicheresAlter(-3) === null && sicheresAlter(200) === null :: `sicheresAlter` liefert das Alter oder `null`
+@hints
+- Werfen: `if (alter < 0 || alter > 150) { throw new Error("Ungültiges Alter"); }`
+- Der Rückgabetyp von `sicheresAlter` ist `number | null`.
+- `try { return alterPruefen(alter); } catch { return null; }` – die Klammer mit der Fehlervariable darfst du weglassen, wenn du sie nicht brauchst.
+@after
+Eine Funktion wirft, eine andere fängt. So trennst du «einen Fehler erkennen» von «auf einen Fehler reagieren».
+
+--- code fehler-async | Fehler beim Laden behandeln
+`ladeWetter` simuliert einen unzuverlässigen Server: Für manche Orte kommt eine Temperatur, für unbekannte Orte scheitert das Promise mit einem Fehler.
+
+Schreibe eine `async`-Funktion `wetterText`, die einen Ort bekommt und **immer** einen Text zurückgibt:
+
+- bei Erfolg: `In Bern sind es 18 Grad.`
+- bei einem Fehler: `Fehler: ` gefolgt von der Meldung des Fehlers, also zum Beispiel `Fehler: Ort nicht gefunden`
+@starter
+function ladeWetter(ort: string): Promise<number> {
+  const daten: Record<string, number> = { Bern: 18, Lugano: 24 };
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const grad = daten[ort];
+      if (grad === undefined) {
+        reject(new Error("Ort nicht gefunden"));
+      } else {
+        resolve(grad);
+      }
+    }, 100);
+  });
+}
+
+// Schreibe hier die Funktion wetterText
+
+async function start(): Promise<void> {
+  console.log(await wetterText("Bern"));
+  console.log(await wetterText("Atlantis"));
+}
+
+start();
+@solution
+function ladeWetter(ort: string): Promise<number> {
+  const daten: Record<string, number> = { Bern: 18, Lugano: 24 };
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const grad = daten[ort];
+      if (grad === undefined) {
+        reject(new Error("Ort nicht gefunden"));
+      } else {
+        resolve(grad);
+      }
+    }, 100);
+  });
+}
+
+// Schreibe hier die Funktion wetterText
+async function wetterText(ort: string): Promise<string> {
+  try {
+    const grad = await ladeWetter(ort);
+    return `In ${ort} sind es ${grad} Grad.`;
+  } catch (fehler) {
+    const meldung = fehler instanceof Error ? fehler.message : "Unbekannter Fehler";
+    return `Fehler: ${meldung}`;
+  }
+}
+
+async function start(): Promise<void> {
+  console.log(await wetterText("Bern"));
+  console.log(await wetterText("Atlantis"));
+}
+
+start();
+@tests
+fn wetterText(string): Promise<string>
+has TryStatement :: Es gibt ein `try`/`catch`
+run (await wetterText("Bern")) === "In Bern sind es 18 Grad." :: Für Bern: `In Bern sind es 18 Grad.`
+run (await wetterText("Lugano")) === "In Lugano sind es 24 Grad." :: Für Lugano: `In Lugano sind es 24 Grad.`
+run (await wetterText("Atlantis")) === "Fehler: Ort nicht gefunden" :: Für einen unbekannten Ort: `Fehler: Ort nicht gefunden`
+src /instanceof\s+Error/ :: Die Meldung wird erst nach einer Prüfung mit `instanceof Error` gelesen
+@hints
+- Der Rahmen: `try { const grad = await ladeWetter(ort); return ...; } catch (fehler) { ... }`
+- Im `catch` ist `fehler` vom Typ `unknown`. Prüfe zuerst: `if (fehler instanceof Error) { ... }`
+- Kurz: `` const meldung = fehler instanceof Error ? fehler.message : "Unbekannter Fehler"; return `Fehler: ${meldung}`; ``
+@after
+Laden, Erfolg anzeigen, Fehler anzeigen: Dieses Dreierpaket brauchst du in jeder App, die mit einem Server spricht. In Angular gibt es dafür fertige Werkzeuge – das Prinzip dahinter kennst du jetzt.
+
+=== ts-projekt | Mini-Projekt: Das Notenbuch | 30
+Zeit, alles zusammenzuführen. Du baust eine kleine Notenverwaltung – zuerst hier im Browser, danach in deinem eigenen Projekt in VS Code.
+
+Dabei kommt fast alles vor, was du bisher gelernt hast: Interface, Klasse, private Daten, Array-Methoden, Union-Typen, fehlende Werte.
+
+## Die Anforderungen
+
+Ein **Eintrag** besteht aus einem Fach, einer Note und einer Art (Prüfung oder mündlich):
+
+```ts
+interface Eintrag {
+  fach: string;
+  note: number;
+  art: "pruefung" | "muendlich";
+}
+
+const beispiel: Eintrag = { fach: "Mathe", note: 5, art: "pruefung" };
+console.log(beispiel);
+```
+
+Die Klasse `Notenbuch` verwaltet eine Liste solcher Einträge. Die Liste selbst ist privat – von aussen kommt man nur über Methoden heran.
+
+> [!TIP] So gehst du vor
+> Löse die Übung **Methode für Methode**. Klicke nach jeder Methode auf «Ausführen & prüfen» und schau, welche Anforderungen schon grün sind. Niemand schreibt eine ganze Klasse in einem Zug fehlerfrei herunter.
+
+--- code notenbuch | Die Klasse Notenbuch
+Das Interface `Eintrag` ist gegeben. Schreibe die Klasse `Notenbuch`:
+
+- `eintraege` – ein **privates** Array von `Eintrag`, zu Beginn leer
+- `hinzufuegen(eintrag)` – fügt einen Eintrag hinzu. Liegt die Note nicht zwischen 1 und 6, wirft die Methode einen `Error` mit der Meldung `Ungültige Note`.
+- `anzahl()` – gibt zurück, wie viele Einträge es gibt
+- `faecher()` – gibt ein Array mit allen Fächern zurück, **jedes nur einmal**, in der Reihenfolge des ersten Auftretens
+- `durchschnitt(fach)` – gibt den Notendurchschnitt für dieses Fach zurück, oder `null`, wenn es zu dem Fach keine Noten gibt
+- `bestesFach()` – gibt das Fach mit dem höchsten Durchschnitt zurück, oder `null`, wenn das Notenbuch leer ist
+@starter
+interface Eintrag {
+  fach: string;
+  note: number;
+  art: "pruefung" | "muendlich";
+}
+
+class Notenbuch {
+  // Schreibe hier die Eigenschaft und die Methoden
+}
+
+const buch = new Notenbuch();
+buch.hinzufuegen({ fach: "Mathe", note: 5, art: "pruefung" });
+buch.hinzufuegen({ fach: "Deutsch", note: 4.5, art: "muendlich" });
+buch.hinzufuegen({ fach: "Mathe", note: 6, art: "muendlich" });
+
+console.log(buch.anzahl());
+console.log(buch.faecher());
+console.log(buch.durchschnitt("Mathe"));
+console.log(buch.bestesFach());
+@solution
+interface Eintrag {
+  fach: string;
+  note: number;
+  art: "pruefung" | "muendlich";
+}
+
+class Notenbuch {
+  private eintraege: Eintrag[] = [];
+
+  hinzufuegen(eintrag: Eintrag): void {
+    if (eintrag.note < 1 || eintrag.note > 6) {
+      throw new Error("Ungültige Note");
+    }
+    this.eintraege = [...this.eintraege, eintrag];
+  }
+
+  anzahl(): number {
+    return this.eintraege.length;
+  }
+
+  faecher(): string[] {
+    const ergebnis: string[] = [];
+    for (const eintrag of this.eintraege) {
+      if (!ergebnis.includes(eintrag.fach)) {
+        ergebnis.push(eintrag.fach);
+      }
+    }
+    return ergebnis;
+  }
+
+  durchschnitt(fach: string): number | null {
+    const noten = this.eintraege.filter((e) => e.fach === fach).map((e) => e.note);
+    if (noten.length === 0) {
+      return null;
+    }
+    const summe = noten.reduce((zwischenstand, note) => zwischenstand + note, 0);
+    return summe / noten.length;
+  }
+
+  bestesFach(): string | null {
+    let bestes: string | null = null;
+    let besterSchnitt = 0;
+    for (const fach of this.faecher()) {
+      const schnitt = this.durchschnitt(fach) ?? 0;
+      if (schnitt > besterSchnitt) {
+        besterSchnitt = schnitt;
+        bestes = fach;
+      }
+    }
+    return bestes;
+  }
+}
+
+const buch = new Notenbuch();
+buch.hinzufuegen({ fach: "Mathe", note: 5, art: "pruefung" });
+buch.hinzufuegen({ fach: "Deutsch", note: 4.5, art: "muendlich" });
+buch.hinzufuegen({ fach: "Mathe", note: 6, art: "muendlich" });
+
+console.log(buch.anzahl());
+console.log(buch.faecher());
+console.log(buch.durchschnitt("Mathe"));
+console.log(buch.bestesFach());
+@tests
+src /private\s+(readonly\s+)?eintraege\b/ :: `eintraege` ist `private`
+shape Notenbuch { hinzufuegen: (eintrag: Eintrag) => void; anzahl: () => number; faecher: () => string[]; durchschnitt: (fach: string) => number | null; bestesFach: () => string | null }
+setup const __n = () => { const b = new Notenbuch(); b.hinzufuegen({ fach: "Mathe", note: 5, art: "pruefung" }); b.hinzufuegen({ fach: "Deutsch", note: 4.5, art: "muendlich" }); b.hinzufuegen({ fach: "Mathe", note: 6, art: "muendlich" }); b.hinzufuegen({ fach: "Sport", note: 5.5, art: "pruefung" }); return b; };
+run new Notenbuch().anzahl() === 0 && __n().anzahl() === 4 :: `anzahl()` zählt die Einträge (leer: `0`)
+run (() => { const b = new Notenbuch(); try { b.hinzufuegen({ fach: "X", note: 7, art: "pruefung" }); return false; } catch (e) { return e instanceof Error && e.message === "Ungültige Note" && b.anzahl() === 0; } })() :: Note 7 wirft `Ungültige Note` und wird nicht gespeichert
+run (() => { const b = new Notenbuch(); try { b.hinzufuegen({ fach: "X", note: 0.5, art: "pruefung" }); return false; } catch (e) { return e instanceof Error; } })() :: Auch eine Note unter 1 wird abgelehnt
+run (() => { const b = new Notenbuch(); b.hinzufuegen({ fach: "X", note: 1, art: "pruefung" }); b.hinzufuegen({ fach: "X", note: 6, art: "pruefung" }); return b.anzahl() === 2; })() :: Die Noten 1 und 6 sind gültig
+run __n().faecher().join(",") === "Mathe,Deutsch,Sport" :: `faecher()` nennt jedes Fach nur einmal, in der Reihenfolge des ersten Auftretens
+run __n().durchschnitt("Mathe") === 5.5 && __n().durchschnitt("Deutsch") === 4.5 :: `durchschnitt("Mathe")` ergibt `5.5`
+run __n().durchschnitt("Chemie") === null :: `durchschnitt` für ein Fach ohne Noten ergibt `null` ?? Ohne Sonderfall teilst du durch 0 und bekommst `NaN`.
+run __n().bestesFach() === "Mathe" || __n().bestesFach() === "Sport" :: `bestesFach()` liefert ein Fach mit dem höchsten Durchschnitt (hier 5.5)
+run (() => { const b = __n(); b.hinzufuegen({ fach: "Sport", note: 6, art: "pruefung" }); return b.bestesFach() === "Sport"; })() :: Nach einer 6 in Sport ist `Sport` das beste Fach
+run new Notenbuch().bestesFach() === null :: Ein leeres Notenbuch hat kein bestes Fach (`null`)
+@hints
+- Beginne mit `private eintraege: Eintrag[] = [];`, dann `hinzufuegen` und `anzahl`. Prüfe nach jeder Methode.
+- `faecher()`: Starte mit einem leeren `string[]`. Gehe alle Einträge durch und füge das Fach nur hinzu, wenn es noch nicht enthalten ist (`includes`).
+- `durchschnitt(fach)`: Zuerst filtern (`e.fach === fach`), dann die Noten herausziehen (`map`). Ist das Array leer → `return null`. Sonst Summe geteilt durch Anzahl.
+- `bestesFach()`: Gehe mit `for (const fach of this.faecher())` alle Fächer durch und merke dir in zwei Variablen das bisher beste Fach und seinen Durchschnitt. `this.durchschnitt(fach) ?? 0` macht aus `null` eine 0.
+@after
+Das war ein richtiges kleines Programm mit Datenmodell, Kapselung, Sonderfällen und Fehlerbehandlung. Wenn du diese Übung selbst gelöst hast, bist du bereit für Angular.
+
+--- text
+## Jetzt in VS Code
+
+Baue das Notenbuch auch in deinem Projekt `ts-lernen` – diesmal aufgeteilt auf mehrere Dateien, wie in einem echten Projekt.
+
+> [!WARN] In ts-lernen: Typen mit import type holen
+> Node.js streicht beim Ausführen alle Typen weg. Ein Interface existiert danach nicht mehr – und ein gewöhnliches `import { Eintrag }` findet dann nichts. Node.js meldet: *«does not provide an export named 'Eintrag'»*.
+>
+> Schreibe für Interfaces und Typen deshalb `import type`:
+>
+> ```ts nocheck
+> import type { Eintrag } from "./eintrag.ts";
+> ```
+>
+> Der Zusatz `type` sagt: «Das brauche ich nur für die Typprüfung.» VS Code erinnert dich mit einer roten Linie daran. Klassen, Funktionen und Konstanten importierst du weiterhin ohne `type`. In Angular-Projekten brauchst du `import type` nicht.
+
+--- task notenbuch-task | Das Notenbuch in VS Code
+Drei Dateien im Ordner `src`:
+[ ] `eintrag.ts` enthält das Interface `Eintrag` mit `export`.
+[ ] `notenbuch.ts` holt `Eintrag` mit `import type { Eintrag } from "./eintrag.ts"` und exportiert die Klasse `Notenbuch`.
+[ ] `main.ts` importiert `Notenbuch` aus `"./notenbuch.ts"`, trägt ein paar Noten ein und gibt Durchschnitte aus.
+[ ] `node src/main.ts` läuft und zeigt die erwartete Ausgabe.
+[ ] `npx tsc` meldet keine Fehler.
+[ ] Du hast in VS Code `buch.` getippt und dir die Vorschlagsliste mit deinen Methoden angesehen.
