@@ -1,0 +1,11 @@
+const CodeMirror = require('codemirror/lib/codemirror');
+require('codemirror/mode/javascript/javascript');
+require('codemirror/mode/xml/xml');
+require('codemirror/mode/css/css');
+require('codemirror/mode/htmlmixed/htmlmixed');
+require('codemirror/addon/edit/closebrackets');
+require('codemirror/addon/edit/matchbrackets');
+require('codemirror/addon/edit/closetag');
+require('codemirror/addon/comment/comment');
+require('codemirror/addon/runmode/runmode');
+window.CodeMirror = CodeMirror;
