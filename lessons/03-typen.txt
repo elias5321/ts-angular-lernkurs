@@ -1,0 +1,1427 @@
+#part typen | TypeScript richtig nutzen: Typen | Jetzt kommt das, was TypeScript von JavaScript unterscheidet: eigene Typen, Varianten, fehlende Werte und Generics. Dieses Wissen brauchst du in Angular jeden Tag.
+
+=== interfaces | Eigene Typen: interface und type | 20
+In der letzten Lektion hast du Objekt-Typen direkt hingeschrieben: `{ titel: string; seiten: number }`. Sobald derselbe Typ an mehreren Stellen vorkommt, wird das mühsam. Die Lösung: Gib dem Typ einen **Namen**.
+
+## interface
+
+```ts
+interface Buch {
+  titel: string;
+  autor: string;
+  seiten: number;
+}
+
+const momo: Buch = {
+  titel: "Momo",
+  autor: "Michael Ende",
+  seiten: 304,
+};
+
+function beschreibe(buch: Buch): string {
+  return `${buch.titel} von ${buch.autor}`;
+}
+
+console.log(beschreibe(momo));
+```
+
+Ein `interface` beschreibt die **Form** eines Objekts: welche Eigenschaften es hat und welche Typen sie haben. Der Name beginnt mit einem Grossbuchstaben (`Buch`, `Benutzer`, `TodoEintrag`).
+
+Ab jetzt ist `Buch` ein Typ wie `string` oder `number`. Du kannst ihn überall verwenden: bei Variablen, Parametern, Rückgabewerten und in Arrays (`Buch[]`).
+
+## TypeScript prüft die Form
+
+Ein Objekt vom Typ `Buch` muss **alle** Eigenschaften haben, mit den **richtigen Typen**, und **keine zusätzlichen**:
+
+```ts error
+interface Buch {
+  titel: string;
+  autor: string;
+  seiten: number;
+}
+
+const a: Buch = { titel: "Momo", autor: "Michael Ende" };              // seiten fehlt
+const b: Buch = { titel: "Momo", autor: "Michael Ende", seiten: "304" }; // falscher Typ
+const c: Buch = { titel: "Momo", autor: "Michael Ende", seiten: 304, preis: 12 }; // preis gibt es nicht
+```
+
+> [!MERKE] Ein Interface existiert nur beim Prüfen
+> Ein `interface` erzeugt keinen Code. Beim Übersetzen nach JavaScript verschwindet es spurlos. Es ist eine reine Beschreibung für TypeScript und für dich.
+
+## type
+
+Es gibt eine zweite Möglichkeit, einem Typ einen Namen zu geben – das Schlüsselwort `type`:
+
+```ts
+type Punkt = {
+  x: number;
+  y: number;
+};
+
+const start: Punkt = { x: 0, y: 0 };
+console.log(start);
+```
+
+Beachte das Gleichheitszeichen: `type Name = ...`. Bei `interface` steht keines.
+
+## interface oder type?
+
+Für Objekte sind beide fast gleichwertig. `type` kann aber mehr: Damit lassen sich auch Typen benennen, die **keine** Objekte sind – das brauchst du in der übernächsten Lektion.
+
+Eine verbreitete Faustregel, an die sich auch dieser Kurs hält:
+
+- **`interface`** für die Form von Objekten (Daten wie `Buch`, `Benutzer`).
+- **`type`** für alles andere (Varianten, Kombinationen, Funktionstypen).
+
+## Interfaces verschachteln
+
+Eigenschaften können selbst wieder Interfaces oder Arrays sein:
+
+```ts
+interface Adresse {
+  strasse: string;
+  ort: string;
+}
+
+interface Schueler {
+  name: string;
+  adresse: Adresse;
+  noten: number[];
+}
+
+const lena: Schueler = {
+  name: "Lena",
+  adresse: { strasse: "Hauptstrasse 5", ort: "Luzern" },
+  noten: [5, 4.5, 6],
+};
+
+console.log(lena.adresse.ort); // "Luzern"
+```
+
+--- code interface-haustier | Ein eigenes Interface
+1. Definiere ein Interface `Haustier` mit den Eigenschaften `name` (Text), `art` (Text) und `alter` (Zahl).
+2. Lege eine Variable `meinTier` vom Typ `Haustier` an. Die Werte darfst du frei wählen.
+@starter
+// 1. Interface Haustier
+
+// 2. Variable meinTier
+
+console.log(meinTier);
+@solution
+// 1. Interface Haustier
+interface Haustier {
+  name: string;
+  art: string;
+  alter: number;
+}
+
+// 2. Variable meinTier
+const meinTier: Haustier = {
+  name: "Luna",
+  art: "Katze",
+  alter: 4,
+};
+
+console.log(meinTier);
+@tests
+exists interface Haustier
+shape Haustier { name: string; art: string; alter: number }
+annotated meinTier
+var meinTier: Haustier
+@hints
+- Ein Interface beginnt mit `interface Haustier {` und endet mit `}`. Dazwischen steht pro Zeile eine Eigenschaft: `name: string;`
+- Die Variable: `const meinTier: Haustier = { name: "...", art: "...", alter: ... };`
+- Im Interface trennen **Strichpunkte**, im Objekt **Kommas**.
+@after
+Das Interface ist die Schablone, das Objekt ist ein konkretes Exemplar. Im Interface stehen Typen und Strichpunkte, im Objekt Werte und Kommas.
+
+--- code interface-funktionen | Funktionen mit Interfaces
+Das Interface `Produkt` ist schon definiert. Schreibe zwei Funktionen:
+
+- `istVerfuegbar` bekommt ein `Produkt` und gibt zurück, ob `lager` grösser als 0 ist.
+- `lagerwert` bekommt ein **Array** von Produkten und gibt den Gesamtwert des Lagers zurück: für jedes Produkt `preis` mal `lager`, alles zusammengezählt.
+@starter
+interface Produkt {
+  name: string;
+  preis: number;
+  lager: number;
+}
+
+// Schreibe hier istVerfuegbar und lagerwert
+
+const sortiment: Produkt[] = [
+  { name: "Heft", preis: 3, lager: 10 },
+  { name: "Rucksack", preis: 45, lager: 0 },
+];
+console.log(istVerfuegbar(sortiment[0]), lagerwert(sortiment));
+@solution
+interface Produkt {
+  name: string;
+  preis: number;
+  lager: number;
+}
+
+// Schreibe hier istVerfuegbar und lagerwert
+function istVerfuegbar(produkt: Produkt): boolean {
+  return produkt.lager > 0;
+}
+
+function lagerwert(produkte: Produkt[]): number {
+  let wert = 0;
+  for (const produkt of produkte) {
+    wert += produkt.preis * produkt.lager;
+  }
+  return wert;
+}
+
+const sortiment: Produkt[] = [
+  { name: "Heft", preis: 3, lager: 10 },
+  { name: "Rucksack", preis: 45, lager: 0 },
+];
+console.log(istVerfuegbar(sortiment[0]), lagerwert(sortiment));
+@tests
+fn istVerfuegbar(Produkt): boolean
+run istVerfuegbar({ name: "a", preis: 1, lager: 5 }) === true && istVerfuegbar({ name: "a", preis: 1, lager: 0 }) === false :: `istVerfuegbar` stimmt für Lager 5 und Lager 0
+fn lagerwert(Produkt[]): number
+run lagerwert([{ name: "a", preis: 3, lager: 10 }, { name: "b", preis: 45, lager: 2 }]) === 120 :: `lagerwert` rechnet `3·10 + 45·2 = 120`
+run lagerwert([]) === 0 :: Ein leeres Lager hat den Wert `0`
+@hints
+- `function istVerfuegbar(produkt: Produkt): boolean { return produkt.lager > 0; }`
+- Der Parameter von `lagerwert` hat den Typ `Produkt[]`.
+- In der Schleife: `wert += produkt.preis * produkt.lager;`
+@after
+`Produkt` und `Produkt[]` als Parametertypen – kürzer und klarer geht es nicht. Wer die Funktion liest, weiss sofort, was sie erwartet.
+
+--- quiz quiz-interface
+Was passiert mit einem `interface`, wenn dein TypeScript-Code in JavaScript übersetzt wird?
+( ) Es wird zu einer JavaScript-Klasse. :: Nein. Klassen gibt es zwar auch (kommt in Teil 4), aber ein Interface ist etwas anderes.
+( ) Es wird zu einem leeren Objekt. :: Nein, es bleibt gar nichts übrig.
+(x) Es verschwindet komplett. :: Richtig. Ein Interface ist nur eine Beschreibung für die Typprüfung. Im fertigen JavaScript kommt es nicht mehr vor.
+
+=== optional-readonly | Optionale und schreibgeschützte Eigenschaften | 15
+Nicht jede Angabe ist immer vorhanden. Und manche Angaben sollen sich nie ändern. Beides kannst du im Interface ausdrücken.
+
+## Optionale Eigenschaften
+
+Ein Fragezeichen hinter dem Namen macht eine Eigenschaft freiwillig:
+
+```ts
+interface Benutzer {
+  name: string;
+  email: string;
+  telefon?: string;
+}
+
+const mia: Benutzer = { name: "Mia", email: "mia@example.com" };
+const noah: Benutzer = { name: "Noah", email: "noah@example.com", telefon: "079 123 45 67" };
+
+console.log(mia.telefon);  // undefined
+console.log(noah.telefon); // "079 123 45 67"
+```
+
+Fehlt eine optionale Eigenschaft, hat sie den Wert `undefined`. TypeScript weiss das und gibt `telefon` den Typ `string | undefined` – «String oder nicht vorhanden». Deshalb darfst du nicht einfach damit weiterarbeiten:
+
+```ts error
+interface Benutzer {
+  name: string;
+  telefon?: string;
+}
+
+function telefonLaenge(benutzer: Benutzer): number {
+  return benutzer.telefon.length;
+}
+```
+
+Du musst zuerst prüfen, ob etwas da ist:
+
+```ts
+interface Benutzer {
+  name: string;
+  telefon?: string;
+}
+
+function kontakt(benutzer: Benutzer): string {
+  if (benutzer.telefon) {
+    return `${benutzer.name}: ${benutzer.telefon}`;
+  }
+  return `${benutzer.name}: keine Telefonnummer`;
+}
+
+console.log(kontakt({ name: "Mia" }));
+```
+
+Innerhalb des `if` weiss TypeScript: Hier ist `telefon` sicher ein `string`. Dieses «Mitdenken» heisst **Narrowing** (Einengen) – dazu gibt es bald eine eigene Lektion.
+
+## readonly
+
+Mit `readonly` vor dem Namen darf eine Eigenschaft nach dem Erstellen nicht mehr verändert werden:
+
+```ts error
+interface Benutzer {
+  readonly id: number;
+  name: string;
+}
+
+const mia: Benutzer = { id: 1, name: "Mia" };
+mia.name = "Mia Keller"; // erlaubt
+mia.id = 2;              // Fehler: id ist readonly
+```
+
+Typisch ist das für Kennungen (`id`), die ein Objekt eindeutig identifizieren. In Angular siehst du `readonly` ausserdem sehr oft bei Eigenschaften von Komponenten.
+
+--- code optional-profil | Ein Profil mit optionaler Angabe
+1. Definiere ein Interface `Profil` mit:
+   - `id` – eine Zahl, **schreibgeschützt**
+   - `name` – ein Text
+   - `motto` – ein Text, **optional**
+2. Schreibe eine Funktion `anzeige`, die ein `Profil` bekommt und einen Text zurückgibt:
+   - mit Motto: `Mia – «Carpe diem»`
+   - ohne Motto: nur `Mia`
+@starter
+// 1. Interface Profil
+
+// 2. Funktion anzeige
+
+console.log(anzeige({ id: 1, name: "Mia", motto: "Carpe diem" }));
+console.log(anzeige({ id: 2, name: "Noah" }));
+@solution
+// 1. Interface Profil
+interface Profil {
+  readonly id: number;
+  name: string;
+  motto?: string;
+}
+
+// 2. Funktion anzeige
+function anzeige(profil: Profil): string {
+  if (profil.motto) {
+    return `${profil.name} – «${profil.motto}»`;
+  }
+  return profil.name;
+}
+
+console.log(anzeige({ id: 1, name: "Mia", motto: "Carpe diem" }));
+console.log(anzeige({ id: 2, name: "Noah" }));
+@tests
+shape Profil { readonly id: number; name: string; motto?: string }
+fn anzeige(Profil): string
+run anzeige({ id: 1, name: "Mia", motto: "Carpe diem" }) === "Mia – «Carpe diem»" :: Mit Motto: `Mia – «Carpe diem»` ?? Die Zeichen kannst du aus der Aufgabe kopieren: Gedankenstrich `–` und die Anführungszeichen `«` `»`.
+run anzeige({ id: 2, name: "Noah" }) === "Noah" :: Ohne Motto: nur `Noah`
+@hints
+- Im Interface: `readonly id: number;` und `motto?: string;`
+- In der Funktion prüfst du mit `if (profil.motto) { ... }`, ob ein Motto vorhanden ist.
+- Mit Motto: `` return `${profil.name} – «${profil.motto}»`; `` – ohne: `return profil.name;`
+@after
+`?` für «kann fehlen», `readonly` für «ändert sich nie». Und: Was fehlen kann, musst du prüfen, bevor du es benutzt – TypeScript besteht darauf.
+
+--- quiz quiz-optional
+Im Interface steht `spitzname?: string`. Welchen Typ hat `person.spitzname` für TypeScript?
+( ) `string` :: Nicht ganz – die Eigenschaft kann ja fehlen. Das muss im Typ vorkommen.
+(x) `string | undefined` :: Genau. Entweder steht ein Text drin, oder die Eigenschaft fehlt, und dann ist der Wert `undefined`.
+( ) `boolean` :: Das Fragezeichen macht die Eigenschaft optional, es macht sie nicht zu einem Wahrheitswert.
+
+=== union-typen | Entweder-oder: Union-Typen | 20
+Manchmal kann ein Wert mehrere Typen haben: eine ID ist bei manchen Systemen eine Zahl, bei anderen ein Text. Oder ein Wert darf nur aus einer kleinen, festen Auswahl stammen. Dafür gibt es **Union-Typen**.
+
+## Mehrere Typen erlauben
+
+Der senkrechte Strich `|` bedeutet «oder»:
+
+```ts
+let id: string | number;
+
+id = 42;      // erlaubt
+id = "abc42"; // auch erlaubt
+console.log(id);
+```
+
+`boolean` wäre hier ein Fehler – es kommt in der Auswahl nicht vor.
+
+## Feste Werte als Typ
+
+Jetzt wird es interessant. In TypeScript kann auch ein **einzelner fester Wert** ein Typ sein. Kombiniert mit `|` entsteht eine Auswahlliste:
+
+```ts
+let ampel: "rot" | "gelb" | "grün";
+
+ampel = "rot";  // erlaubt
+ampel = "grün"; // erlaubt
+console.log(ampel);
+```
+
+Alles andere wird abgelehnt – auch Tippfehler:
+
+```ts error
+let ampel: "rot" | "gelb" | "grün";
+ampel = "blau";
+ampel = "Rot";
+```
+
+Das ist enorm praktisch. Statt irgendeinen `string` zu erlauben, erlaubst du genau die Werte, die Sinn ergeben. VS Code schlägt sie dir beim Tippen sogar vor.
+
+## Einen Namen geben mit type
+
+Hier kommt `type` zum Einsatz, denn das ist kein Objekt-Typ:
+
+```ts
+type Ampelfarbe = "rot" | "gelb" | "grün";
+type Schulnote = 1 | 2 | 3 | 4 | 5 | 6;
+
+function darfFahren(farbe: Ampelfarbe): boolean {
+  return farbe === "grün";
+}
+
+const meineNote: Schulnote = 5;
+console.log(darfFahren("rot"), meineNote);
+```
+
+## In Interfaces verwenden
+
+```ts
+interface Aufgabe {
+  titel: string;
+  status: "offen" | "in Arbeit" | "erledigt";
+  prioritaet: 1 | 2 | 3;
+}
+
+const hausaufgabe: Aufgabe = {
+  titel: "Mathe S. 42",
+  status: "offen",
+  prioritaet: 2,
+};
+console.log(hausaufgabe);
+```
+
+Solche Status-Felder gibt es in praktisch jeder App.
+
+> [!NOTE] Und enum?
+> In anderen Sprachen und in älterem TypeScript-Code löst man das mit `enum`. TypeScript hat `enum` auch, aber heute nimmt man meistens die Union aus festen Werten: Sie ist einfacher, erzeugt keinen zusätzlichen Code und funktioniert überall. Du solltest `enum` wiedererkennen, wenn du es siehst – selbst schreiben musst du es selten.
+
+--- code union-groesse | Getränkegrössen
+1. Definiere einen Typ `Groesse`, der nur die Werte `"klein"`, `"mittel"` und `"gross"` erlaubt.
+2. Schreibe eine Funktion `preis`, die eine `Groesse` bekommt und den Preis zurückgibt: klein `3`, mittel `4.5`, gross `6`.
+@starter
+// 1. Typ Groesse
+
+// 2. Funktion preis
+
+console.log(preis("klein"), preis("mittel"), preis("gross"));
+@solution
+// 1. Typ Groesse
+type Groesse = "klein" | "mittel" | "gross";
+
+// 2. Funktion preis
+function preis(groesse: Groesse): number {
+  if (groesse === "klein") {
+    return 3;
+  } else if (groesse === "mittel") {
+    return 4.5;
+  } else {
+    return 6;
+  }
+}
+
+console.log(preis("klein"), preis("mittel"), preis("gross"));
+@tests
+exists type Groesse
+fn preis("klein" | "mittel" | "gross"): number
+run preis("klein") === 3 :: `preis("klein")` ergibt `3`
+run preis("mittel") === 4.5 :: `preis("mittel")` ergibt `4.5`
+run preis("gross") === 6 :: `preis("gross")` ergibt `6`
+@hints
+- Der Typ: `type Groesse = "klein" | "mittel" | "gross";`
+- Die Funktion: `function preis(groesse: Groesse): number { ... }`
+- Im Rumpf unterscheidest du mit `if (groesse === "klein") { return 3; } else if ...`
+@after
+Probier es aus: Schreibe unten `preis("riesig")`. TypeScript lehnt das sofort ab. Mit einem gewöhnlichen `string`-Parameter wäre der Fehler erst beim Ausführen aufgefallen – oder gar nie.
+
+--- quiz quiz-union
+Gegeben ist `type Richtung = "links" | "rechts";`. Welche Zeile führt zu einem Fehler?
+( ) `const a: Richtung = "links";` :: Das ist erlaubt, `"links"` gehört zur Auswahl.
+(x) `const b: Richtung = "Rechts";` :: Genau. Gross- und Kleinschreibung zählt: `"Rechts"` ist nicht `"rechts"`.
+( ) `const c: Richtung[] = ["links", "rechts", "links"];` :: Das ist erlaubt: ein Array, in dem jeder Eintrag eine `Richtung` ist.
+
+=== narrowing | Narrowing: Typen eingrenzen | 20
+Wenn ein Wert `string | number` sein kann, was darfst du dann mit ihm tun? Nur das, was mit **beiden** Typen funktioniert. Und das ist nicht viel:
+
+```ts error
+function verdopple(wert: string | number): number {
+  return wert * 2;
+}
+```
+
+Mit einem Text kann man nicht multiplizieren, also lehnt TypeScript das ab. Du musst zuerst herausfinden, was du vor dir hast. Dieses Herausfinden heisst **Narrowing** (Eingrenzen).
+
+## Narrowing mit typeof
+
+`typeof wert` liefert den Typ eines Werts als Text: `"string"`, `"number"`, `"boolean"` …
+
+```ts
+function verdopple(wert: string | number): number {
+  if (typeof wert === "number") {
+    return wert * 2;        // hier ist wert sicher eine number
+  }
+  return Number(wert) * 2;  // hier bleibt nur noch string übrig
+}
+
+console.log(verdopple(4), verdopple("5"));
+```
+
+Das Besondere: TypeScript **denkt mit**. Innerhalb des `if` weiss es, dass `wert` eine Zahl ist. Und danach weiss es, dass nur noch `string` übrig sein kann. Fahre in VS Code mit der Maus über `wert` an beiden Stellen – der angezeigte Typ ist jedes Mal ein anderer.
+
+## Narrowing bei festen Werten
+
+Bei Auswahl-Typen grenzt du mit einem Vergleich ein. Für mehrere Fälle ist `switch` oft übersichtlicher als eine lange `else if`-Kette:
+
+```ts
+type Ampelfarbe = "rot" | "gelb" | "grün";
+
+function aktion(farbe: Ampelfarbe): string {
+  switch (farbe) {
+    case "rot":
+      return "anhalten";
+    case "gelb":
+      return "bremsen";
+    case "grün":
+      return "fahren";
+  }
+}
+
+console.log(aktion("gelb"));
+```
+
+`switch` vergleicht den Wert in den Klammern der Reihe nach mit jedem `case`. TypeScript prüft dabei, dass du **keinen Fall vergessen** hast: Löschst du `case "grün"`, bekommst du einen Fehler, weil die Funktion dann nicht mehr in jedem Fall etwas zurückgibt.
+
+## Objekte unterscheiden
+
+Der wichtigste Trick für grössere Programme: Gib verwandten Objekten eine gemeinsame Eigenschaft mit **unterschiedlichen festen Werten**. Daran kann TypeScript sie unterscheiden.
+
+```ts
+interface Kreis {
+  art: "kreis";
+  radius: number;
+}
+
+interface Rechteck {
+  art: "rechteck";
+  breite: number;
+  hoehe: number;
+}
+
+type Form = Kreis | Rechteck;
+
+function beschreibe(form: Form): string {
+  if (form.art === "kreis") {
+    return `Kreis mit Radius ${form.radius}`;
+  }
+  return `Rechteck ${form.breite} × ${form.hoehe}`;
+}
+
+console.log(beschreibe({ art: "kreis", radius: 2 }));
+```
+
+Nach der Prüfung `form.art === "kreis"` weiss TypeScript, dass `form` ein `Kreis` ist – und erlaubt `form.radius`. Im anderen Zweig erlaubt es `form.breite`. Dieses Muster heisst «Discriminated Union» und kommt in echtem Code ständig vor, zum Beispiel für Ladezustände: `{ status: "laedt" }`, `{ status: "fertig"; daten: ... }`, `{ status: "fehler"; meldung: string }`.
+
+--- code narrowing-typeof | Text oder Zahl formatieren
+Schreibe eine Funktion `formatiere`, die einen `string` **oder** eine `number` bekommt und immer einen `string` zurückgibt:
+
+- Bei einer Zahl: die Zahl mit genau zwei Nachkommastellen, zum Beispiel `"3.14"`. Dafür gibt es `zahl.toFixed(2)`.
+- Bei einem Text: der Text ohne Leerzeichen am Rand und in Grossbuchstaben.
+@starter
+// Schreibe hier die Funktion formatiere
+
+console.log(formatiere(3.14159));
+console.log(formatiere("  hallo "));
+@solution
+// Schreibe hier die Funktion formatiere
+function formatiere(wert: string | number): string {
+  if (typeof wert === "number") {
+    return wert.toFixed(2);
+  }
+  return wert.trim().toUpperCase();
+}
+
+console.log(formatiere(3.14159));
+console.log(formatiere("  hallo "));
+@tests
+fn formatiere(string | number): string
+src /typeof\s+\w+\s*===\s*["'](number|string)["']/ :: Es wird mit `typeof` unterschieden
+run formatiere(3.14159) === "3.14" && formatiere(2) === "2.00" :: Zahlen bekommen zwei Nachkommastellen (`"3.14"`, `"2.00"`)
+run formatiere("  hallo ") === "HALLO" :: `"  hallo "` wird zu `"HALLO"`
+@hints
+- Der Parametertyp ist `string | number`.
+- `if (typeof wert === "number") { return wert.toFixed(2); }`
+- Danach bleibt nur noch `string` übrig: `return wert.trim().toUpperCase();`
+@after
+`toFixed` gibt es nur auf Zahlen, `trim` nur auf Strings. Dank Narrowing erlaubt TypeScript jede Methode genau dort, wo sie sicher funktioniert.
+
+--- code narrowing-formen | Flächen berechnen
+Die Typen `Kreis`, `Rechteck` und `Form` sind gegeben. Schreibe eine Funktion `flaeche`, die eine `Form` bekommt und ihre Fläche zurückgibt:
+
+- Kreis: `Math.PI * radius * radius`
+- Rechteck: `breite * hoehe`
+@starter
+interface Kreis {
+  art: "kreis";
+  radius: number;
+}
+
+interface Rechteck {
+  art: "rechteck";
+  breite: number;
+  hoehe: number;
+}
+
+type Form = Kreis | Rechteck;
+
+// Schreibe hier die Funktion flaeche
+
+console.log(flaeche({ art: "rechteck", breite: 4, hoehe: 5 }));
+console.log(flaeche({ art: "kreis", radius: 1 }));
+@solution
+interface Kreis {
+  art: "kreis";
+  radius: number;
+}
+
+interface Rechteck {
+  art: "rechteck";
+  breite: number;
+  hoehe: number;
+}
+
+type Form = Kreis | Rechteck;
+
+// Schreibe hier die Funktion flaeche
+function flaeche(form: Form): number {
+  if (form.art === "kreis") {
+    return Math.PI * form.radius * form.radius;
+  }
+  return form.breite * form.hoehe;
+}
+
+console.log(flaeche({ art: "rechteck", breite: 4, hoehe: 5 }));
+console.log(flaeche({ art: "kreis", radius: 1 }));
+@tests
+fn flaeche(Form): number
+run flaeche({ art: "rechteck", breite: 4, hoehe: 5 }) === 20 :: Rechteck 4 × 5 ergibt `20`
+run Math.abs(flaeche({ art: "kreis", radius: 1 }) - Math.PI) < 1e-9 :: Kreis mit Radius 1 ergibt π (etwa `3.14159`)
+run Math.abs(flaeche({ art: "kreis", radius: 2 }) - 4 * Math.PI) < 1e-9 :: Kreis mit Radius 2 ergibt 4π
+@hints
+- Unterscheide über die gemeinsame Eigenschaft: `if (form.art === "kreis") { ... }`
+- Im `if` darfst du `form.radius` benutzen, danach `form.breite` und `form.hoehe`.
+- Probier aus, was passiert, wenn du `form.radius` **ausserhalb** des `if` schreibst.
+@after
+Eine gemeinsame Eigenschaft mit festen Werten (`art`) macht aus mehreren Interfaces eine Familie, die TypeScript sauber auseinanderhalten kann.
+
+=== null-undefined | Wenn ein Wert fehlt: null und undefined | 20
+Der berühmteste Fehler in JavaScript lautet: *«Cannot read properties of undefined»*. Er passiert, wenn man auf etwas zugreift, das gar nicht da ist. TypeScript kann diesen Fehler fast vollständig verhindern.
+
+## Zwei Arten von «nichts»
+
+- `undefined` – «noch kein Wert». Das liefert JavaScript von selbst: bei fehlenden Eigenschaften, weggelassenen Parametern oder wenn `find` nichts findet.
+- `null` – «absichtlich leer». Das setzt ein Programmierer bewusst ein.
+
+In der Praxis behandelt man beide meist gleich.
+
+## TypeScript zwingt dich zum Prüfen
+
+Im strengen Modus (den du in deiner `tsconfig.json` eingeschaltet hast und den Angular immer benutzt) gehört «nichts» **nicht** automatisch zu jedem Typ. Ein `string` ist immer ein String. Soll etwas fehlen dürfen, musst du es hinschreiben:
+
+```ts
+let spitzname: string | null = null;
+spitzname = "Mimi";
+console.log(spitzname);
+```
+
+Und bevor du so einen Wert benutzt, verlangt TypeScript eine Prüfung:
+
+```ts error
+function laenge(text: string | null): number {
+  return text.length;
+}
+```
+
+```ts
+function laenge(text: string | null): number {
+  if (text === null) {
+    return 0;
+  }
+  return text.length; // hier ist text sicher ein string
+}
+
+console.log(laenge(null), laenge("hallo"));
+```
+
+Das ist wieder Narrowing: Nach der Prüfung auf `null` bleibt nur `string` übrig.
+
+## Wo undefined herkommt
+
+Am häufigsten begegnet dir `undefined` bei `find`. Es kann ja sein, dass nichts gefunden wird:
+
+```ts
+const namen = ["Mia", "Noah"];
+const gefunden = namen.find((name) => name.startsWith("X"));
+// gefunden hat den Typ: string | undefined
+
+if (gefunden) {
+  console.log(gefunden.toUpperCase());
+} else {
+  console.log("Niemand gefunden");
+}
+```
+
+## Zwei Abkürzungen: ?. und ??
+
+**Optional Chaining `?.`** – «greife nur zu, wenn etwas da ist». Ist der Wert links `null` oder `undefined`, wird nicht weitergemacht und das Ergebnis ist `undefined`. Kein Absturz.
+
+**Nullish Coalescing `??`** – «nimm den Wert links; wenn er `null` oder `undefined` ist, nimm den rechts». Damit gibst du einen Ersatzwert an.
+
+```ts
+interface Benutzer {
+  name: string;
+  adresse?: { ort: string };
+}
+
+const mia: Benutzer = { name: "Mia" };
+
+console.log(mia.adresse?.ort);                // undefined – kein Absturz
+console.log(mia.adresse?.ort ?? "unbekannt"); // "unbekannt"
+```
+
+Die beiden treten oft als Paar auf: `?.` für den sicheren Zugriff, `??` für den Ersatzwert. In Angular-Templates wirst du `?.` sehr häufig sehen.
+
+> [!WARN] Das Ausrufezeichen
+> Es gibt noch ein drittes Zeichen: `wert!` bedeutet «Vertrau mir, das ist nie null». Damit schaltest du die Prüfung an dieser Stelle ab. Wenn du dich irrst, stürzt das Programm ab – genau das, was TypeScript verhindern wollte. Benutze `!` nur, wenn du es wirklich besser weisst als TypeScript, und das ist selten.
+
+--- code null-suche | Sicher suchen
+Gegeben ist eine Liste von Schülern. Schreibe eine Funktion `klasseVon`, die einen Namen bekommt und die Klasse dieser Person zurückgibt. Gibt es niemanden mit diesem Namen, soll `"unbekannt"` zurückkommen.
+
+Benutze `find` und danach `?.` und `??`.
+@starter
+interface Schueler {
+  name: string;
+  klasse: string;
+}
+
+const schueler: Schueler[] = [
+  { name: "Mia", klasse: "2a" },
+  { name: "Noah", klasse: "3b" },
+];
+
+// Schreibe hier die Funktion klasseVon
+
+console.log(klasseVon("Noah"));
+console.log(klasseVon("Paula"));
+@solution
+interface Schueler {
+  name: string;
+  klasse: string;
+}
+
+const schueler: Schueler[] = [
+  { name: "Mia", klasse: "2a" },
+  { name: "Noah", klasse: "3b" },
+];
+
+// Schreibe hier die Funktion klasseVon
+function klasseVon(name: string): string {
+  const gefunden = schueler.find((s) => s.name === name);
+  return gefunden?.klasse ?? "unbekannt";
+}
+
+console.log(klasseVon("Noah"));
+console.log(klasseVon("Paula"));
+@tests
+fn klasseVon(string): string
+src /\.find\s*\(/ :: Es wird `find` benutzt
+run klasseVon("Noah") === "3b" && klasseVon("Mia") === "2a" :: Vorhandene Namen liefern ihre Klasse
+run klasseVon("Paula") === "unbekannt" :: Unbekannte Namen liefern `"unbekannt"`
+src /\?\?/ :: Der Ersatzwert kommt über `??`
+@hints
+- Suchen: `const gefunden = schueler.find((s) => s.name === name);` – der Typ ist `Schueler | undefined`.
+- Sicher zugreifen: `gefunden?.klasse` ergibt die Klasse oder `undefined`.
+- Mit Ersatzwert: `return gefunden?.klasse ?? "unbekannt";`
+@after
+`find` + `?.` + `??` ist ein Dreiergespann, das du dir merken solltest. Es ersetzt ein ganzes `if`/`else` durch eine Zeile.
+
+--- code null-reparieren | Fehler finden: möglicherweise undefined
+Diese Funktion soll den Anfangsbuchstaben des zweiten Vornamens liefern – oder einen leeren Text, wenn es keinen zweiten Vornamen gibt. TypeScript beschwert sich zu Recht. Repariere die Funktion, **ohne** das Interface zu ändern.
+@starter
+interface Person {
+  vorname: string;
+  zweiterVorname?: string;
+}
+
+function initialeZwei(person: Person): string {
+  return person.zweiterVorname[0];
+}
+
+console.log(initialeZwei({ vorname: "Anna", zweiterVorname: "Maria" }));
+console.log(initialeZwei({ vorname: "Ben" }));
+@solution
+interface Person {
+  vorname: string;
+  zweiterVorname?: string;
+}
+
+function initialeZwei(person: Person): string {
+  if (person.zweiterVorname) {
+    return person.zweiterVorname[0];
+  }
+  return "";
+}
+
+console.log(initialeZwei({ vorname: "Anna", zweiterVorname: "Maria" }));
+console.log(initialeZwei({ vorname: "Ben" }));
+@tests
+shape Person { vorname: string; zweiterVorname?: string }
+run initialeZwei({ vorname: "Anna", zweiterVorname: "Maria" }) === "M" :: Mit zweitem Vornamen kommt `"M"` heraus
+run initialeZwei({ vorname: "Ben" }) === "" :: Ohne zweiten Vornamen kommt `""` heraus
+hasnot NonNullExpression :: Gelöst ohne das Ausrufezeichen `!`
+@hints
+- Die Meldung sagt: `person.zweiterVorname` ist möglicherweise `undefined`. Du musst also prüfen, bevor du `[0]` benutzt.
+- Variante 1: `if (person.zweiterVorname) { return person.zweiterVorname[0]; } return "";`
+- Variante 2 in einer Zeile: `return person.zweiterVorname?.[0] ?? "";`
+@after
+Die Meldung «is possibly undefined» ist kein Ärgernis, sondern ein Geschenk: TypeScript hat einen Absturz gefunden, bevor er passiert ist.
+
+--- quiz quiz-nullish
+Was ergibt `const anzeige = eingabe ?? "leer";`, wenn `eingabe` den Wert `""` (leerer Text) hat?
+( ) `"leer"` :: `??` springt nur bei `null` und `undefined` ein. Ein leerer Text ist ein ganz normaler Wert.
+(x) `""` :: Richtig. `??` ersetzt nur `null` und `undefined`. Der leere Text bleibt, wie er ist.
+( ) Einen Fehler :: Nein, der Ausdruck ist gültig.
+
+=== any-unknown | any und unknown | 15
+Zwei besondere Typen solltest du kennen: einen, den du möglichst **vermeidest**, und einen, der sein sicherer Ersatz ist.
+
+## any: die Typprüfung abschalten
+
+`any` bedeutet «irgendetwas». Mit einem Wert vom Typ `any` darfst du **alles** tun – TypeScript prüft nichts mehr:
+
+```ts
+let wert: any = "hallo";
+wert = 42;
+wert = true;
+console.log(wert.gibtEsNicht); // kein Fehler von TypeScript – einfach undefined
+```
+
+Damit bist du wieder bei JavaScript, mit allen seinen Tücken. Schlimmer noch: `any` ist ansteckend. Was du aus einem `any`-Wert herausholst, ist wieder `any`, und so breitet sich das Loch in der Prüfung aus.
+
+`any` hat seinen Platz, wenn man alten JavaScript-Code schrittweise umstellt. In neuem Code solltest du es nicht brauchen. Wenn du bei einem Problem denkst «Ich mach das einfach `any`», ist das fast immer ein Zeichen, dass du den richtigen Typ noch nicht gefunden hast.
+
+> [!NOTE] Implizites any
+> Im strengen Modus meldet TypeScript einen Fehler, wenn es einem Parameter keinen Typ zuordnen kann: *«Parameter implicitly has an 'any' type»*. Deshalb musst du Parameter immer mit Typ versehen. Das ist Absicht.
+
+## unknown: «weiss ich noch nicht»
+
+`unknown` bedeutet ebenfalls «könnte alles sein» – aber mit umgekehrter Wirkung: Mit einem `unknown`-Wert darfst du **nichts** tun, bevor du nicht geprüft hast, was es ist.
+
+```ts error
+function zeige(wert: unknown): void {
+  console.log(wert.toUpperCase());
+}
+```
+
+```ts
+function zeige(wert: unknown): void {
+  if (typeof wert === "string") {
+    console.log(wert.toUpperCase()); // hier ist es sicher ein string
+  } else {
+    console.log("kein Text");
+  }
+}
+
+zeige("hallo");
+zeige(42);
+```
+
+`unknown` nimmst du für Daten, deren Form du wirklich nicht kennst: was ein Benutzer eintippt, was ein Server schickt, was beim Abfangen eines Fehlers ankommt.
+
+> [!MERKE] Der Unterschied in einem Satz
+> `any` sagt «frag nicht», `unknown` sagt «prüf zuerst».
+
+--- code unknown-zahl | Unbekanntes sicher umwandeln
+Schreibe eine Funktion `alsZahl`, die einen Wert vom Typ `unknown` bekommt und **immer eine Zahl** zurückgibt:
+
+- Ist der Wert schon eine Zahl, wird er unverändert zurückgegeben.
+- Ist er ein Text, wird er mit `Number(...)` umgewandelt.
+- In allen anderen Fällen kommt `0` zurück.
+
+Benutze kein `any`.
+@starter
+// Schreibe hier die Funktion alsZahl
+
+console.log(alsZahl(7), alsZahl("12"), alsZahl(true));
+@solution
+// Schreibe hier die Funktion alsZahl
+function alsZahl(wert: unknown): number {
+  if (typeof wert === "number") {
+    return wert;
+  }
+  if (typeof wert === "string") {
+    return Number(wert);
+  }
+  return 0;
+}
+
+console.log(alsZahl(7), alsZahl("12"), alsZahl(true));
+@tests
+fn alsZahl(unknown): number
+run alsZahl(7) === 7 && alsZahl(-1.5) === -1.5 :: Zahlen bleiben unverändert
+run alsZahl("12") === 12 && alsZahl("3.5") === 3.5 :: Texte werden umgewandelt (`"12"` → `12`)
+run alsZahl(true) === 0 && alsZahl(null) === 0 && alsZahl([1]) === 0 && alsZahl(undefined) === 0 :: Alles andere ergibt `0`
+hasnot AnyKeyword :: Kein `any` im Code
+@hints
+- Der Parameter: `wert: unknown`
+- Erste Prüfung: `if (typeof wert === "number") { return wert; }`
+- Zweite Prüfung: `if (typeof wert === "string") { return Number(wert); }` – und am Ende `return 0;`
+@after
+So geht man mit Daten um, denen man nicht trauen kann: als `unknown` annehmen, Schritt für Schritt prüfen, und erst dann benutzen.
+
+--- quiz quiz-any
+Ein Mitschüler sagt: «Wenn TypeScript meckert, schreib einfach `any` hin, dann ist Ruhe.» Was ist das Problem daran?
+( ) `any` macht das Programm langsamer. :: Nein, auf die Geschwindigkeit hat das keinen Einfluss. Typen gibt es im laufenden Programm gar nicht mehr.
+(x) Mit `any` findet TypeScript an dieser Stelle keine Fehler mehr – auch die echten nicht. :: Genau. Die Meldung verschwindet, der Fehler nicht. Er taucht dann erst auf, wenn das Programm läuft.
+( ) `any` ist in Angular verboten und führt zu einem Abbruch. :: Verboten ist es nicht. Es gilt aber als schlechter Stil, und viele Projekte lassen sich davor warnen.
+
+=== funktionstypen | Funktionen als Werte | 15
+In TypeScript (und JavaScript) sind Funktionen ganz normale Werte. Du kannst sie in Variablen speichern und an andere Funktionen übergeben. Das hast du schon getan: `zahlen.map((z) => z * 2)` übergibt eine Funktion an `map`.
+
+Jetzt lernst du, wie man den **Typ einer Funktion** hinschreibt.
+
+## Der Typ einer Funktion
+
+```ts
+let rechne: (a: number, b: number) => number;
+
+rechne = (a, b) => a + b;
+console.log(rechne(2, 3)); // 5
+
+rechne = (a, b) => a * b;
+console.log(rechne(2, 3)); // 6
+```
+
+Der Typ `(a: number, b: number) => number` liest sich: «eine Funktion, die zwei Zahlen bekommt und eine Zahl zurückgibt». Er sieht aus wie eine Pfeilfunktion, nur steht hinter dem Pfeil ein Typ statt Code.
+
+Die Parameternamen im Typ (`a`, `b`) dienen nur der Lesbarkeit. Die echte Funktion darf ihre Parameter anders nennen.
+
+## Mit type einen Namen geben
+
+```ts
+type Rechenart = (a: number, b: number) => number;
+
+const plus: Rechenart = (a, b) => a + b;
+const mal: Rechenart = (a, b) => a * b;
+
+console.log(plus(4, 5), mal(4, 5));
+```
+
+## Funktionen als Parameter: Callbacks
+
+Eine Funktion, die du an eine andere Funktion übergibst, damit diese sie später aufruft, heisst **Callback** («Rückruf»).
+
+```ts
+function wiederhole(anzahl: number, aktion: (runde: number) => void): void {
+  for (let i = 1; i <= anzahl; i++) {
+    aktion(i);
+  }
+}
+
+wiederhole(3, (runde) => console.log(`Runde ${runde}`));
+```
+
+`wiederhole` weiss nicht, **was** getan werden soll – das bestimmt der Aufrufer. Es weiss nur, dass es die übergebene Funktion dreimal aufrufen soll. Genau so funktionieren `map`, `filter` und auch Klick-Ereignisse in Angular: «Wenn der Knopf gedrückt wird, ruf diese Funktion auf.»
+
+--- code callback-anwenden | Eine eigene map-Funktion
+Schreibe eine Funktion `wendeAn` mit zwei Parametern:
+
+- `zahlen` – ein Array von Zahlen
+- `umwandlung` – eine Funktion, die eine Zahl bekommt und eine Zahl zurückgibt
+
+`wendeAn` ruft `umwandlung` für jede Zahl auf und gibt ein neues Array mit den Ergebnissen zurück. Benutze dafür eine `for...of`-Schleife und `push` – du baust gerade `map` nach, also verwende `map` selbst nicht.
+@starter
+// Schreibe hier die Funktion wendeAn
+
+console.log(wendeAn([1, 2, 3], (zahl) => zahl * 10));
+@solution
+// Schreibe hier die Funktion wendeAn
+function wendeAn(zahlen: number[], umwandlung: (zahl: number) => number): number[] {
+  const ergebnis: number[] = [];
+  for (const zahl of zahlen) {
+    ergebnis.push(umwandlung(zahl));
+  }
+  return ergebnis;
+}
+
+console.log(wendeAn([1, 2, 3], (zahl) => zahl * 10));
+@tests
+fn wendeAn(number[], (zahl: number) => number): number[]
+run wendeAn([1, 2, 3], (z) => z * 10).join(",") === "10,20,30" :: Mal 10: `[1, 2, 3]` wird zu `[10, 20, 30]`
+run wendeAn([4, 9], Math.sqrt).join(",") === "2,3" :: Mit `Math.sqrt`: `[4, 9]` wird zu `[2, 3]`
+run wendeAn([], (z) => z).length === 0 :: Ein leeres Array bleibt leer
+nosrc /\.map\s*\(/ :: Ohne `map` gelöst
+@hints
+- Der zweite Parameter: `umwandlung: (zahl: number) => number`
+- Ein leeres Array braucht eine Typangabe, sonst weiss TypeScript nicht, was hinein soll: `const ergebnis: number[] = [];`
+- In der Schleife: `ergebnis.push(umwandlung(zahl));`
+@after
+Du hast gerade `map` selbst gebaut. Es ist keine Zauberei: eine Schleife, die für jedes Element die übergebene Funktion aufruft.
+
+--- quiz quiz-funktionstyp
+Was beschreibt der Typ `(text: string) => boolean`?
+( ) Eine Variable, die entweder ein `string` oder ein `boolean` ist. :: Das wäre `string | boolean`. Der Pfeil `=>` zeigt, dass es um eine Funktion geht.
+(x) Eine Funktion, die einen `string` bekommt und einen `boolean` zurückgibt. :: Genau. Links vom Pfeil stehen die Parameter, rechts der Rückgabetyp.
+( ) Eine Funktion, die einen `boolean` bekommt und einen `string` zurückgibt. :: Umgekehrt: Was in den Klammern steht, geht hinein, was hinter dem Pfeil steht, kommt heraus.
+
+=== generics | Generics: Typen mit Platzhaltern | 20
+`string[]` kennst du. Dafür gibt es eine zweite, gleichbedeutende Schreibweise: `Array<string>`. Die spitzen Klammern bedeuten: «ein Array **von** Strings». `Array` ist ein Typ mit einem **Platzhalter**, in den du einen anderen Typ einsetzt. So etwas heisst **Generic**.
+
+In Angular triffst du ständig auf spitze Klammern: `signal<number>(0)`, `input<string>()`, `HttpClient.get<Benutzer[]>(...)`. Hier lernst du, sie zu lesen – und selbst zu schreiben.
+
+## Das Problem
+
+Angenommen, du willst eine Funktion, die das erste Element eines Arrays zurückgibt. Für Zahlen:
+
+```ts
+function erstesVonZahlen(liste: number[]): number | undefined {
+  return liste[0];
+}
+console.log(erstesVonZahlen([4, 5]));
+```
+
+Für Strings bräuchtest du dieselbe Funktion nochmal mit `string`. Für Bücher nochmal. Das ist Unsinn – der Code ist jedes Mal derselbe.
+
+## Die Lösung: ein Typ-Parameter
+
+```ts
+function erstes<T>(liste: T[]): T | undefined {
+  return liste[0];
+}
+
+const zahl = erstes([4, 5, 6]);       // Typ: number | undefined
+const wort = erstes(["a", "b"]);      // Typ: string | undefined
+console.log(zahl, wort);
+```
+
+`<T>` hinter dem Funktionsnamen führt einen **Typ-Parameter** ein. `T` ist ein Platzhalter: «irgendein Typ, den ich noch nicht kenne». Die Funktion sagt damit: «Gib mir ein Array von `T`, und ich gebe dir ein `T` zurück.»
+
+Beim Aufruf erkennt TypeScript selbst, was `T` ist: Übergibst du ein `number[]`, ist `T` gleich `number`. Der Rückgabetyp stimmt automatisch.
+
+Der Name `T` (für «Type») ist Tradition. Du darfst auch `TElement` oder `Eintrag` schreiben.
+
+## Generische Interfaces
+
+Auch Interfaces können Platzhalter haben. Ein typisches Beispiel ist die Antwort eines Servers: Die Verpackung ist immer gleich, der Inhalt jedes Mal anders.
+
+```ts
+interface Antwort<T> {
+  erfolgreich: boolean;
+  daten: T;
+}
+
+const a: Antwort<number> = { erfolgreich: true, daten: 42 };
+const b: Antwort<string[]> = { erfolgreich: true, daten: ["Mia", "Noah"] };
+
+console.log(a.daten + 1, b.daten.length);
+```
+
+Bei Interfaces musst du den Typ in den spitzen Klammern immer selbst angeben.
+
+## Den Typ ausdrücklich angeben
+
+Manchmal kann TypeScript `T` nicht erraten – zum Beispiel bei einem leeren Array. Dann schreibst du ihn in spitzen Klammern dazu:
+
+```ts
+const namen = new Array<string>();
+namen.push("Mia");
+console.log(namen);
+```
+
+Genau das tust du später in Angular: `signal<string[]>([])` heisst «ein Signal, das ein Array von Strings enthält und leer startet».
+
+> [!MERKE] Spitze Klammern lesen
+> Lies `<...>` als «von» oder «mit»: `Array<string>` = Array von Strings, `Antwort<Buch>` = Antwort mit einem Buch, `Promise<number>` = Versprechen auf eine Zahl.
+
+--- code generic-letztes | Deine erste generische Funktion
+Schreibe eine generische Funktion `letztes` mit dem Typ-Parameter `T`. Sie bekommt ein Array von `T` und gibt das **letzte** Element zurück – oder `undefined`, wenn das Array leer ist.
+@starter
+// Schreibe hier die Funktion letztes
+
+const zahl = letztes([1, 2, 3]);
+const wort = letztes(["a", "b"]);
+console.log(zahl, wort);
+@solution
+// Schreibe hier die Funktion letztes
+function letztes<T>(liste: T[]): T | undefined {
+  return liste[liste.length - 1];
+}
+
+const zahl = letztes([1, 2, 3]);
+const wort = letztes(["a", "b"]);
+console.log(zahl, wort);
+@tests
+fn letztes<T>(T[]): T | undefined
+var zahl: number | undefined
+var wort: string | undefined
+run letztes([1, 2, 3]) === 3 && letztes(["a", "b"]) === "b" :: Das letzte Element wird geliefert
+run letztes([]) === undefined :: Ein leeres Array ergibt `undefined`
+@hints
+- Der Typ-Parameter steht direkt hinter dem Namen: `function letztes<T>(...)`
+- Parameter und Rückgabetyp: `(liste: T[]): T | undefined`
+- Das letzte Element hat den Index `liste.length - 1`.
+@after
+Schau dir die Anforderungen an: `zahl` hat den Typ `number | undefined`, `wort` den Typ `string | undefined`. Eine einzige Funktion, und der Typ passt sich dem Aufruf an – das ist der ganze Sinn von Generics.
+
+--- code generic-interface | Ein generisches Interface
+1. Definiere ein generisches Interface `Paar<T>` mit zwei Eigenschaften `links` und `rechts`, beide vom Typ `T`.
+2. Schreibe eine generische Funktion `tausche<T>`, die ein `Paar<T>` bekommt und ein **neues** `Paar<T>` zurückgibt, bei dem `links` und `rechts` vertauscht sind.
+@starter
+// 1. Interface Paar<T>
+
+// 2. Funktion tausche<T>
+
+const zahlen: Paar<number> = { links: 1, rechts: 2 };
+console.log(tausche(zahlen));
+@solution
+// 1. Interface Paar<T>
+interface Paar<T> {
+  links: T;
+  rechts: T;
+}
+
+// 2. Funktion tausche<T>
+function tausche<T>(paar: Paar<T>): Paar<T> {
+  return { links: paar.rechts, rechts: paar.links };
+}
+
+const zahlen: Paar<number> = { links: 1, rechts: 2 };
+console.log(tausche(zahlen));
+@tests
+exists interface Paar
+shape Paar { links: T; rechts: T }
+fn tausche<T>(Paar<T>): Paar<T>
+run tausche({ links: 1, rechts: 2 }).links === 2 && tausche({ links: 1, rechts: 2 }).rechts === 1 :: Zahlen werden vertauscht
+run tausche({ links: "a", rechts: "b" }).links === "b" :: Funktioniert auch mit Strings
+@hints
+- `interface Paar<T> { links: T; rechts: T; }`
+- `function tausche<T>(paar: Paar<T>): Paar<T> { ... }`
+- Gib ein neues Objekt zurück: `return { links: paar.rechts, rechts: paar.links };`
+@after
+`Paar<number>`, `Paar<string>`, `Paar<Buch>` – ein Interface, beliebig viele Varianten. Genau so sind `Array<T>`, `Promise<T>` und Angulars `Signal<T>` gebaut.
+
+=== weitere-typen | Tupel, Record und nützliche Helfer | 15
+Drei Werkzeuge, die dir in echtem Code regelmässig begegnen. Du musst sie nicht auswendig können – aber wiedererkennen.
+
+## Tupel: Arrays mit fester Länge
+
+Ein Tupel ist ein Array, bei dem **jede Position ihren eigenen Typ** hat:
+
+```ts
+const koordinate: [number, number] = [47.37, 8.54];
+const eintrag: [string, number] = ["Mia", 15];
+
+console.log(koordinate[0], eintrag[0].toUpperCase(), eintrag[1] + 1);
+```
+
+`[string, number]` heisst: genau zwei Elemente, zuerst ein Text, dann eine Zahl.
+
+## Record: Nachschlagetabellen
+
+Manchmal kennst du die Namen der Eigenschaften nicht im Voraus – etwa bei einer Tabelle «Wort → wie oft kommt es vor». Dafür gibt es `Record<Schlüsseltyp, Werttyp>`:
+
+```ts
+const punkte: Record<string, number> = {};
+
+punkte["Mia"] = 12;
+punkte["Noah"] = 9;
+punkte["Mia"] += 3;
+
+console.log(punkte); // { Mia: 15, Noah: 9 }
+```
+
+Mit eckigen Klammern greifst du über einen **berechneten** Namen zu: `punkte[name]`. Das ist die Schreibweise für Eigenschaften, deren Namen in einer Variable stecken.
+
+Noch nützlicher wird `Record` mit einer festen Auswahl als Schlüssel. Dann prüft TypeScript, dass du **keinen Schlüssel vergisst**:
+
+```ts
+type Ampelfarbe = "rot" | "gelb" | "grün";
+
+const bedeutung: Record<Ampelfarbe, string> = {
+  rot: "anhalten",
+  gelb: "bremsen",
+  grün: "fahren",
+};
+console.log(bedeutung.gelb);
+```
+
+## Helfer, die aus Typen neue Typen machen
+
+TypeScript bringt Werkzeuge mit, die einen vorhandenen Typ abwandeln:
+
+```ts
+interface Benutzer {
+  id: number;
+  name: string;
+  email: string;
+}
+
+type BenutzerEntwurf = Partial<Benutzer>;          // alle Eigenschaften optional
+type BenutzerOhneId = Omit<Benutzer, "id">;         // alles ausser id
+type NurName = Pick<Benutzer, "name">;              // nur name
+
+const entwurf: BenutzerEntwurf = { name: "Mia" };
+const neu: BenutzerOhneId = { name: "Mia", email: "mia@example.com" };
+const kurz: NurName = { name: "Mia" };
+console.log(entwurf, neu, kurz);
+```
+
+`Omit<Benutzer, "id">` ist zum Beispiel praktisch für ein Formular «Neuer Benutzer»: Dort gibt es alles ausser der `id`, denn die vergibt erst der Server.
+
+--- code record-zaehlen | Buchstaben zählen
+Schreibe eine Funktion `zaehleBuchstaben`, die einen Text bekommt und ein `Record<string, number>` zurückgibt: zu jedem Zeichen, wie oft es im Text vorkommt.
+
+Beispiel: `zaehleBuchstaben("hallo")` ergibt `{ h: 1, a: 1, l: 2, o: 1 }`.
+
+Tipp: Über die Zeichen eines Strings kannst du mit `for (const zeichen of text)` gehen.
+@starter
+// Schreibe hier die Funktion zaehleBuchstaben
+
+console.log(zaehleBuchstaben("hallo"));
+@solution
+// Schreibe hier die Funktion zaehleBuchstaben
+function zaehleBuchstaben(text: string): Record<string, number> {
+  const anzahl: Record<string, number> = {};
+  for (const zeichen of text) {
+    anzahl[zeichen] = (anzahl[zeichen] ?? 0) + 1;
+  }
+  return anzahl;
+}
+
+console.log(zaehleBuchstaben("hallo"));
+@tests
+fn zaehleBuchstaben(string): Record<string, number>
+run zaehleBuchstaben("hallo").l === 2 && zaehleBuchstaben("hallo").h === 1 && zaehleBuchstaben("hallo").o === 1 :: In `"hallo"` kommt `l` zweimal vor, `h` und `o` je einmal
+run Object.keys(zaehleBuchstaben("hallo")).length === 4 :: `"hallo"` hat vier verschiedene Zeichen
+run Object.keys(zaehleBuchstaben("")).length === 0 :: Ein leerer Text ergibt ein leeres Objekt
+run zaehleBuchstaben("aaa").a === 3 :: `"aaa"` ergibt `{ a: 3 }`
+@hints
+- Starte mit einer leeren Tabelle: `const anzahl: Record<string, number> = {};`
+- Beim ersten Vorkommen eines Zeichens ist `anzahl[zeichen]` noch `undefined`. Mit `?? 0` machst du daraus eine 0.
+- In der Schleife: `anzahl[zeichen] = (anzahl[zeichen] ?? 0) + 1;`
+@after
+Zählen in einer Nachschlagetabelle ist ein Klassiker – und du hast dabei gleich `??` aus der letzten Lektion sinnvoll eingesetzt.
+
+--- quiz quiz-omit
+Gegeben ist `interface Todo { id: number; titel: string; erledigt: boolean }`. Welche Eigenschaften hat der Typ `Omit<Todo, "id">`?
+( ) Nur `id` :: Umgekehrt: `Omit` lässt die genannte Eigenschaft **weg**. Nur `id` behalten würde `Pick<Todo, "id">`.
+(x) `titel` und `erledigt` :: Genau. `Omit` («auslassen») liefert den Typ ohne die genannte Eigenschaft.
+( ) `id`, `titel` und `erledigt`, aber alle optional :: Das wäre `Partial<Todo>`.
+
+=== spread-destructuring | Auspacken und Kopieren: Destructuring und Spread | 20
+Zwei Schreibweisen, die Code kürzer machen – und die du für Angular unbedingt brauchst. Besonders der zweite Teil dieser Lektion (Kopieren statt Verändern) ist die Grundlage dafür, wie Angular Änderungen bemerkt.
+
+## Destructuring: Werte auspacken
+
+Statt jede Eigenschaft einzeln aus einem Objekt zu holen …
+
+```ts
+const buch = { titel: "Momo", autor: "Michael Ende", seiten: 304 };
+
+const titel1 = buch.titel;
+const seiten1 = buch.seiten;
+console.log(titel1, seiten1);
+```
+
+… kannst du mehrere auf einmal «auspacken»:
+
+```ts
+const buch = { titel: "Momo", autor: "Michael Ende", seiten: 304 };
+
+const { titel, seiten } = buch;
+console.log(titel, seiten); // "Momo" 304
+```
+
+Die geschweiften Klammern stehen hier **links** vom Gleichheitszeichen. Die Namen darin müssen den Eigenschaften entsprechen. Es entstehen zwei normale Variablen `titel` und `seiten`.
+
+Bei Arrays geht dasselbe mit eckigen Klammern. Hier zählt die Position:
+
+```ts
+const koordinate = [47.37, 8.54];
+const [breite, laenge] = koordinate;
+console.log(breite, laenge);
+```
+
+Sehr beliebt ist Destructuring direkt in den Parametern einer Funktion:
+
+```ts
+interface Buch {
+  titel: string;
+  seiten: number;
+}
+
+function beschreibe({ titel, seiten }: Buch): string {
+  return `${titel} (${seiten} Seiten)`;
+}
+
+console.log(beschreibe({ titel: "Momo", seiten: 304 }));
+```
+
+## Spread: Inhalte ausbreiten
+
+Drei Punkte `...` vor einem Array oder Objekt «breiten» seinen Inhalt aus. Damit erstellst du **Kopien** – auf Wunsch mit Änderungen:
+
+```ts
+const zahlen = [1, 2, 3];
+const mehrZahlen = [...zahlen, 4, 5];
+console.log(mehrZahlen); // [ 1, 2, 3, 4, 5 ]
+console.log(zahlen);     // [ 1, 2, 3 ] – unverändert
+
+const buch = { titel: "Momo", seiten: 304 };
+const neueAuflage = { ...buch, seiten: 320 };
+console.log(neueAuflage); // { titel: 'Momo', seiten: 320 }
+console.log(buch);        // { titel: 'Momo', seiten: 304 } – unverändert
+```
+
+Bei Objekten gilt: Was **weiter hinten** steht, gewinnt. `{ ...buch, seiten: 320 }` kopiert erst alles aus `buch` und überschreibt dann `seiten`.
+
+## Warum kopieren statt verändern?
+
+Bisher hast du Arrays mit `push` verändert und Objekte mit `objekt.eigenschaft = ...`. Das ist nicht falsch. Aber in Angular (und vielen anderen Frameworks) gilt eine wichtige Regel:
+
+> [!MERKE] Daten nicht verändern, sondern ersetzen
+> Angular bemerkt Änderungen daran, dass ein **neuer Wert** gesetzt wird. Wenn du nur den Inhalt eines bestehenden Arrays veränderst, bleibt es dasselbe Array – und Angular bekommt unter Umständen nichts mit. Deshalb erstellt man eine geänderte **Kopie** und setzt diese als neuen Wert.
+
+Die drei häufigsten Fälle solltest du im Schlaf können:
+
+```ts
+interface Todo {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+const todos: Todo[] = [
+  { id: 1, titel: "Mathe", erledigt: false },
+  { id: 2, titel: "Sport", erledigt: false },
+];
+
+// 1. Hinzufügen: neues Array mit einem Element mehr
+const mitNeuem = [...todos, { id: 3, titel: "Musik", erledigt: false }];
+
+// 2. Entfernen: filter liefert ein neues Array ohne das Element
+const ohneZwei = todos.filter((todo) => todo.id !== 2);
+
+// 3. Ändern: map liefert ein neues Array; nur das passende Element wird ersetzt
+const einsErledigt = todos.map((todo) =>
+  todo.id === 1 ? { ...todo, erledigt: true } : todo
+);
+
+console.log(mitNeuem.length, ohneZwei.length, einsErledigt[0].erledigt);
+console.log(todos[0].erledigt); // false – das Original ist unverändert
+```
+
+Schau dir Fall 3 genau an: `map` geht alle Todos durch. Beim Todo mit der gesuchten `id` entsteht eine Kopie mit `erledigt: true`, alle anderen werden unverändert übernommen. Dieses Muster wirst du in der Abschluss-App exakt so verwenden.
+
+--- code destructuring-auspacken | Werte auspacken
+Hole aus dem Objekt `spieler` mit **einer einzigen** Destructuring-Zeile die Eigenschaften `name` und `punkte` in gleichnamige Variablen.
+@starter
+const spieler = { name: "Alex", punkte: 120, level: 3 };
+
+// Eine Zeile Destructuring
+
+console.log(name, punkte);
+@solution
+const spieler = { name: "Alex", punkte: 120, level: 3 };
+
+// Eine Zeile Destructuring
+const { name, punkte } = spieler;
+
+console.log(name, punkte);
+@tests
+has ObjectBindingPattern :: Es wird Objekt-Destructuring benutzt (`const { ... } = spieler`)
+run name === "Alex" :: `name` ist `"Alex"`
+run punkte === 120 :: `punkte` ist `120`
+nosrc /spieler\s*\.\s*(name|punkte)/ :: Ohne `spieler.name` und `spieler.punkte`
+@hints
+- Die geschweiften Klammern stehen links: `const { ... } = spieler;`
+- In die Klammern kommen die Namen der Eigenschaften, getrennt durch Komma.
+@after
+`const { a, b } = objekt;` ist nur eine Kurzform für `const a = objekt.a; const b = objekt.b;` – aber eine, die du in fast jeder Angular-Datei siehst, nämlich beim `import`.
+
+--- code spread-kopieren | Kopieren statt verändern
+Schreibe drei Funktionen, die jeweils ein **neues** Array zurückgeben und das übergebene Array **nicht verändern**:
+
+- `hinzufuegen(todos, titel)` – hängt ein neues Todo mit diesem Titel an. Es bekommt `erledigt: false` und als `id` die Anzahl der bisherigen Todos plus 1.
+- `entfernen(todos, id)` – liefert alle Todos ausser dem mit dieser `id`.
+- `abhaken(todos, id)` – setzt beim Todo mit dieser `id` `erledigt` auf `true`. Alle anderen bleiben, wie sie sind.
+@starter
+interface Todo {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+// Schreibe hier hinzufuegen, entfernen und abhaken
+
+const start: Todo[] = [{ id: 1, titel: "Mathe", erledigt: false }];
+const mehr = hinzufuegen(start, "Sport");
+console.log(mehr);
+console.log(abhaken(mehr, 1));
+console.log(entfernen(mehr, 1));
+@solution
+interface Todo {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+// Schreibe hier hinzufuegen, entfernen und abhaken
+function hinzufuegen(todos: Todo[], titel: string): Todo[] {
+  return [...todos, { id: todos.length + 1, titel, erledigt: false }];
+}
+
+function entfernen(todos: Todo[], id: number): Todo[] {
+  return todos.filter((todo) => todo.id !== id);
+}
+
+function abhaken(todos: Todo[], id: number): Todo[] {
+  return todos.map((todo) => (todo.id === id ? { ...todo, erledigt: true } : todo));
+}
+
+const start: Todo[] = [{ id: 1, titel: "Mathe", erledigt: false }];
+const mehr = hinzufuegen(start, "Sport");
+console.log(mehr);
+console.log(abhaken(mehr, 1));
+console.log(entfernen(mehr, 1));
+@tests
+fn hinzufuegen(Todo[], string): Todo[]
+setup const __a = [{ id: 1, titel: "Mathe", erledigt: false }]; const __b = hinzufuegen(__a, "Sport");
+run __b.length === 2 && __b[1].titel === "Sport" && __b[1].erledigt === false && __b[1].id === 2 :: `hinzufuegen` hängt `{ id: 2, titel: "Sport", erledigt: false }` an
+run __a.length === 1 && __b !== __a :: `hinzufuegen` verändert das ursprüngliche Array nicht ?? `push` verändert das Original. Erstelle ein neues Array mit `[...todos, neuesTodo]`.
+fn entfernen(Todo[], number): Todo[]
+setup const __c = entfernen(__b, 1);
+run __c.length === 1 && __c[0].id === 2 && __b.length === 2 :: `entfernen` liefert ein neues Array ohne das Todo – das Original bleibt
+fn abhaken(Todo[], number): Todo[]
+setup const __d = abhaken(__b, 1);
+run __d.length === 2 && __d[0].erledigt === true && __d[1].erledigt === false :: `abhaken` setzt nur beim richtigen Todo `erledigt: true`
+run __b[0].erledigt === false && __d[0] !== __b[0] :: `abhaken` verändert das ursprüngliche Todo nicht ?? `todo.erledigt = true` verändert das Original. Erstelle eine Kopie: `{ ...todo, erledigt: true }`.
+run __d[1] === __b[1] :: Unveränderte Todos werden einfach übernommen (nicht kopiert)
+@hints
+- Hinzufügen: `return [...todos, { id: todos.length + 1, titel: titel, erledigt: false }];`
+- Entfernen: `return todos.filter((todo) => todo.id !== id);`
+- Abhaken: `return todos.map((todo) => todo.id === id ? { ...todo, erledigt: true } : todo);`
+@after
+Hinzufügen mit Spread, Entfernen mit `filter`, Ändern mit `map` und Spread: Das sind die drei Handgriffe, mit denen du in Angular jede Liste verwaltest. Übrigens: Statt `titel: titel` darf man kurz `titel` schreiben, wenn Eigenschaft und Variable gleich heissen.
+
+--- quiz quiz-spread
+Was gibt dieser Code aus?
+
+```ts
+const original = { name: "Mia", alter: 15 };
+const kopie = { ...original, alter: 16 };
+console.log(original.alter, kopie.alter);
+```
+( ) `16 16` :: Nein. Durch den Spread entsteht ein neues, unabhängiges Objekt. Das Original bleibt, wie es war.
+(x) `15 16` :: Richtig. `kopie` ist ein neues Objekt mit allen Eigenschaften von `original`, bei dem `alter` überschrieben wurde.
+( ) `15 15` :: Nein – was weiter hinten steht, gewinnt. `alter: 16` überschreibt den kopierten Wert.
