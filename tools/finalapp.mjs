@@ -1,0 +1,43 @@
+// Setzt die fertige Abschluss-App aus den Musterlösungen zusammen, baut sie und bedient sie im Browser.
+import fs from 'node:fs'; import path from 'node:path'; import http from 'node:http';
+import { execFileSync } from 'node:child_process'; import { createRequire } from 'node:module';
+import { ROOT } from './common.mjs'; import { loadCourse } from './lessons.mjs';
+const { chromium } = createRequire(import.meta.url)('playwright');
+const proj = path.resolve(process.env.NG_PROJEKT || path.join(ROOT, '../lern-app')), base = path.join(ROOT, 'ng-basis');
+const course = loadCourse(path.join(ROOT, 'lessons'));
+const ex = {}; course.parts.forEach((p) => p.lessons.forEach((l) => l.blocks.forEach((b) => { if (b.type === 'code') ex[b.id] = b; })));
+fs.rmSync(path.join(proj, 'src'), { recursive: true, force: true }); fs.cpSync(base, path.join(proj, 'src'), { recursive: true });
+const files = { ...ex['projekt-filter'].solution, ...ex['projekt-speicher-laden'].solution };
+for (const [n, t] of Object.entries(files)) { const f = path.join(proj, 'src/app', n); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, t); }
+if (!process.env.NOBUILD) execFileSync('npx', ['ng', 'build'], { cwd: proj, stdio: 'pipe' });
+const root = path.join(proj, 'dist/lern-app/browser');
+const srv = http.createServer((q, r) => { let f = path.join(root, q.url.split('?')[0]); if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) f = path.join(root, 'index.html'); r.writeHead(200, { 'content-type': f.endsWith('.js') ? 'text/javascript' : f.endsWith('.css') ? 'text/css' : 'text/html' }); fs.createReadStream(f).pipe(r); }).listen(0);
+const b = await chromium.launch(); const p = await b.newPage(); const errs = [];
+p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
+const url = 'http://localhost:' + srv.address().port + '/';
+await p.goto(url); await p.waitForSelector('h1');
+const ok = (c, m) => console.log((c ? '✓ ' : '✗ ') + m);
+const w = () => p.waitForTimeout(150);
+await w(); ok((await p.locator('body').innerText()).includes('Hier gibt es nichts zu sehen.'), 'leerer Zustand');
+for (const t of ['Mathe', '   ', 'Sport', 'Musik']) { await p.locator('input[type=text]').fill(t); await p.locator('input[type=text]').press('Enter'); }
+await w(); ok(await p.locator('app-aufgabe-zeile').count() === 3, 'drei Aufgaben, leere Eingabe ignoriert');
+await w(); ok(await p.locator('input[type=text]').inputValue() === '', 'Feld geleert');
+await p.locator('app-aufgabe-zeile input[type=checkbox]').nth(1).check();
+await w(); ok((await p.locator('body').innerText()).includes('Noch offen: 2'), 'Zähler nach Abhaken = 2');
+await w(); ok(await p.locator('app-aufgabe-zeile span.erledigt').count() === 1, 'Klasse erledigt gesetzt');
+await p.locator('button', { hasText: 'Offen' }).click();
+await w(); ok(await p.locator('app-aufgabe-zeile').count() === 2, 'Filter offen zeigt 2');
+await w(); ok(await p.locator('button.aktiv').innerText() === 'Offen', 'aktiver Filter markiert');
+await p.locator('button', { hasText: 'Erledigt' }).click();
+await w(); ok(await p.locator('app-aufgabe-zeile').count() === 1, 'Filter erledigt zeigt 1');
+await p.locator('button', { hasText: 'Alle' }).click();
+await p.locator('app-aufgabe-zeile button').first().click();
+await w(); ok(await p.locator('app-aufgabe-zeile').count() === 2, 'Löschen entfernt eine Aufgabe');
+await p.reload(); await p.waitForSelector('h1');
+await w(); ok(await p.locator('app-aufgabe-zeile').count() === 2, 'nach Neuladen noch 2 Aufgaben (localStorage)');
+await w(); ok(await p.locator('app-aufgabe-zeile input[type=checkbox]').first().isChecked(), 'Zustand erledigt bleibt erhalten');
+await p.locator('input[type=text]').fill('Neu'); await p.locator('input[type=text]').press('Enter');
+const stored = await p.evaluate(() => JSON.parse(localStorage.getItem('aufgaben')));
+await w(); ok(new Set(stored.map((a) => a.id)).size === 3 && stored[2].id === 4, 'IDs eindeutig nach Neuladen: ' + stored.map((a) => a.id).join(','));
+console.log((await p.locator('body').innerText()).slice(0,300)); console.log('Konsolenfehler:', errs);
+await b.close(); srv.close();
