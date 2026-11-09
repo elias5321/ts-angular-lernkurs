@@ -1,0 +1,1544 @@
+#part angular-basis | Angular: die Grundlagen | Dein erstes Angular-Projekt, Komponenten, Templates, Signals und alles, was eine Seite lebendig macht.
+
+=== angular-ueberblick | Was ist Angular? | 15
+Du kannst jetzt TypeScript. Zeit für den Baukasten, mit dem daraus Web-Apps werden.
+
+## Das Problem, das Angular löst
+
+Mit reinem JavaScript musst du jede Änderung auf der Seite von Hand erledigen: Element suchen, Text setzen, Klasse ändern, Liste neu aufbauen. Bei einer kleinen Seite geht das. Bei einer App mit vielen Ansichten und Daten wird es schnell unübersichtlich und fehleranfällig.
+
+Angular dreht das um. Du beschreibst zwei Dinge:
+
+1. **Die Daten** – in TypeScript: «Es gibt einen Zähler, er steht auf 0.»
+2. **Wie die Seite aussehen soll** – in HTML mit ein paar Zusätzen: «Zeige hier den Zähler an.»
+
+Ändern sich die Daten, bringt Angular die Seite **automatisch** auf den neuesten Stand. Du fasst das HTML nie von Hand an.
+
+## Alles ist eine Komponente
+
+Eine Angular-App besteht aus **Komponenten**. Eine Komponente ist ein eigenständiger Baustein der Oberfläche: ein Knopf, eine Karte, eine Liste, eine ganze Seite. Komponenten werden ineinander verschachtelt wie Lego-Steine.
+
+Stell dir eine Aufgaben-App vor:
+
+- `App` – der äusserste Rahmen
+- darin eine `Kopfzeile`
+- darin eine `AufgabenListe`
+- darin für jede Aufgabe eine `AufgabenKarte`
+
+Jede Komponente besteht aus drei Teilen:
+
+| Teil | Datei | Inhalt |
+| --- | --- | --- |
+| Klasse | `karte.ts` | Daten und Verhalten, in TypeScript |
+| Template | `karte.html` | das Aussehen, in HTML |
+| Styles | `karte.css` | die Gestaltung, in CSS |
+
+## So sieht eine Komponente aus
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-zaehler',
+  template: `
+    <p>Zählerstand: {{ stand() }}</p>
+    <button (click)="erhoehe()">Plus 1</button>
+  `,
+})
+export class Zaehler {
+  readonly stand = signal(0);
+
+  erhoehe(): void {
+    this.stand.update((wert) => wert + 1);
+  }
+}
+```
+
+Fast alles davon kannst du schon lesen:
+
+- `import { ... } from '@angular/core'` – etwas aus dem Angular-Paket holen.
+- `export class Zaehler { ... }` – eine Klasse mit einer Eigenschaft und einer Methode.
+- `(wert) => wert + 1` – eine Pfeilfunktion.
+
+Neu sind drei Dinge, die du in den nächsten Lektionen lernst:
+
+- `@Component({...})` – ein **Decorator**. Dazu gleich mehr.
+- `signal(0)` – ein **Signal**: ein Wert, bei dem Angular mitbekommt, wenn er sich ändert.
+- `{{ stand() }}` und `(click)="..."` – die **Template-Syntax**, mit der HTML und Klasse verbunden werden.
+
+## Decorators
+
+Ein Decorator beginnt mit `@` und steht direkt vor einer Klasse. Er hängt der Klasse Zusatzinformationen an. `@Component({...})` sagt Angular: «Diese Klasse ist eine Komponente. Hier ist ihr HTML-Name und ihr Template.»
+
+Ohne den Decorator wäre `Zaehler` eine gewöhnliche Klasse. Erst der Decorator macht daraus einen Baustein, den Angular auf der Seite anzeigen kann.
+
+## Aktuelles Angular
+
+Angular wird laufend weiterentwickelt. Dieser Kurs zeigt den Stil von **Angular 22**. Wenn du im Internet nach Hilfe suchst, wirst du viel älteren Code finden, der anders aussieht. Das Wichtigste, damit du dich nicht verwirren lässt:
+
+| Früher | Heute (in diesem Kurs) |
+| --- | --- |
+| `app.component.ts`, Klasse `AppComponent` | `app.ts`, Klasse `App` |
+| `*ngIf`, `*ngFor` | `@if`, `@for` |
+| `@Input()`, `@Output()` | `input()`, `output()` |
+| `NgModule`, `app.module.ts` | gibt es nicht mehr – Komponenten sind eigenständig |
+| normale Eigenschaften für Daten | Signals |
+| `@Injectable({ providedIn: 'root' })` | `@Service()` |
+| `constructor(private x: X)` | `inject(X)` |
+
+Der alte Code funktioniert meist noch. Für neue Projekte gilt aber die rechte Spalte. Die offizielle, immer aktuelle Dokumentation findest du auf [angular.dev](https://angular.dev).
+
+--- quiz quiz-ng-komponente
+Was ist eine Komponente in Angular?
+( ) Eine HTML-Datei, die Angular in JavaScript umwandelt. :: Das Template gehört dazu, ist aber nur ein Teil. Der Kern ist eine TypeScript-Klasse.
+(x) Ein Baustein der Oberfläche: eine TypeScript-Klasse mit dazugehörigem Template und Styles. :: Genau. Klasse (Daten und Verhalten), Template (Aussehen) und Styles (Gestaltung) bilden zusammen eine Komponente.
+( ) Ein Paket, das man mit npm installiert. :: Pakete sind fertige Bibliotheken anderer Leute. Komponenten schreibst du selbst.
+
+--- quiz quiz-ng-decorator
+Wozu dient `@Component({...})` über einer Klasse?
+( ) Es importiert die Klasse aus dem Angular-Paket. :: Importiert wird mit `import`. Der Decorator steht bei der Klasse, die du selbst schreibst.
+( ) Es erzeugt automatisch ein Objekt der Klasse. :: Nein, Objekte erzeugt Angular später selbst, wenn die Komponente auf der Seite gebraucht wird.
+(x) Es kennzeichnet die Klasse als Komponente und gibt Angular die nötigen Angaben wie Selektor und Template. :: Richtig. Der Decorator ist die Verbindung zwischen deiner Klasse und Angular.
+
+=== angular-projekt | Dein erstes Angular-Projekt | 25
+Angular läuft nicht hier im Browser-Editor – eine Angular-App wird aus vielen Dateien zusammengebaut, und dafür braucht es die Werkzeuge auf deinem Computer. Ab jetzt arbeitest du deshalb zweigleisig:
+
+- **Hier im Kurs** schreibst du den Code der Komponenten. Geprüft werden die Typen und der Aufbau.
+- **In VS Code** baust du dasselbe in einem echten Projekt und siehst es im Browser laufen.
+
+## Die Angular CLI installieren
+
+Die **CLI** («Command Line Interface») ist das Kommandozeilen-Werkzeug von Angular. Der Befehl heisst `ng`. Damit erstellst du Projekte, startest sie und erzeugst neue Komponenten.
+
+Öffne ein Terminal (in VS Code oder das Terminal-Programm deines Computers) und installiere die CLI:
+
+```bash
+npm install -g @angular/cli
+```
+
+Das `-g` steht für «global»: Der Befehl `ng` ist danach in jedem Ordner verfügbar. Prüfe es mit:
+
+```bash
+ng version
+```
+
+Es erscheint eine Übersicht mit der Versionsnummer.
+
+> [!WARN] Wenn die Installation scheitert
+> - **Mac/Linux, Meldung mit «EACCES» oder «permission denied»:** Dir fehlt die Berechtigung für globale Installationen. Du kannst die CLI dann einfach ohne Installation benutzen: Schreibe überall `npx @angular/cli` statt `ng`, beim Erstellen also `npx @angular/cli new erste-app`. Innerhalb eines Projekts funktioniert danach `npx ng serve`.
+> - **Windows, «Die Ausführung von Skripts ist deaktiviert»:** Schau in der Lektion «Deinen Computer einrichten» nach – dort steht der Befehl, der das behebt.
+
+## Ein Projekt erstellen
+
+Wechsle im Terminal in den Ordner, in dem das Projekt liegen soll (zum Beispiel «Dokumente»), und führe aus:
+
+```bash
+ng new erste-app
+```
+
+Die CLI stellt ein paar Fragen. Mit den Pfeiltasten wählst du aus, mit [[Enter]] bestätigst du:
+
+| Frage | Deine Antwort |
+| --- | --- |
+| Which stylesheet system would you like to use? | **CSS** |
+| Do you want to enable Server-Side Rendering (SSR) …? | **No** (tippe `n`) |
+| Fragen zu KI-Werkzeugen oder Ähnlichem | [[Enter]] für den Standard bzw. «None» |
+
+Danach lädt die CLI alle nötigen Pakete herunter. Das dauert eine oder zwei Minuten.
+
+## Das Projekt öffnen und starten
+
+Öffne den neuen Ordner `erste-app` in VS Code (**Datei → Ordner öffnen**). Öffne dort ein Terminal und starte die App:
+
+```bash
+ng serve
+```
+
+Nach ein paar Sekunden erscheint eine Meldung mit einer Adresse. Öffne im Browser:
+
+```text
+http://localhost:4200
+```
+
+Du siehst die Startseite deiner ersten Angular-App.
+
+`ng serve` startet einen **Entwicklungsserver**. Er läuft, solange das Terminal offen ist, und er beobachtet deine Dateien: Sobald du etwas speicherst, wird die App neu gebaut und der Browser lädt automatisch neu. Du beendest ihn mit [[Strg]] + [[C]].
+
+> [!TIP] Zwei Terminals
+> Lass `ng serve` in einem Terminal laufen und öffne für andere Befehle ein zweites (mit dem **+** im Terminal-Bereich). Wenn du `ng serve` beendest, ist die Seite im Browser nicht mehr erreichbar.
+
+## Die erste Änderung
+
+Öffne die Datei `src/app/app.html`. Sie enthält einen langen Platzhalter. Lösche **alles** und schreibe stattdessen:
+
+```html
+<h1>Hallo Angular!</h1>
+```
+
+Speichere. Der Browser zeigt sofort deine Überschrift.
+
+## Fehler erscheinen an drei Stellen
+
+Wenn in einem Angular-Projekt etwas nicht stimmt, siehst du das:
+
+1. **in VS Code** als rote Linie – auch im HTML-Template, dank der Erweiterung «Angular Language Service»;
+2. **im Terminal**, in dem `ng serve` läuft;
+3. **im Browser** als Überlagerung über der Seite.
+
+Bei Fehlern, die erst beim Benutzen der App auftreten, hilft die **Konsole des Browsers**: Drücke [[F12]] und wähle den Reiter «Konsole» (Console). Dort landen auch deine `console.log`-Ausgaben.
+
+--- task ng-projekt-task | Angular-Projekt erstellen
+Erstelle dein erstes Angular-Projekt.
+[ ] `ng version` zeigt eine Versionsnummer an.
+[ ] `ng new erste-app` ist durchgelaufen (CSS, kein SSR).
+[ ] Der Ordner `erste-app` ist in VS Code geöffnet.
+[ ] `ng serve` läuft und `http://localhost:4200` zeigt die App.
+[ ] Du hast `src/app/app.html` durch eine eigene Überschrift ersetzt und die Änderung im Browser gesehen.
+
+--- quiz quiz-ng-serve
+Du hast `ng serve` gestartet und änderst eine Datei. Was musst du tun, damit du die Änderung im Browser siehst?
+(x) Nur speichern. :: Richtig. Der Entwicklungsserver bemerkt die Änderung, baut die App neu und lädt den Browser automatisch neu.
+( ) Speichern, `ng serve` beenden und neu starten. :: Nicht nötig – das wäre sehr mühsam. Der Server beobachtet deine Dateien selbst.
+( ) Speichern und `npx tsc` ausführen. :: `tsc` brauchst du in einem Angular-Projekt nicht direkt. `ng serve` übersetzt und prüft alles.
+
+=== angular-struktur | Ein Rundgang durch das Projekt | 15
+`ng new` hat viele Dateien erzeugt. Du musst nicht alle kennen – aber du solltest wissen, wo was liegt.
+
+## Die wichtigsten Dateien und Ordner
+
+| Pfad | Wozu |
+| --- | --- |
+| `package.json` | Name des Projekts, benötigte Pakete, Befehle |
+| `angular.json` | Einstellungen der Angular CLI (selten anfassen) |
+| `tsconfig.json` | Einstellungen von TypeScript (streng, wie du es kennst) |
+| `node_modules/` | heruntergeladene Pakete (nie anfassen) |
+| `public/` | Dateien, die unverändert ausgeliefert werden, z. B. Bilder |
+| `src/index.html` | die einzige echte HTML-Seite |
+| `src/main.ts` | der Startpunkt des Programms |
+| `src/styles.css` | Styles für die ganze App |
+| `src/app/` | **hier arbeitest du**: alle Komponenten |
+
+## Wie die App startet
+
+Drei Dateien spielen zusammen. Schau sie dir in deinem Projekt an.
+
+**1. `src/index.html`** enthält im `<body>` nur ein einziges, unbekanntes Element:
+
+```html
+<body>
+  <app-root></app-root>
+</body>
+```
+
+**2. `src/main.ts`** startet Angular und sagt, welche Komponente zuerst angezeigt wird:
+
+```ts nocheck
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { App } from './app/app';
+
+bootstrapApplication(App, appConfig).catch((err) => console.error(err));
+```
+
+**3. `src/app/app.ts`** ist diese erste Komponente – die **Wurzelkomponente**:
+
+```ts nocheck
+import { Component, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+  imports: [RouterOutlet],
+  selector: 'app-root',
+  styleUrl: './app.css',
+  templateUrl: './app.html',
+})
+export class App {
+  protected readonly title = signal('erste-app');
+}
+```
+
+Der Zusammenhang: `selector: 'app-root'` legt fest, dass diese Komponente überall dort erscheint, wo im HTML `<app-root>` steht. Und genau das steht in `index.html`. Angular ersetzt also `<app-root>` durch das Template der Komponente `App`.
+
+## Die Angaben im Decorator
+
+| Angabe | Bedeutung |
+| --- | --- |
+| `selector` | der HTML-Name der Komponente |
+| `templateUrl` | Pfad zur HTML-Datei mit dem Template |
+| `styleUrl` | Pfad zur CSS-Datei |
+| `imports` | andere Komponenten und Werkzeuge, die im Template benutzt werden |
+
+Statt `templateUrl` kann man mit `template: '...'` das HTML auch direkt in die TypeScript-Datei schreiben. Das eignet sich für sehr kleine Komponenten. Die CLI erzeugt standardmässig getrennte Dateien, und so machen wir es im Kurs auch.
+
+## Die Dateien im Ordner app
+
+| Datei | Inhalt |
+| --- | --- |
+| `app.ts` | die Klasse der Wurzelkomponente |
+| `app.html` | ihr Template |
+| `app.css` | ihre Styles |
+| `app.spec.ts` | automatische Tests (in diesem Kurs nicht behandelt) |
+| `app.config.ts` | Grundeinstellungen der App |
+| `app.routes.ts` | die Seiten der App (kommt beim Routing) |
+
+In der generierten Klasse steht `protected readonly title = signal('erste-app');`. Du kannst jedes Wort lesen: eine Eigenschaft `title`, sichtbar für die Klasse und ihr Template (`protected`), die nie ersetzt wird (`readonly`), und die ein Signal mit dem Text `'erste-app'` enthält.
+
+> [!NOTE] protected oder nicht?
+> Angular empfiehlt `protected` für alles, was nur das eigene Template braucht. In den Übungen hier lassen wir das Wort oft weg, damit der Code kürzer bleibt – dann ist die Eigenschaft `public`. Beides funktioniert. `readonly` schreiben wir bei Signals immer: Das Signal selbst wird nie ausgetauscht, nur sein Inhalt ändert sich.
+
+--- quiz quiz-ng-selector
+In `index.html` steht `<app-root></app-root>`. Woher weiss Angular, was dort angezeigt werden soll?
+( ) Angular sucht eine Datei namens `app-root.html`. :: Nein, eine solche Datei gibt es nicht.
+(x) Die Komponente `App` hat `selector: 'app-root'` – ihr Template wird an dieser Stelle eingesetzt. :: Genau. Der Selektor ist der HTML-Name einer Komponente. Wo er im HTML vorkommt, erscheint die Komponente.
+( ) `app-root` ist ein normales HTML-Element, das jeder Browser kennt. :: Nein, Browser kennen `<app-root>` nicht. Erst Angular füllt es mit Inhalt.
+
+--- quiz quiz-ng-ordner
+In welchem Ordner schreibst du fast deinen ganzen Code?
+( ) `node_modules` :: Dort liegen die heruntergeladenen Pakete. Diesen Ordner fasst du nie an.
+( ) `public` :: Dort liegen Bilder und andere Dateien, die unverändert ausgeliefert werden.
+(x) `src/app` :: Richtig. Dort liegen alle Komponenten und sonstigen Bausteine deiner App.
+
+=== komponenten | Daten im Template anzeigen | 20
+Die Klasse einer Komponente hält die Daten, das Template zeigt sie an. Die Verbindung zwischen beiden heisst **Interpolation** – und sie ist der erste Schritt zu einer lebendigen Seite.
+
+## Signals: Werte, die Angular beobachtet
+
+Daten, die im Template angezeigt werden und sich ändern können, legst du als **Signal** an:
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+})
+export class App {
+  readonly name = signal('Mia');
+  readonly punkte = signal(120);
+}
+```
+
+Ein Signal ist eine kleine Schachtel um einen Wert. `signal('Mia')` erzeugt ein Signal mit dem Startwert `'Mia'`. TypeScript erkennt den Typ von selbst: `name` ist ein `WritableSignal<string>` – ein Generic, wie du es kennst.
+
+Um den Wert zu **lesen**, rufst du das Signal wie eine Funktion auf: `name()`. Die Klammern sind wichtig. `name` ist die Schachtel, `name()` ist ihr Inhalt.
+
+## Interpolation: doppelte geschweifte Klammern
+
+Im Template schreibst du zwischen `{{` und `}}` einen Ausdruck. Angular rechnet ihn aus und setzt das Ergebnis als Text ein:
+
+```html
+<h1>Hallo {{ name() }}!</h1>
+<p>Du hast {{ punkte() }} Punkte.</p>
+<p>Verdoppelt wären das {{ punkte() * 2 }}.</p>
+<p>Dein Name hat {{ name().length }} Buchstaben.</p>
+```
+
+Zwischen den Klammern darf alles stehen, was einen Wert ergibt: Signale lesen, rechnen, Methoden aufrufen, die Kurzform `bedingung ? a : b`. Nicht erlaubt sind Anweisungen wie `if`, `for` oder Zuweisungen mit `=`.
+
+Im Template schreibst du **kein** `this.`. Alles, was du dort verwendest, wird automatisch in der Klasse der Komponente gesucht.
+
+## Warum Signals?
+
+Wenn sich der Wert eines Signals ändert, weiss Angular genau, welche Stellen im Template davon abhängen – und aktualisiert **nur diese**. Du musst nichts weiter tun. Wie man Werte ändert, lernst du in der nächsten Lektion.
+
+> [!WARN] Der häufigste Anfängerfehler
+> `{{ name }}` ohne Klammern zeigt nicht den Namen an, sondern die Schachtel selbst – auf der Seite erscheint dann etwas wie `[Signal: Mia]`. Signale liest man immer mit Klammern: `{{ name() }}`.
+
+## Feste Werte
+
+Werte, die sich nie ändern, brauchen kein Signal. Eine gewöhnliche `readonly`-Eigenschaft reicht:
+
+```ts ng
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  template: `<footer>{{ copyright }} · Version {{ version }}</footer>`,
+})
+export class App {
+  readonly copyright = '© Meine Schule';
+  readonly version = 3;
+}
+```
+
+Als Faustregel: Kann sich etwas ändern, während die App läuft → Signal. Sonst → normale Eigenschaft.
+
+--- code ng-interpolation | Deine erste Komponente
+Diese Übung hat zwei Reiter: die Klasse (`app.ts`) und das Template (`app.html`).
+
+1. Lege in der Klasse zwei Signale an: `name` mit einem Text (zum Beispiel deinem Vornamen) und `alter` mit einer Zahl.
+2. Ergänze im Template unter der Überschrift einen Absatz, der beide anzeigt – zum Beispiel `Ich heisse Mia und bin 15 Jahre alt.`
+3. Füge einen zweiten Absatz hinzu, der mit einer Rechnung im Template anzeigt, wie alt du **nächstes Jahr** bist.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly titel = signal('Über mich');
+
+  // Lege hier name und alter an
+}
+@starter app.html
+<h1>{{ titel() }}</h1>
+
+<!-- Schreibe hier deine zwei Absätze -->
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly titel = signal('Über mich');
+
+  // Lege hier name und alter an
+  readonly name = signal('Mia');
+  readonly alter = signal(15);
+}
+@solution app.html
+<h1>{{ titel() }}</h1>
+
+<!-- Schreibe hier deine zwei Absätze -->
+<p>Ich heisse {{ name() }} und bin {{ alter() }} Jahre alt.</p>
+<p>Nächstes Jahr bin ich {{ alter() + 1 }}.</p>
+@tests
+shape App { name: WritableSignal<string>; alter: WritableSignal<number> }
+tpl /\{\{\s*name\(\)\s*\}\}/ :: Das Template zeigt `{{ name() }}` an
+tpl /\{\{\s*alter\(\)\s*\}\}/ :: Das Template zeigt `{{ alter() }}` an
+tpl /\{\{\s*alter\(\)\s*\+\s*1\s*\}\}|\{\{\s*1\s*\+\s*alter\(\)\s*\}\}/ :: Das Alter im nächsten Jahr wird im Template berechnet: `{{ alter() + 1 }}`
+notpl /\{\{\s*(name|alter|titel)\s*[^(\s]?\s*\}\}/ :: Alle Signale werden mit Klammern gelesen ?? `{{ name }}` zeigt die Schachtel, `{{ name() }}` den Inhalt.
+tpl /<p[\s>][\s\S]*<p[\s>]/ :: Es gibt zwei Absätze (`<p>`)
+@hints
+- In der Klasse: `readonly name = signal('Mia');` und `readonly alter = signal(15);`
+- Im Template: `<p>Ich heisse {{ name() }} und bin {{ alter() }} Jahre alt.</p>`
+- Die Rechnung steht direkt in den Klammern: `{{ alter() + 1 }}`
+@after
+Signal in der Klasse anlegen, im Template mit `{{ signal() }}` lesen. Dieses Paar ist das Fundament von allem, was folgt. Baue es jetzt auch in deiner `erste-app` nach und schau es dir im Browser an.
+
+--- quiz quiz-ng-klammern
+In der Klasse steht `readonly stadt = signal('Bern');`. Was schreibst du ins Template, um «Bern» anzuzeigen?
+( ) `{{ stadt }}` :: Ohne Klammern bekommst du das Signal selbst, nicht seinen Inhalt.
+( ) `{{ this.stadt() }}` :: Fast – aber im Template lässt man `this.` weg.
+(x) `{{ stadt() }}` :: Richtig. Ein Signal liest man, indem man es wie eine Funktion aufruft.
+
+=== signals | Signals ändern und auf Klicks reagieren | 25
+Eine Seite, die nur anzeigt, ist langweilig. Jetzt reagiert deine Komponente auf den Benutzer – und du lernst, wie sich Signale ändern.
+
+## Auf Ereignisse reagieren
+
+Im Template verbindest du ein Ereignis mit einer Methode der Klasse. Das Ereignis steht in **runden** Klammern:
+
+```html
+<button (click)="erhoehe()">Plus 1</button>
+```
+
+Lies es so: «Wenn auf diesen Knopf geklickt wird, rufe `erhoehe()` auf.» Das nennt man **Event Binding**. Neben `click` gibt es viele weitere Ereignisse: `input` (Eingabe in ein Feld), `keydown` (Taste gedrückt), `submit` (Formular abgeschickt), `mouseenter` und so weiter.
+
+## Signale ändern
+
+Ein Signal hat zwei Methoden zum Ändern:
+
+- `set(neuerWert)` – ersetzt den Wert.
+- `update(funktion)` – berechnet den neuen Wert **aus dem alten**. Du übergibst eine Pfeilfunktion, die den alten Wert bekommt und den neuen zurückgibt.
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-zaehler',
+  template: `
+    <p>Stand: {{ stand() }}</p>
+    <button (click)="erhoehe()">Plus 1</button>
+    <button (click)="zuruecksetzen()">Zurücksetzen</button>
+  `,
+})
+export class Zaehler {
+  readonly stand = signal(0);
+
+  erhoehe(): void {
+    this.stand.update((wert) => wert + 1);
+  }
+
+  zuruecksetzen(): void {
+    this.stand.set(0);
+  }
+}
+```
+
+In der Klasse brauchst du wieder `this.` – nur im Template fällt es weg.
+
+Sobald `set` oder `update` aufgerufen wird, aktualisiert Angular automatisch alle Stellen im Template, die `stand()` anzeigen. Das ist der ganze Zauber.
+
+> [!MERKE] Lesen, setzen, aktualisieren
+> - Lesen: `stand()`
+> - Ersetzen: `stand.set(5)`
+> - Aus dem alten Wert berechnen: `stand.update((alt) => alt + 1)`
+
+## Signale mit Arrays und Objekten
+
+Hier zahlt sich aus, was du über Kopieren statt Verändern gelernt hast. Ein Signal bemerkt eine Änderung nur, wenn es einen **neuen Wert** bekommt:
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-liste',
+  template: `<p>{{ namen().length }} Namen</p>`,
+})
+export class Liste {
+  readonly namen = signal<string[]>([]);
+
+  hinzufuegen(name: string): void {
+    this.namen.update((alt) => [...alt, name]); // neues Array
+  }
+}
+```
+
+`signal<string[]>([])` gibt den Typ in spitzen Klammern an, weil TypeScript aus einem leeren Array nicht erraten kann, was hinein soll.
+
+Falsch wäre `this.namen().push(name)`: Das verändert das bestehende Array, ohne dass das Signal etwas davon erfährt. Die Seite bliebe unverändert.
+
+## Kleine Aktionen direkt im Template
+
+Für ganz einfache Fälle darfst du die Änderung direkt ins Template schreiben:
+
+```html
+<button (click)="stand.set(0)">Zurücksetzen</button>
+```
+
+Sobald mehr als ein einzelner Aufruf nötig ist, gehört die Logik in eine Methode der Klasse. Dort ist sie lesbarer und TypeScript kann sie besser prüfen.
+
+--- code ng-zaehler | Ein Zähler
+Baue einen Zähler mit drei Knöpfen.
+
+In `app.ts`:
+
+- ein Signal `stand` mit dem Startwert `0`
+- eine Methode `erhoehe()`, die den Stand um 1 erhöht
+- eine Methode `verringere()`, die den Stand um 1 verringert
+- eine Methode `zuruecksetzen()`, die den Stand auf 0 setzt
+
+In `app.html`: Zeige den Stand an und verbinde die drei Knöpfe per `(click)` mit den Methoden.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // Signal und Methoden
+}
+@starter app.html
+<h1>Zähler</h1>
+<p>Stand: </p>
+
+<button>−</button>
+<button>+</button>
+<button>Zurücksetzen</button>
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // Signal und Methoden
+  readonly stand = signal(0);
+
+  erhoehe(): void {
+    this.stand.update((wert) => wert + 1);
+  }
+
+  verringere(): void {
+    this.stand.update((wert) => wert - 1);
+  }
+
+  zuruecksetzen(): void {
+    this.stand.set(0);
+  }
+}
+@solution app.html
+<h1>Zähler</h1>
+<p>Stand: {{ stand() }}</p>
+
+<button (click)="verringere()">−</button>
+<button (click)="erhoehe()">+</button>
+<button (click)="zuruecksetzen()">Zurücksetzen</button>
+@tests
+shape App { stand: WritableSignal<number>; erhoehe: () => void; verringere: () => void; zuruecksetzen: () => void }
+src /stand\s*\.\s*update\s*\(/ :: Erhöhen und Verringern benutzen `stand.update(...)`
+src /stand\s*\.\s*set\s*\(\s*0\s*\)/ :: Zurücksetzen benutzt `stand.set(0)`
+tpl /\{\{\s*stand\(\)\s*\}\}/ :: Das Template zeigt `{{ stand() }}` an
+tpl /\(click\)\s*=\s*"erhoehe\(\)"/ :: Ein Knopf ruft per `(click)` die Methode `erhoehe()` auf
+tpl /\(click\)\s*=\s*"verringere\(\)"/ :: Ein Knopf ruft `verringere()` auf
+tpl /\(click\)\s*=\s*"zuruecksetzen\(\)"/ :: Ein Knopf ruft `zuruecksetzen()` auf
+@hints
+- Das Signal: `readonly stand = signal(0);`
+- Erhöhen: `erhoehe(): void { this.stand.update((wert) => wert + 1); }`
+- Im Template: `<button (click)="erhoehe()">+</button>` – die Klammern hinter dem Methodennamen nicht vergessen.
+@after
+Signal, drei Methoden, drei Klick-Bindungen: Das ist der komplette Kreislauf einer Angular-Komponente. Der Benutzer löst ein Ereignis aus, eine Methode ändert ein Signal, Angular aktualisiert die Anzeige.
+
+--- code ng-liste-signal | Ein Signal mit einem Array
+Die Komponente zeigt an, wie viele Würfe schon gemacht wurden und was der letzte Wurf war.
+
+Ergänze die Methode `wuerfle()`: Sie soll eine Zufallszahl von 1 bis 6 erzeugen und **hinten an das Array im Signal `wuerfe` anhängen** – so, dass das Signal die Änderung bemerkt.
+
+Schreibe ausserdem die Methode `leeren()`, die alle Würfe löscht.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly wuerfe = signal<number[]>([]);
+
+  wuerfle(): void {
+    const zahl = Math.floor(Math.random() * 6) + 1;
+    // Hänge zahl an das Array im Signal an
+  }
+
+  // Methode leeren()
+}
+@starter app.html
+<h1>Würfel</h1>
+<p>Anzahl Würfe: {{ wuerfe().length }}</p>
+<p>Alle Würfe: {{ wuerfe().join(', ') }}</p>
+
+<button (click)="wuerfle()">Würfeln</button>
+<button (click)="leeren()">Leeren</button>
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly wuerfe = signal<number[]>([]);
+
+  wuerfle(): void {
+    const zahl = Math.floor(Math.random() * 6) + 1;
+    // Hänge zahl an das Array im Signal an
+    this.wuerfe.update((alt) => [...alt, zahl]);
+  }
+
+  // Methode leeren()
+  leeren(): void {
+    this.wuerfe.set([]);
+  }
+}
+@solution app.html
+<h1>Würfel</h1>
+<p>Anzahl Würfe: {{ wuerfe().length }}</p>
+<p>Alle Würfe: {{ wuerfe().join(', ') }}</p>
+
+<button (click)="wuerfle()">Würfeln</button>
+<button (click)="leeren()">Leeren</button>
+@tests
+shape App { wuerfe: WritableSignal<number[]>; wuerfle: () => void; leeren: () => void }
+src /wuerfe\s*\.\s*(update|set)\s*\(/ :: Das Signal wird mit `update` oder `set` geändert
+src /\[\s*\.\.\.[^\]]*,\s*zahl\s*\]/ :: Es entsteht ein neues Array: `[...alt, zahl]`
+nosrc /\.push\s*\(/ :: Kein `push` – das Signal würde die Änderung nicht bemerken
+src /wuerfe\s*\.\s*set\s*\(\s*\[\s*\]\s*\)/ :: `leeren()` setzt ein leeres Array: `wuerfe.set([])`
+@hints
+- `update` bekommt eine Funktion, die aus dem alten Array ein neues macht.
+- `this.wuerfe.update((alt) => [...alt, zahl]);`
+- Leeren: `leeren(): void { this.wuerfe.set([]); }`
+@after
+Bei Arrays und Objekten in Signals gilt immer: neuen Wert erzeugen, nicht den alten verändern. `[...alt, neu]` zum Hinzufügen, `filter` zum Entfernen, `map` zum Ändern.
+
+--- quiz quiz-ng-update
+Was ist der Unterschied zwischen `punkte.set(10)` und `punkte.update((p) => p + 10)`?
+( ) Keiner, beides setzt den Wert auf 10. :: Nur `set(10)` setzt auf 10. `update` rechnet vom alten Wert aus.
+(x) `set` ersetzt den Wert durch 10, `update` zählt 10 zum bisherigen Wert dazu. :: Genau. `update` nimmst du immer dann, wenn der neue Wert vom alten abhängt.
+( ) `set` ist für Zahlen, `update` für Texte. :: Beide funktionieren mit jedem Typ.
+
+=== computed | Berechnete Werte: computed | 15
+Viele Werte in einer App sind keine eigenen Daten, sondern ergeben sich aus anderen: der Gesamtpreis aus Preis und Menge, die Anzahl offener Aufgaben aus der Aufgabenliste. Solche Werte speicherst du nicht separat – du lässt sie **berechnen**.
+
+## computed
+
+```ts ng
+import { Component, computed, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-warenkorb',
+  template: `
+    <p>{{ menge() }} × {{ preis() }} Franken = {{ gesamt() }} Franken</p>
+    <button (click)="mehr()">Eins mehr</button>
+  `,
+})
+export class Warenkorb {
+  readonly preis = signal(4.5);
+  readonly menge = signal(2);
+
+  readonly gesamt = computed(() => this.preis() * this.menge());
+
+  mehr(): void {
+    this.menge.update((m) => m + 1);
+  }
+}
+```
+
+`computed` bekommt eine Pfeilfunktion, die den Wert ausrechnet. Das Ergebnis ist wieder ein Signal – du liest es genauso mit `gesamt()`.
+
+Das Besondere: Angular merkt sich, welche Signale in der Funktion gelesen wurden (hier `preis` und `menge`). Ändert sich eines davon, wird `gesamt` automatisch neu berechnet. Du musst nie daran denken, es selbst zu aktualisieren.
+
+## Warum nicht einfach ein zweites Signal?
+
+Du könntest `gesamt` auch als normales Signal anlegen und in `mehr()` von Hand nachführen. Das geht so lange gut, bis du es an einer Stelle vergisst – dann zeigt die Seite einen falschen Preis. Mit `computed` kann das nicht passieren: Der Wert **folgt** immer aus seinen Quellen.
+
+> [!MERKE] Eine Quelle der Wahrheit
+> Speichere jede Information nur einmal. Alles, was sich daraus berechnen lässt, wird mit `computed` abgeleitet.
+
+## Eigenschaften von computed
+
+- **Nur lesbar:** Ein `computed` hat kein `set` und kein `update`. Der Typ ist `Signal<...>`, nicht `WritableSignal<...>`.
+- **Sparsam:** Es rechnet nur neu, wenn sich eine seiner Quellen wirklich geändert hat – und nur, wenn jemand den Wert braucht.
+- **Verkettbar:** Ein `computed` darf andere `computed` lesen.
+
+## Mit Listen arbeiten
+
+Hier kommen die Array-Methoden zurück:
+
+```ts ng
+import { Component, computed, signal } from '@angular/core';
+
+interface Aufgabe {
+  titel: string;
+  erledigt: boolean;
+}
+
+@Component({
+  selector: 'app-aufgaben',
+  template: `<p>{{ offen() }} von {{ aufgaben().length }} Aufgaben offen</p>`,
+})
+export class Aufgaben {
+  readonly aufgaben = signal<Aufgabe[]>([
+    { titel: 'Mathe', erledigt: true },
+    { titel: 'Deutsch', erledigt: false },
+  ]);
+
+  readonly offen = computed(() => this.aufgaben().filter((a) => !a.erledigt).length);
+}
+```
+
+--- code ng-computed | Ein kleiner Warenkorb
+Die Signale `preis` und `menge` sind gegeben. Ergänze:
+
+- `zwischensumme` – ein `computed`: Preis mal Menge
+- `versand` – ein `computed`: `0`, wenn die Zwischensumme mindestens 50 ist, sonst `7`
+- `total` – ein `computed`: Zwischensumme plus Versand
+
+Zeige im Template alle drei Werte an (die Stellen sind markiert).
+@flags angular norun
+@starter app.ts
+import { Component, computed, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly preis = signal(12);
+  readonly menge = signal(1);
+
+  // zwischensumme, versand, total
+
+  mehr(): void {
+    this.menge.update((m) => m + 1);
+  }
+
+  weniger(): void {
+    this.menge.update((m) => Math.max(1, m - 1));
+  }
+}
+@starter app.html
+<h1>Warenkorb</h1>
+<p>
+  <button (click)="weniger()">−</button>
+  {{ menge() }} Stück à {{ preis() }} Franken
+  <button (click)="mehr()">+</button>
+</p>
+
+<p>Zwischensumme: </p>
+<p>Versand: </p>
+<p>Total: </p>
+@solution app.ts
+import { Component, computed, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly preis = signal(12);
+  readonly menge = signal(1);
+
+  // zwischensumme, versand, total
+  readonly zwischensumme = computed(() => this.preis() * this.menge());
+  readonly versand = computed(() => (this.zwischensumme() >= 50 ? 0 : 7));
+  readonly total = computed(() => this.zwischensumme() + this.versand());
+
+  mehr(): void {
+    this.menge.update((m) => m + 1);
+  }
+
+  weniger(): void {
+    this.menge.update((m) => Math.max(1, m - 1));
+  }
+}
+@solution app.html
+<h1>Warenkorb</h1>
+<p>
+  <button (click)="weniger()">−</button>
+  {{ menge() }} Stück à {{ preis() }} Franken
+  <button (click)="mehr()">+</button>
+</p>
+
+<p>Zwischensumme: {{ zwischensumme() }}</p>
+<p>Versand: {{ versand() }}</p>
+<p>Total: {{ total() }}</p>
+@tests
+shape App { zwischensumme: Signal<number>; total: Signal<number> }
+src /zwischensumme\s*=\s*computed\s*\(/ :: `zwischensumme` ist ein `computed`
+src /versand\s*=\s*computed\s*\(/ :: `versand` ist ein `computed`
+src /total\s*=\s*computed\s*\(/ :: `total` ist ein `computed`
+src /this\s*\.\s*zwischensumme\s*\(\s*\)\s*(>=\s*50|>\s*49)|(50\s*<=|49\s*<)\s*this\s*\.\s*zwischensumme\s*\(\s*\)/ :: `versand` hängt von `zwischensumme()` ab (gratis ab 50)
+tpl /\{\{\s*zwischensumme\(\)\s*\}\}/ :: Das Template zeigt `{{ zwischensumme() }}`
+tpl /\{\{\s*versand\(\)\s*\}\}/ :: Das Template zeigt `{{ versand() }}`
+tpl /\{\{\s*total\(\)\s*\}\}/ :: Das Template zeigt `{{ total() }}`
+@hints
+- `readonly zwischensumme = computed(() => this.preis() * this.menge());`
+- Für den Versand passt die Kurzform: `computed(() => this.zwischensumme() >= 50 ? 0 : 7)`
+- `total` liest die beiden anderen: `computed(() => this.zwischensumme() + this.versand())`
+@after
+Drei berechnete Werte, die aufeinander aufbauen – und keiner davon muss je von Hand aktualisiert werden. Ein Klick auf «+» ändert nur `menge`, alles andere folgt von selbst.
+
+--- quiz quiz-ng-computed
+Warum kann man bei `readonly total = computed(() => ...)` nicht `total.set(100)` aufrufen?
+( ) Weil `readonly` davorsteht. :: `readonly` verhindert nur, dass die Eigenschaft `total` durch ein anderes Signal ersetzt wird. Auch ein normales `readonly`-Signal hat `set`.
+(x) Weil ein `computed` nur lesbar ist – sein Wert ergibt sich immer aus der Berechnung. :: Genau. Könnte man ihn setzen, wäre er nicht mehr garantiert das Ergebnis seiner Quellen.
+( ) Weil `set` nur für Texte funktioniert. :: `set` funktioniert bei schreibbaren Signals mit jedem Typ.
+
+=== property-binding | Eigenschaften binden | 20
+Mit `{{ }}` setzt du **Text** ein. Oft willst du aber eine **Eigenschaft** eines Elements steuern: Ein Knopf soll deaktiviert sein, ein Bild soll eine bestimmte Datei zeigen, ein Element soll eine CSS-Klasse bekommen. Dafür gibt es **Property Binding**.
+
+## Eckige Klammern
+
+```html
+<button [disabled]="stand() >= 10">Plus 1</button>
+<img [src]="bildAdresse()" [alt]="bildBeschreibung()" />
+<input [value]="name()" />
+```
+
+Steht ein Attribut in **eckigen** Klammern, ist der Wert in den Anführungszeichen kein Text, sondern ein **Ausdruck**, der in der Klasse ausgewertet wird. `[disabled]="stand() >= 10"` heisst: «Der Knopf ist deaktiviert, wenn der Stand mindestens 10 ist.»
+
+Ohne eckige Klammern wäre es gewöhnliches HTML mit festem Text:
+
+| Schreibweise | Bedeutung |
+| --- | --- |
+| `title="hilfe"` | das Wort «hilfe», fest |
+| `[title]="hilfe()"` | der aktuelle Wert des Signals `hilfe` |
+
+## Die drei Arten von Klammern
+
+Damit hast du alle drei Verbindungen zwischen Template und Klasse beisammen:
+
+| Schreibweise | Name | Richtung |
+| --- | --- | --- |
+| `{{ wert() }}` | Interpolation | Klasse → Text im Template |
+| `[eigenschaft]="wert()"` | Property Binding | Klasse → Eigenschaft eines Elements |
+| `(ereignis)="methode()"` | Event Binding | Template → Klasse |
+
+Eselsbrücke: Eckige Klammern bringen Daten **hinein**, runde Klammern melden Ereignisse **heraus**.
+
+## CSS-Klassen ein- und ausschalten
+
+Sehr häufig soll ein Element je nach Zustand anders aussehen. Mit `[class.name]` schaltest du eine einzelne CSS-Klasse:
+
+```html
+<li [class.erledigt]="aufgabe.erledigt">{{ aufgabe.titel }}</li>
+<p [class.warnung]="guthaben() < 10">Guthaben: {{ guthaben() }}</p>
+```
+
+Ist der Ausdruck `true`, bekommt das Element die Klasse, sonst nicht. Die Klasse selbst definierst du in der CSS-Datei der Komponente:
+
+```css
+.erledigt {
+  text-decoration: line-through;
+  color: gray;
+}
+```
+
+## Einzelne Style-Werte
+
+Für einzelne CSS-Eigenschaften gibt es `[style.eigenschaft]`. Praktisch für Werte, die berechnet werden:
+
+```html
+<div class="balken" [style.width.%]="fortschritt()"></div>
+<p [style.color]="punkte() < 0 ? 'red' : 'green'">{{ punkte() }}</p>
+```
+
+`[style.width.%]="fortschritt()"` setzt die Breite in Prozent. Die Einheit hängst du mit einem Punkt an (`.px`, `.%`, `.rem`).
+
+--- code ng-binding | Ein Akku-Anzeiger
+Baue eine Akku-Anzeige mit zwei Knöpfen.
+
+Die Klasse ist fertig. Ergänze im **Template**:
+
+1. Der innere Balken (`class="fuellung"`) bekommt seine Breite in Prozent aus `ladung()`.
+2. Der Balken bekommt die CSS-Klasse `niedrig`, wenn die Ladung unter 20 liegt.
+3. Der Knopf «Laden» ist deaktiviert, wenn die Ladung 100 erreicht hat.
+4. Der Knopf «Verbrauchen» ist deaktiviert, wenn die Ladung 0 ist.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly ladung = signal(50);
+
+  laden(): void {
+    this.ladung.update((wert) => Math.min(100, wert + 10));
+  }
+
+  verbrauchen(): void {
+    this.ladung.update((wert) => Math.max(0, wert - 10));
+  }
+}
+@starter app.html
+<h1>Akku: {{ ladung() }} %</h1>
+
+<div class="akku">
+  <div class="fuellung"></div>
+</div>
+
+<button (click)="verbrauchen()">Verbrauchen</button>
+<button (click)="laden()">Laden</button>
+@starter app.css
+.akku {
+  width: 200px;
+  height: 24px;
+  border: 2px solid black;
+}
+
+.fuellung {
+  height: 100%;
+  background: green;
+}
+
+.fuellung.niedrig {
+  background: red;
+}
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly ladung = signal(50);
+
+  laden(): void {
+    this.ladung.update((wert) => Math.min(100, wert + 10));
+  }
+
+  verbrauchen(): void {
+    this.ladung.update((wert) => Math.max(0, wert - 10));
+  }
+}
+@solution app.html
+<h1>Akku: {{ ladung() }} %</h1>
+
+<div class="akku">
+  <div class="fuellung" [style.width.%]="ladung()" [class.niedrig]="ladung() < 20"></div>
+</div>
+
+<button (click)="verbrauchen()" [disabled]="ladung() === 0">Verbrauchen</button>
+<button (click)="laden()" [disabled]="ladung() === 100">Laden</button>
+@solution app.css
+.akku {
+  width: 200px;
+  height: 24px;
+  border: 2px solid black;
+}
+
+.fuellung {
+  height: 100%;
+  background: green;
+}
+
+.fuellung.niedrig {
+  background: red;
+}
+@tests
+tpl /\[style\.width\.%\]\s*=\s*"\s*ladung\(\)\s*"/ :: Die Breite des Balkens ist gebunden: `[style.width.%]="ladung()"`
+tpl /\[class\.niedrig\]\s*=\s*"\s*(ladung\(\)\s*<\s*20|ladung\(\)\s*<=\s*19|20\s*>\s*ladung\(\))\s*"/ :: Die Klasse `niedrig` gilt unter 20: `[class.niedrig]="ladung() < 20"`
+tpl /laden\(\)"[^>]*\[disabled\]\s*=\s*"\s*ladung\(\)\s*(===|>=)\s*100\s*"|\[disabled\]\s*=\s*"\s*ladung\(\)\s*(===|>=)\s*100\s*"[^>]*laden\(\)"/ :: «Laden» ist bei 100 deaktiviert: `[disabled]="ladung() === 100"`
+tpl /verbrauchen\(\)"[^>]*\[disabled\]\s*=\s*"\s*ladung\(\)\s*(===|<=)\s*0\s*"|\[disabled\]\s*=\s*"\s*ladung\(\)\s*(===|<=)\s*0\s*"[^>]*verbrauchen\(\)"/ :: «Verbrauchen» ist bei 0 deaktiviert: `[disabled]="ladung() === 0"`
+@hints
+- Die Breite: `<div class="fuellung" [style.width.%]="ladung()"></div>`
+- Die Klasse kommt am selben Element dazu: `[class.niedrig]="ladung() < 20"`
+- Deaktivieren: `<button (click)="laden()" [disabled]="ladung() === 100">Laden</button>`
+@after
+Eckige Klammern links, ein Ausdruck rechts: So steuerst du Breite, Aussehen und Bedienbarkeit direkt aus deinen Daten. Im Template steht nur noch, **wovon** etwas abhängt – nie, **wann** es geändert werden muss.
+
+--- quiz quiz-ng-klammerarten
+Welche Zeile ruft die Methode `speichern()` auf, wenn der Knopf geklickt wird?
+( ) `<button [click]="speichern()">` :: Eckige Klammern setzen eine Eigenschaft. Für Ereignisse braucht es runde.
+(x) `<button (click)="speichern()">` :: Richtig. Runde Klammern stehen für Ereignisse, die aus dem Template in die Klasse gemeldet werden.
+( ) `<button click="{{ speichern() }}">` :: Das würde `speichern()` sofort beim Anzeigen aufrufen und das Ergebnis als Text einsetzen – nicht beim Klick.
+
+=== kontrollfluss-if | Etwas nur manchmal anzeigen: @if | 15
+Nicht alles soll immer sichtbar sein. Eine Fehlermeldung erscheint nur bei einem Fehler, ein Lade-Hinweis nur während des Ladens. Im Template entscheidest du das mit `@if`.
+
+## @if
+
+```html
+@if (punkte() >= 100) {
+  <p>Gewonnen!</p>
+}
+```
+
+Der Aufbau ist derselbe wie beim `if` in TypeScript: Bedingung in runden Klammern, Inhalt in geschweiften. Nur steht ein `@` davor, und in den geschweiften Klammern steht HTML.
+
+Ist die Bedingung falsch, **existiert** der Inhalt auf der Seite gar nicht. Er ist nicht bloss versteckt.
+
+## @else und @else if
+
+```html
+@if (note() >= 5.5) {
+  <p>Hervorragend!</p>
+} @else if (note() >= 4) {
+  <p>Bestanden.</p>
+} @else {
+  <p>Leider nicht bestanden.</p>
+}
+```
+
+## Typische Einsätze
+
+**Leere Zustände:**
+
+```html
+@if (aufgaben().length === 0) {
+  <p>Noch keine Aufgaben. Leg los!</p>
+}
+```
+
+**Angemeldet oder nicht:**
+
+```html
+@if (angemeldet()) {
+  <p>Willkommen zurück, {{ name() }}!</p>
+  <button (click)="abmelden()">Abmelden</button>
+} @else {
+  <button (click)="anmelden()">Anmelden</button>
+}
+```
+
+**Werte, die fehlen können.** Hier hilft Angular genau wie TypeScript mit Narrowing. Mit `; as` gibst du dem geprüften Wert einen Namen, unter dem er im Block sicher vorhanden ist:
+
+```html
+@if (ausgewaehlt(); as buch) {
+  <h2>{{ buch.titel }}</h2>
+  <p>{{ buch.seiten }} Seiten</p>
+} @else {
+  <p>Kein Buch ausgewählt.</p>
+}
+```
+
+Hat `ausgewaehlt` den Typ `Signal<Buch | undefined>`, dann ist `buch` innerhalb des Blocks ein `Buch` – ohne `undefined`.
+
+> [!NOTE] Älterer Code: *ngIf
+> In älteren Projekten und Anleitungen siehst du `<p *ngIf="bedingung">`. Das tut dasselbe, ist aber die alte Schreibweise. In neuem Code verwendest du `@if`.
+
+--- code ng-if | Anmelden und abmelden
+Die Klasse hat ein Signal `angemeldet` und ein Signal `versuche`. Ergänze das **Template** so:
+
+- Ist der Benutzer **angemeldet**: Zeige einen Absatz `Willkommen, Mia!` (mit dem Namen aus dem Signal) und einen Knopf, der `abmelden()` aufruft.
+- **Sonst**: Zeige einen Knopf, der `anmelden()` aufruft.
+- Unabhängig davon: Wenn `versuche()` grösser als 2 ist, zeige einen Absatz mit einem Hinweis (Text frei wählbar).
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly name = signal('Mia');
+  readonly angemeldet = signal(false);
+  readonly versuche = signal(0);
+
+  anmelden(): void {
+    this.angemeldet.set(true);
+    this.versuche.update((v) => v + 1);
+  }
+
+  abmelden(): void {
+    this.angemeldet.set(false);
+  }
+}
+@starter app.html
+<h1>Mein Konto</h1>
+
+<!-- @if / @else für angemeldet -->
+
+<!-- @if für versuche -->
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly name = signal('Mia');
+  readonly angemeldet = signal(false);
+  readonly versuche = signal(0);
+
+  anmelden(): void {
+    this.angemeldet.set(true);
+    this.versuche.update((v) => v + 1);
+  }
+
+  abmelden(): void {
+    this.angemeldet.set(false);
+  }
+}
+@solution app.html
+<h1>Mein Konto</h1>
+
+<!-- @if / @else für angemeldet -->
+@if (angemeldet()) {
+  <p>Willkommen, {{ name() }}!</p>
+  <button (click)="abmelden()">Abmelden</button>
+} @else {
+  <button (click)="anmelden()">Anmelden</button>
+}
+
+<!-- @if für versuche -->
+@if (versuche() > 2) {
+  <p>Du hast dich schon oft an- und abgemeldet.</p>
+}
+@tests
+tpl /@if\s*\(\s*angemeldet\(\)\s*\)\s*\{/ :: Es gibt `@if (angemeldet()) { ... }`
+tpl /@if\s*\(\s*angemeldet\(\)\s*\)\s*\{[^}]*\{\{\s*name\(\)\s*\}\}[\s\S]*?\(click\)\s*=\s*"abmelden\(\)"[\s\S]*?\}\s*@else\s*\{/ :: Im `@if`-Block stehen die Begrüssung mit `{{ name() }}` und der Abmelde-Knopf, danach folgt `@else`
+tpl /@else\s*\{[^}]*\(click\)\s*=\s*"anmelden\(\)"[^}]*\}/ :: Im `@else`-Block steht der Anmelde-Knopf
+tpl /@if\s*\(\s*(versuche\(\)\s*>\s*2|versuche\(\)\s*>=\s*3|2\s*<\s*versuche\(\))\s*\)\s*\{[^}]*<p[\s>]/ :: Ein zweites `@if (versuche() > 2)` zeigt einen Absatz
+@hints
+- Der Rahmen: `@if (angemeldet()) { ... } @else { ... }`
+- In den ersten Block: `<p>Willkommen, {{ name() }}!</p>` und `<button (click)="abmelden()">Abmelden</button>`
+- Das zweite `@if` steht einzeln darunter: `@if (versuche() > 2) { <p>...</p> }`
+@after
+`@if` liest sich wie TypeScript und steht mitten im HTML. Die Bedingung ist ein gewöhnlicher Ausdruck mit deinen Signals – ändert sich ein Signal, erscheint oder verschwindet der Block von selbst.
+
+=== kontrollfluss-for | Listen anzeigen: @for | 20
+Fast jede App zeigt Listen: Aufgaben, Nachrichten, Produkte. Mit `@for` erzeugst du für jedes Element eines Arrays ein Stück HTML.
+
+## @for
+
+```html
+<ul>
+  @for (name of namen(); track name) {
+    <li>{{ name }}</li>
+  }
+</ul>
+```
+
+Das ist die `for...of`-Schleife aus TypeScript, in HTML-Form. Für jedes Element in `namen()` entsteht ein `<li>`. Innerhalb der geschweiften Klammern steht das aktuelle Element in der Variable `name`.
+
+## track ist Pflicht
+
+Hinter dem Strichpunkt steht `track`. Damit sagst du Angular, **woran es ein Element wiedererkennt**. Ändert sich die Liste, muss Angular wissen, welche Einträge geblieben, dazugekommen oder verschwunden sind – nur so kann es die Seite gezielt aktualisieren, statt alles neu zu bauen.
+
+- Haben die Elemente eine eindeutige Kennung, nimm die: `track aufgabe.id`.
+- Bei einfachen, eindeutigen Werten (wie Namen ohne Doppelte) das Element selbst: `track name`.
+- Nur wenn es gar nichts Eindeutiges gibt, die Position: `track $index`.
+
+Deshalb haben Datenobjekte in Apps fast immer eine `id`.
+
+## Listen von Objekten
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+interface Aufgabe {
+  id: number;
+  titel: string;
+  erledigt: boolean;
+}
+
+@Component({
+  selector: 'app-aufgaben',
+  templateUrl: './aufgaben.html',
+})
+export class Aufgaben {
+  readonly aufgaben = signal<Aufgabe[]>([
+    { id: 1, titel: 'Mathe', erledigt: true },
+    { id: 2, titel: 'Deutsch', erledigt: false },
+  ]);
+}
+```
+
+```html
+<ul>
+  @for (aufgabe of aufgaben(); track aufgabe.id) {
+    <li [class.erledigt]="aufgabe.erledigt">{{ aufgabe.titel }}</li>
+  }
+</ul>
+```
+
+`aufgabe` ist hier ein normales Objekt, kein Signal. Deshalb `aufgabe.titel` ohne Klammern – nur das Signal `aufgaben()` braucht sie.
+
+## Leere Listen: @empty
+
+Direkt nach dem `@for`-Block kannst du mit `@empty` festlegen, was erscheint, wenn das Array leer ist:
+
+```html
+<ul>
+  @for (aufgabe of aufgaben(); track aufgabe.id) {
+    <li>{{ aufgabe.titel }}</li>
+  } @empty {
+    <li>Keine Aufgaben vorhanden.</li>
+  }
+</ul>
+```
+
+## Die Position kennen
+
+Innerhalb von `@for` stellt Angular Hilfsvariablen bereit:
+
+| Variable | Bedeutung |
+| --- | --- |
+| `$index` | Position des Elements, ab 0 |
+| `$first` | `true` beim ersten Element |
+| `$last` | `true` beim letzten Element |
+| `$count` | Anzahl Elemente insgesamt |
+
+```html
+@for (name of namen(); track name) {
+  <p>{{ $index + 1 }}. {{ name }}</p>
+}
+```
+
+## Aus der Liste heraus etwas auslösen
+
+In der Schleife kannst du das aktuelle Element an eine Methode übergeben:
+
+```html
+@for (aufgabe of aufgaben(); track aufgabe.id) {
+  <li>
+    {{ aufgabe.titel }}
+    <button (click)="entferne(aufgabe.id)">Löschen</button>
+  </li>
+}
+```
+
+So weiss die Methode, welcher Eintrag gemeint ist.
+
+> [!NOTE] Älterer Code: *ngFor
+> Die alte Schreibweise lautet `<li *ngFor="let name of namen">`. In neuem Code verwendest du `@for`.
+
+--- code ng-for | Eine Einkaufsliste
+Die Klasse enthält ein Signal `artikel` mit einer Liste. Ergänze:
+
+**In `app.ts`** die Methode `entferne(id)`: Sie entfernt den Artikel mit dieser `id` aus dem Signal – mit `update` und `filter`.
+
+**In `app.html`**:
+
+- Zeige mit `@for` für jeden Artikel ein `<li>` mit dem Namen und der Menge.
+- Jedes `<li>` enthält einen Knopf, der `entferne(...)` mit der `id` des Artikels aufruft.
+- Ist die Liste leer, erscheint über `@empty` ein `<li>` mit einem Hinweis.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+interface Artikel {
+  id: number;
+  name: string;
+  menge: number;
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly artikel = signal<Artikel[]>([
+    { id: 1, name: 'Brot', menge: 1 },
+    { id: 2, name: 'Äpfel', menge: 6 },
+    { id: 3, name: 'Milch', menge: 2 },
+  ]);
+
+  // Methode entferne(id)
+}
+@starter app.html
+<h1>Einkaufsliste ({{ artikel().length }})</h1>
+
+<ul>
+  <!-- @for ... @empty -->
+</ul>
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+interface Artikel {
+  id: number;
+  name: string;
+  menge: number;
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly artikel = signal<Artikel[]>([
+    { id: 1, name: 'Brot', menge: 1 },
+    { id: 2, name: 'Äpfel', menge: 6 },
+    { id: 3, name: 'Milch', menge: 2 },
+  ]);
+
+  // Methode entferne(id)
+  entferne(id: number): void {
+    this.artikel.update((alt) => alt.filter((a) => a.id !== id));
+  }
+}
+@solution app.html
+<h1>Einkaufsliste ({{ artikel().length }})</h1>
+
+<ul>
+  <!-- @for ... @empty -->
+  @for (eintrag of artikel(); track eintrag.id) {
+    <li>
+      {{ eintrag.menge }} × {{ eintrag.name }}
+      <button (click)="entferne(eintrag.id)">Entfernen</button>
+    </li>
+  } @empty {
+    <li>Die Liste ist leer.</li>
+  }
+</ul>
+@tests
+shape App { entferne: (id: number) => void }
+src /artikel\s*\.\s*update\s*\([\s\S]*?\.filter\s*\(/ :: `entferne` benutzt `artikel.update(...)` mit `filter`
+tpl /@for\s*\(\s*(\w+)\s+of\s+artikel\(\)\s*;\s*track\s+\1\.id\s*\)\s*\{/ :: Es gibt `@for (… of artikel(); track ….id)`
+tpl /@for\s*\(\s*(\w+)\s+of[\s\S]*?<li[\s>][\s\S]*?\{\{\s*\1\.name\s*\}\}/ :: Jedes `<li>` zeigt den Namen des Artikels
+tpl /@for\s*\(\s*(\w+)\s+of[\s\S]*?\{\{\s*\1\.menge\s*\}\}/ :: Die Menge wird angezeigt
+tpl /@for\s*\(\s*(\w+)\s+of[\s\S]*?\(click\)\s*=\s*"entferne\(\s*\1\.id\s*\)"/ :: Der Knopf ruft `entferne(….id)` auf
+tpl /\}\s*@empty\s*\{[^}]*<li[\s>]/ :: `@empty` zeigt ein `<li>` für die leere Liste
+@hints
+- Die Methode: `entferne(id: number): void { this.artikel.update((alt) => alt.filter((a) => a.id !== id)); }`
+- Die Schleife: `@for (eintrag of artikel(); track eintrag.id) { <li>...</li> } @empty { <li>...</li> }`
+- Im `<li>`: `{{ eintrag.menge }} × {{ eintrag.name }}` und `<button (click)="entferne(eintrag.id)">Entfernen</button>`
+@after
+`@for` mit `track`, `@empty` für die leere Liste, und ein Knopf, der die `id` an eine Methode weiterreicht: Damit kannst du jede Liste anzeigen und bearbeiten.
+
+--- quiz quiz-ng-track
+Wozu dient `track aufgabe.id` in `@for (aufgabe of aufgaben(); track aufgabe.id)`?
+( ) Es sortiert die Liste nach der `id`. :: Nein, an der Reihenfolge ändert `track` nichts.
+(x) Es sagt Angular, woran es einen Eintrag wiedererkennt, wenn sich die Liste ändert. :: Genau. So kann Angular gezielt nur die Einträge anfassen, die sich wirklich geändert haben.
+( ) Es zählt, wie oft die Schleife durchlaufen wird. :: Dafür gibt es `$index` und `$count`.
+
+=== eingaben | Eingaben des Benutzers lesen | 20
+Bisher konnte der Benutzer nur klicken. Jetzt liest du, was er in ein Textfeld tippt.
+
+## Eine Template-Variable
+
+Mit einem `#` gibst du einem Element im Template einen Namen. Über diesen Namen kannst du an anderer Stelle im selben Template auf das Element zugreifen:
+
+```html
+<input #feld type="text" placeholder="Dein Name" />
+<button (click)="begruesse(feld.value)">Hallo sagen</button>
+```
+
+`#feld` macht das Eingabefeld unter dem Namen `feld` verfügbar. `feld.value` ist der Text, der gerade darin steht. Beim Klick wird er an die Methode `begruesse` übergeben.
+
+## Mit der Enter-Taste abschicken
+
+Niemand will für jede Eingabe zur Maus greifen. Mit `(keydown.enter)` reagierst du gezielt auf die Enter-Taste:
+
+```html
+<input #feld type="text" (keydown.enter)="hinzufuegen(feld.value); feld.value = ''" />
+```
+
+Hier stehen zwei Anweisungen, getrennt durch einen Strichpunkt: zuerst die Methode aufrufen, dann das Feld leeren.
+
+## Bei jedem Tastendruck mitlesen
+
+Das Ereignis `input` wird bei jeder Änderung im Feld ausgelöst. So hältst du ein Signal ständig auf dem Stand des Feldes:
+
+```ts ng
+import { Component, computed, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-suche',
+  template: `
+    <input #feld type="text" [value]="suchtext()" (input)="suchtext.set(feld.value)" />
+    <p>Du suchst nach: {{ suchtext() }} ({{ laenge() }} Zeichen)</p>
+  `,
+})
+export class Suche {
+  readonly suchtext = signal('');
+  readonly laenge = computed(() => this.suchtext().length);
+}
+```
+
+Zwei Bindungen arbeiten zusammen:
+
+- `[value]="suchtext()"` – das Feld zeigt den Wert des Signals.
+- `(input)="suchtext.set(feld.value)"` – jede Eingabe schreibt zurück ins Signal.
+
+Damit ist das Signal die einzige Quelle der Wahrheit, und alles, was davon abhängt (`laenge`, eine gefilterte Liste …), aktualisiert sich bei jedem Tastendruck.
+
+## Eingaben prüfen
+
+Benutzer tippen Leerzeichen, schicken leere Felder ab und klicken doppelt. Eine robuste Methode räumt zuerst auf und bricht ab, wenn nichts Brauchbares da ist:
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+@Component({ selector: 'app-namen', template: '' })
+export class Namen {
+  readonly namen = signal<string[]>([]);
+
+  hinzufuegen(eingabe: string): void {
+    const name = eingabe.trim();
+    if (name === '') {
+      return;
+    }
+    this.namen.update((alt) => [...alt, name]);
+  }
+}
+```
+
+Ein `return` ohne Wert beendet eine `void`-Methode vorzeitig.
+
+> [!NOTE] Für grössere Formulare
+> Diese Technik reicht für einzelne Felder. Für richtige Formulare mit mehreren Feldern und Prüfregeln hat Angular ein eigenes Werkzeug – das lernst du in der Lektion «Formulare».
+
+--- code ng-eingabe | Namen sammeln
+Baue eine kleine Gästeliste.
+
+**In `app.ts`** die Methode `hinzufuegen(eingabe)`:
+
+- Sie entfernt Leerzeichen am Rand.
+- Ist das Ergebnis leer, passiert nichts.
+- Sonst wird der Name hinten an das Signal `gaeste` angehängt.
+
+**In `app.html`**:
+
+- Gib dem Eingabefeld die Template-Variable `#feld`.
+- Der Knopf ruft `hinzufuegen` mit dem Inhalt des Feldes auf.
+- Dasselbe passiert beim Drücken von Enter im Feld.
+- Zeige die Gäste mit `@for` als `<li>` an.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly gaeste = signal<string[]>([]);
+
+  // Methode hinzufuegen(eingabe)
+}
+@starter app.html
+<h1>Gästeliste ({{ gaeste().length }})</h1>
+
+<input type="text" placeholder="Name" />
+<button>Hinzufügen</button>
+
+<ul>
+  <!-- @for -->
+</ul>
+@solution app.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly gaeste = signal<string[]>([]);
+
+  // Methode hinzufuegen(eingabe)
+  hinzufuegen(eingabe: string): void {
+    const name = eingabe.trim();
+    if (name === '') {
+      return;
+    }
+    this.gaeste.update((alt) => [...alt, name]);
+  }
+}
+@solution app.html
+<h1>Gästeliste ({{ gaeste().length }})</h1>
+
+<input #feld type="text" placeholder="Name" (keydown.enter)="hinzufuegen(feld.value)" />
+<button (click)="hinzufuegen(feld.value)">Hinzufügen</button>
+
+<ul>
+  <!-- @for -->
+  @for (gast of gaeste(); track $index) {
+    <li>{{ gast }}</li>
+  }
+</ul>
+@tests
+shape App { hinzufuegen: (eingabe: string) => void }
+src /\.trim\s*\(\s*\)/ :: Die Eingabe wird mit `trim()` aufgeräumt
+src /gaeste\s*\.\s*update\s*\(/ :: Der Name wird mit `gaeste.update(...)` angehängt
+nosrc /\.push\s*\(/ :: Kein `push` – es entsteht ein neues Array
+tpl /<input[^>]*#feld\b/ :: Das Eingabefeld hat die Template-Variable `#feld`
+tpl /<button[^>]*\(click\)\s*=\s*"hinzufuegen\(\s*feld\.value\s*\)[^"]*"/ :: Der Knopf ruft `hinzufuegen(feld.value)` auf
+tpl /<input[^>]*\(keydown\.enter\)\s*=\s*"hinzufuegen\(\s*feld\.value\s*\)[^"]*"/ :: Enter im Feld ruft ebenfalls `hinzufuegen(feld.value)` auf
+tpl /@for\s*\(\s*(\w+)\s+of\s+gaeste\(\)\s*;\s*track\s+[^)]+\)\s*\{[\s\S]*?<li[\s>][\s\S]*?\{\{\s*\1\s*\}\}/ :: Die Gäste werden mit `@for` als `<li>` angezeigt
+@hints
+- Die Methode beginnt mit `const name = eingabe.trim();` und `if (name === '') { return; }`
+- Im Template: `<input #feld type="text" (keydown.enter)="hinzufuegen(feld.value)" />`
+- Da Namen doppelt vorkommen können, eignet sich hier `track $index`.
+@after
+Template-Variable, Ereignis, Methode mit Prüfung, Signal, Liste: Du hast jetzt alle Zutaten für interaktive Seiten beisammen. Im nächsten Teil setzt du sie zu einer richtigen App aus mehreren Komponenten zusammen.
+
+--- task ng-basis-task | Nachbauen in VS Code
+Baue die Gästeliste in deinem Projekt `erste-app` nach und probiere sie im Browser aus.
+[ ] `app.ts` und `app.html` enthalten die Gästeliste, `ng serve` läuft ohne Fehler.
+[ ] Du kannst im Browser Namen hinzufügen – per Knopf und per Enter.
+[ ] Leere Eingaben werden ignoriert.
+[ ] Du hast einen Tippfehler im Template eingebaut (zum Beispiel `gaest()`) und die Fehlermeldung in VS Code und im Terminal gelesen.
+[ ] Zusatz: Das Feld wird nach dem Hinzufügen geleert (`feld.value = ''`).
