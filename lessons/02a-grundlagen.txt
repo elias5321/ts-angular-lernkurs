@@ -1,0 +1,953 @@
+#part grundlagen | Programmieren – die Grundlagen | Variablen, Rechnen, Text, Entscheidungen, Schleifen, Funktionen, Listen und Objekte. Vieles kennst du vielleicht schon aus JavaScript – hier festigst du es und lernst gleich die Typen dazu.
+
+=== variablen | Variablen: let und const | 15
+Ein Programm muss sich Dinge merken: einen Namen, einen Punktestand, einen Preis. Dafür gibt es **Variablen**. Eine Variable ist wie eine beschriftete Schachtel: Aussen steht ein Name, innen liegt ein Wert.
+
+## Eine Variable anlegen
+
+```ts
+const vorname = "Mia";
+let punkte = 0;
+
+console.log(vorname);
+console.log(punkte);
+```
+
+So liest du die erste Zeile: «Lege eine Variable namens `vorname` an und lege den Text `"Mia"` hinein.» Das Gleichheitszeichen bedeutet hier nicht «ist gleich», sondern **«bekommt den Wert»**. Man nennt das eine Zuweisung.
+
+## const oder let?
+
+Es gibt zwei Wörter, um eine Variable anzulegen:
+
+- `const` – der Wert bleibt für immer gleich («constant» = gleichbleibend).
+- `let` – der Wert darf sich später ändern.
+
+```ts
+let punkte = 0;
+punkte = 10;        // erlaubt: punkte wurde mit let angelegt
+punkte = punkte + 5;
+console.log(punkte); // 15
+```
+
+Beim Ändern schreibst du **kein** `let` mehr davor. `let` braucht es nur einmal, beim Anlegen.
+
+Versuchst du, eine `const`-Variable zu ändern, meldet TypeScript einen Fehler:
+
+```ts error
+const vorname = "Mia";
+vorname = "Noah";
+```
+
+> [!MERKE] Faustregel
+> Nimm immer zuerst `const`. Erst wenn du merkst, dass sich der Wert ändern muss, machst du ein `let` daraus. So sieht jeder, der deinen Code liest, sofort: «Dieser Wert bleibt.»
+
+> [!JS] Und var?
+> In älterem JavaScript-Code (und vielleicht in der Schule) siehst du `var`. Das ist die alte Art, Variablen anzulegen. Sie hat ein paar Tücken und wird heute nicht mehr verwendet. In TypeScript und Angular schreibst du immer `const` oder `let`.
+
+## Gute Namen
+
+Der Name einer Variable soll sagen, was drin ist. `punkte` ist besser als `p`, `anzahlSpieler` besser als `x2`.
+
+Die Regeln:
+
+- Namen bestehen aus Buchstaben, Ziffern, `_` und `$`. Keine Leerzeichen, keine Bindestriche.
+- Ein Name darf nicht mit einer Ziffer beginnen.
+- Gross- und Kleinschreibung zählt: `Punkte` und `punkte` sind zwei verschiedene Variablen.
+- Besteht ein Name aus mehreren Wörtern, schreibt man sie zusammen und beginnt jedes weitere Wort gross: `anzahlSpieler`, `istAngemeldet`. Diese Schreibweise heisst **camelCase** (wegen der «Höcker»).
+
+> [!NOTE] Umlaute
+> `größe` oder `grösse` als Variablenname würde funktionieren. Trotzdem schreiben fast alle Programmierer ohne Umlaute, also `groesse`. Das vermeidet Ärger mit Tastaturen und Werkzeugen. In diesem Kurs halten wir uns daran.
+
+## Kommentare
+
+Alles hinter `//` ist ein Kommentar. Der Computer ignoriert ihn. Kommentare sind Notizen für Menschen – auch für dich selbst in drei Wochen.
+
+```ts
+// Startwert für ein neues Spiel
+const leben = 3;
+console.log(leben);
+```
+
+--- code variablen-anlegen | Variablen anlegen und ändern
+Schreibe ein kleines Programm:
+
+1. Lege eine Variable `spieler` an, die den Text `"Alex"` enthält. Der Name ändert sich nie.
+2. Lege eine Variable `punkte` mit dem Startwert `0` an. Der Punktestand ändert sich später.
+3. Setze `punkte` danach in einer neuen Zeile auf `10`.
+4. Gib `punkte` mit `console.log` aus.
+@starter
+// 1. spieler anlegen
+
+// 2. punkte anlegen
+
+// 3. punkte ändern
+
+// 4. punkte ausgeben
+@solution
+// 1. spieler anlegen
+const spieler = "Alex";
+
+// 2. punkte anlegen
+let punkte = 0;
+
+// 3. punkte ändern
+punkte = 10;
+
+// 4. punkte ausgeben
+console.log(spieler);
+console.log(punkte);
+@tests
+kind spieler const
+run spieler === "Alex" :: `spieler` enthält den Text `"Alex"`
+kind punkte let
+run punkte === 10 :: `punkte` hat am Ende den Wert `10`
+out 10
+@hints
+- Was sich nie ändert, legst du mit `const` an: `const spieler = "Alex";`
+- Was sich ändert, legst du mit `let` an: `let punkte = 0;`
+- Beim Ändern steht kein `let` mehr davor: `punkte = 10;` – und ausgeben geht mit `console.log(punkte);`
+@after
+`const` für Werte, die bleiben; `let` für Werte, die sich ändern. Beim Ändern schreibst du nur noch `name = neuerWert;`.
+
+--- code const-fehler | Fehler finden: const
+Dieses Programm soll einen Spielstand von 0 auf 5 erhöhen und ausgeben. TypeScript meldet aber einen Fehler. Lies die Meldung unter «Probleme» und behebe die Ursache.
+@starter
+const stand = 0;
+stand = 5;
+console.log(stand);
+@solution
+let stand = 0;
+stand = 5;
+console.log(stand);
+@tests
+kind stand let
+out 5
+@hints
+- Die Meldung sagt: `stand` ist eine Konstante und kann nicht neu zugewiesen werden.
+- Die Zeile `stand = 5;` ist richtig. Falsch ist das Wort, mit dem `stand` angelegt wurde.
+@after
+Die Fehlermeldung «Cannot assign to 'stand' because it is a constant» wirst du noch oft sehen. Sie bedeutet immer: Hier müsste `let` statt `const` stehen – oder du wolltest den Wert eigentlich gar nicht ändern.
+
+--- quiz quiz-namen
+Welcher dieser Variablennamen ist gültig **und** folgt der üblichen Schreibweise (camelCase)?
+( ) `anzahl-spieler` :: Bindestriche sind in Namen nicht erlaubt. TypeScript würde das als «anzahl minus spieler» lesen.
+( ) `2terVersuch` :: Ein Name darf nicht mit einer Ziffer beginnen.
+(x) `anzahlSpieler` :: Genau: zusammengeschrieben, erstes Wort klein, jedes weitere Wort beginnt gross.
+( ) `Anzahl_Spieler` :: Das wäre erlaubt, aber unüblich. Namen mit grossem Anfangsbuchstaben sind für Klassen und Typen reserviert, und statt Unterstrichen nimmt man camelCase.
+
+=== typen | Die drei Grundtypen | 15
+Jeder Wert hat einen **Typ**. Der Typ sagt, was für eine Art von Wert es ist – und damit auch, was man damit tun kann. Mit Zahlen kann man rechnen, mit Text nicht.
+
+Die drei wichtigsten Typen:
+
+| Typ | Bedeutung | Beispiele |
+| --- | --- | --- |
+| `string` | Text (Zeichenkette) | `"Hallo"`, `"Mia"`, `""` |
+| `number` | Zahl, mit oder ohne Komma | `42`, `3.14`, `-7` |
+| `boolean` | Wahrheitswert | `true`, `false` |
+
+Achte auf zwei Dinge: Kommazahlen schreibt man mit **Punkt** (`3.14`), und `"42"` in Anführungszeichen ist ein Text, keine Zahl.
+
+## Typen hinschreiben
+
+In TypeScript kannst du hinter den Variablennamen schreiben, welchen Typ sie hat. Dazu kommt ein Doppelpunkt und dann der Typ. Das nennt man eine **Typangabe** (englisch «type annotation»).
+
+```ts
+const stadt: string = "Bern";
+let einwohner: number = 146000;
+const istHauptstadt: boolean = true;
+
+einwohner = einwohner + 1;
+console.log(stadt, einwohner, istHauptstadt);
+```
+
+Ab jetzt passt TypeScript auf. Legst du etwas Falsches hinein, gibt es einen Fehler:
+
+```ts error
+let einwohner: number = 146000;
+einwohner = "viele";
+```
+
+## TypeScript rät mit
+
+Du musst den Typ nicht immer hinschreiben. Wenn du einer Variable direkt einen Wert gibst, erkennt TypeScript den Typ von selbst. Das heisst **Typinferenz** («Inferenz» = Schlussfolgerung).
+
+```ts
+let punkte = 0;        // TypeScript weiss: number
+const spieler = "Alex"; // TypeScript weiss: string
+console.log(punkte, spieler);
+```
+
+Auch hier ist `punkte = "zehn"` ein Fehler – obwohl nirgends `: number` steht. Der Typ wird beim Anlegen festgelegt und ändert sich danach nie mehr.
+
+> [!VSCODE] Den Typ nachschauen
+> Fahre in VS Code mit der Maus über einen Variablennamen. Es erscheint ein kleines Fenster mit dem Typ, zum Beispiel `let punkte: number`. Das ist einer der nützlichsten Handgriffe überhaupt – gewöhne ihn dir an.
+
+## Wann schreibe ich den Typ hin?
+
+- Gibst du direkt einen Wert → Typ weglassen ist in Ordnung: `const alter = 15;`
+- Legst du eine Variable **ohne** Startwert an → Typ immer hinschreiben: `let ergebnis: number;`
+- Bei Funktionen (kommt bald) → Typen immer hinschreiben.
+
+In den ersten Lektionen schreibst du die Typen zur Übung oft ausdrücklich hin, auch wenn es nicht nötig wäre.
+
+--- code typen-angeben | Typen ausdrücklich angeben
+Lege drei Variablen an und gib bei jeder den Typ **ausdrücklich** an (mit Doppelpunkt):
+
+- `tier` – ein Text, zum Beispiel `"Katze"`
+- `beine` – eine Zahl
+- `kannFliegen` – ein Wahrheitswert
+
+Die Werte darfst du frei wählen, sie müssen nur zum Typ passen.
+@starter
+// Beispiel: const stadt: string = "Bern";
+@solution
+// Beispiel: const stadt: string = "Bern";
+const tier: string = "Katze";
+const beine: number = 4;
+const kannFliegen: boolean = false;
+console.log(tier, beine, kannFliegen);
+@tests
+annotated tier
+var tier: string
+annotated beine
+var beine: number
+annotated kannFliegen
+var kannFliegen: boolean
+@hints
+- Der Aufbau ist immer gleich: `const name: Typ = Wert;`
+- Für den Wahrheitswert gibt es nur zwei mögliche Werte: `true` oder `false` – ohne Anführungszeichen.
+- Beispiel für die erste Variable: `const tier: string = "Katze";`
+@after
+`name: Typ` ist die Schreibweise, die dir in TypeScript überall begegnet: bei Variablen, bei Funktionen, in Klassen und später in Angular.
+
+--- code typen-reparieren | Fehler finden: falsche Werte
+In jeder der drei Zeilen passt der Wert nicht zum angegebenen Typ. Die Typangaben sind richtig – korrigiere die **Werte**:
+
+- `alter` soll die Zahl 15 sein.
+- `stadt` soll der Text Zürich sein.
+- `angemeldet` soll wahr sein.
+@starter
+const alter: number = "15";
+const stadt: string = Zürich;
+const angemeldet: boolean = "ja";
+
+console.log(alter, stadt, angemeldet);
+@solution
+const alter: number = 15;
+const stadt: string = "Zürich";
+const angemeldet: boolean = true;
+
+console.log(alter, stadt, angemeldet);
+@tests
+run alter === 15 :: `alter` ist die Zahl `15`
+run stadt === "Zürich" :: `stadt` ist der Text `"Zürich"`
+run angemeldet === true :: `angemeldet` ist `true`
+@hints
+- Zeile 1: `"15"` mit Anführungszeichen ist ein Text. Eine Zahl schreibt man ohne.
+- Zeile 2: Ohne Anführungszeichen hält TypeScript `Zürich` für den Namen einer Variable – und die gibt es nicht. Text braucht Anführungszeichen.
+- Zeile 3: Ein `boolean` ist entweder `true` oder `false`. `"ja"` ist ein Text.
+@after
+Drei typische Anfängerfehler auf einmal: Zahl als Text geschrieben, Anführungszeichen vergessen, Text statt `true`/`false`. Die Meldungen dazu («not assignable», «Cannot find name») erkennst du jetzt wieder.
+
+--- quiz quiz-inferenz
+Was passiert bei diesem Code?
+
+```ts nocheck
+let stufe = 1;
+stufe = "zwei";
+```
+( ) Kein Problem: Es steht ja kein Typ dabei, also ist alles erlaubt. :: Das wäre in JavaScript so. TypeScript erkennt aber am Startwert `1` selbst, dass `stufe` eine Zahl ist.
+(x) Fehler: TypeScript hat aus dem Startwert `1` geschlossen, dass `stufe` eine Zahl ist. :: Genau. Das ist Typinferenz. Der Typ steht nicht da, er gilt aber trotzdem.
+( ) Fehler: Variablen ohne Typangabe sind in TypeScript verboten. :: Nein, die Typangabe darf fehlen, wenn TypeScript den Typ am Startwert erkennen kann.
+
+=== rechnen | Rechnen mit Zahlen | 15
+Mit Werten vom Typ `number` kannst du rechnen. Die Zeichen dafür heissen **Operatoren**.
+
+| Operator | Bedeutung | Beispiel | Ergebnis |
+| --- | --- | --- | --- |
+| `+` | plus | `7 + 2` | `9` |
+| `-` | minus | `7 - 2` | `5` |
+| `*` | mal | `7 * 2` | `14` |
+| `/` | geteilt | `7 / 2` | `3.5` |
+| `%` | Rest beim Teilen | `7 % 2` | `1` |
+| `**` | hoch | `7 ** 2` | `49` |
+
+Es gilt Punkt vor Strich, wie in der Schule. Mit Klammern änderst du die Reihenfolge:
+
+```ts
+console.log(2 + 3 * 4);   // 14
+console.log((2 + 3) * 4); // 20
+```
+
+## Der Rest-Operator %
+
+`%` (gesprochen «modulo») gibt den Rest einer Division. `17 % 5` ist `2`, weil 5 dreimal in 17 passt und 2 übrig bleiben. Das braucht man öfter, als man denkt:
+
+- `zahl % 2` ist `0` → die Zahl ist gerade.
+- `135 % 60` ist `15` → 135 Minuten sind 2 Stunden und **15** Minuten.
+
+## Variablen verändern
+
+Sehr oft will man einen Wert auf Basis seines alten Werts ändern. Dafür gibt es Abkürzungen:
+
+```ts
+let punkte = 10;
+punkte = punkte + 5; // lang
+punkte += 5;         // kurz, bedeutet dasselbe
+punkte -= 3;
+punkte *= 2;
+punkte++;            // um genau 1 erhöhen
+punkte--;            // um genau 1 verringern
+console.log(punkte);
+```
+
+## Rechnen mit Math
+
+Für alles, was über die Grundrechenarten hinausgeht, gibt es `Math`:
+
+```ts
+console.log(Math.round(3.6));  // 4   – runden
+console.log(Math.floor(3.6));  // 3   – abrunden
+console.log(Math.ceil(3.2));   // 4   – aufrunden
+console.log(Math.max(4, 9, 2)); // 9  – grösster Wert
+console.log(Math.min(4, 9, 2)); // 2  – kleinster Wert
+console.log(Math.sqrt(49));     // 7  – Wurzel
+```
+
+`Math.random()` liefert eine Zufallszahl zwischen 0 und 1. Einen Würfelwurf bekommst du mit `Math.floor(Math.random() * 6) + 1`.
+
+> [!NOTE] Kommazahlen sind manchmal ungenau
+> `0.1 + 0.2` ergibt `0.30000000000000004`. Das ist kein Fehler von TypeScript, sondern liegt daran, wie Computer Kommazahlen speichern. Für Geldbeträge rundet man deshalb am Ende oder rechnet in Rappen bzw. Cent.
+
+--- code rechnen-rechteck | Fläche und Umfang
+Ein Rechteck ist `breite` breit und `hoehe` hoch. Berechne:
+
+- `flaeche` – Breite mal Höhe
+- `umfang` – zweimal Breite plus zweimal Höhe
+
+Benutze in deinen Rechnungen die Variablen `breite` und `hoehe`, nicht die Zahlen selbst. Dann stimmt das Ergebnis auch noch, wenn jemand die Werte oben ändert.
+@starter
+const breite = 8;
+const hoehe = 5;
+
+// Berechne hier flaeche und umfang
+
+console.log(flaeche, umfang);
+@solution
+const breite = 8;
+const hoehe = 5;
+
+// Berechne hier flaeche und umfang
+const flaeche = breite * hoehe;
+const umfang = 2 * breite + 2 * hoehe;
+
+console.log(flaeche, umfang);
+@tests
+run flaeche === 40 :: `flaeche` ist `40`
+run umfang === 26 :: `umfang` ist `26`
+src /(breite\s*\*\s*hoehe|hoehe\s*\*\s*breite)/ :: Die Fläche wird aus `breite` und `hoehe` berechnet ?? Schreibe nicht `40` hin, sondern lass den Computer rechnen: `breite * hoehe`.
+nosrc /umfang\s*=\s*26\b/ :: Der Umfang wird berechnet, nicht fest eingetragen
+@hints
+- Lege zwei neue Variablen mit `const` an: `const flaeche = ...;` und `const umfang = ...;`
+- Fläche: `breite * hoehe`
+- Umfang: `2 * breite + 2 * hoehe` oder `2 * (breite + hoehe)`
+@after
+Ergebnisse aus Variablen zu berechnen statt feste Zahlen einzutragen, ist ein Grundprinzip: So bleibt dein Programm richtig, wenn sich die Eingaben ändern.
+
+--- code rechnen-zeit | Minuten umrechnen
+Ein Film dauert `minuten` Minuten. Rechne das um:
+
+- `stunden` – die vollen Stunden (bei 135 Minuten also `2`)
+- `restMinuten` – die übrigen Minuten (bei 135 Minuten also `15`)
+@starter
+const minuten = 135;
+
+// Berechne stunden und restMinuten
+
+console.log(stunden, restMinuten);
+@solution
+const minuten = 135;
+
+// Berechne stunden und restMinuten
+const stunden = Math.floor(minuten / 60);
+const restMinuten = minuten % 60;
+
+console.log(stunden, restMinuten);
+@tests
+run stunden === 2 :: `stunden` ist `2`
+run restMinuten === 15 :: `restMinuten` ist `15`
+src /minuten\s*%\s*60/ :: Die Restminuten werden mit dem Rest-Operator `%` berechnet
+src /minuten\s*\/\s*60/ :: Die Stunden werden aus `minuten / 60` berechnet
+@hints
+- `minuten / 60` ergibt `2.25`. Du brauchst nur die ganze Zahl davor – also abrunden.
+- Abrunden geht mit `Math.floor(...)`.
+- Der Rest einer Division: `minuten % 60`.
+@after
+`Math.floor(a / b)` und `a % b` treten fast immer als Paar auf: das eine liefert «wie oft passt es hinein», das andere «was bleibt übrig».
+
+=== strings | Mit Text arbeiten | 15
+Text heisst in der Programmierung **String** (wörtlich «Kette», weil es eine Kette von Zeichen ist). Der Typ dafür ist `string`.
+
+## Drei Arten von Anführungszeichen
+
+```ts
+const a = "doppelte Anführungszeichen";
+const b = 'einfache Anführungszeichen';
+const c = `Backticks`;
+console.log(a, b, c);
+```
+
+`"..."` und `'...'` sind gleichwertig. Angular-Projekte benutzen meistens einfache. Wichtig ist nur: womit du anfängst, damit hörst du auch auf.
+
+Die dritte Art, **Backticks**, kann mehr. Auf der Schweizer Tastatur tippst du einen Backtick mit [[Shift]] + der Taste rechts neben dem [[?]], gefolgt von der Leertaste.
+
+## Template-Strings: Text mit Lücken
+
+In einen String mit Backticks kannst du Werte einsetzen. Dazu schreibst du `${...}` und in die geschweiften Klammern eine Variable oder eine Rechnung:
+
+```ts
+const vorname = "Mia";
+const alter = 15;
+
+console.log(`${vorname} ist ${alter} Jahre alt.`);
+console.log(`Nächstes Jahr ist sie ${alter + 1}.`);
+```
+
+Das nennt man einen **Template-String** («Schablone»). Die alte Art, Text zusammenzusetzen, ist das Plus-Zeichen:
+
+```ts
+const vorname = "Mia";
+const alter = 15;
+console.log(vorname + " ist " + alter + " Jahre alt.");
+```
+
+Beides funktioniert. Template-Strings sind aber leichter zu lesen, und man vergisst keine Leerzeichen. In Angular-Code siehst du fast nur noch Template-Strings.
+
+## Was man mit Strings tun kann
+
+Ein String bringt Werkzeuge mit. Du rufst sie mit einem Punkt auf:
+
+```ts
+const wort = "TypeScript";
+
+console.log(wort.length);            // 10 – Anzahl Zeichen
+console.log(wort.toUpperCase());     // "TYPESCRIPT"
+console.log(wort.toLowerCase());     // "typescript"
+console.log(wort.includes("Script")); // true – kommt das darin vor?
+console.log(wort.startsWith("Type")); // true
+console.log(wort.slice(0, 4));        // "Type" – Zeichen 0 bis vor 4
+console.log(wort[0]);                 // "T" – das erste Zeichen
+console.log("  hallo  ".trim());      // "hallo" – Leerzeichen aussen weg
+```
+
+Zwei Dinge fallen auf:
+
+- `length` hat keine Klammern, die anderen schon. `length` ist eine **Eigenschaft** (ein Wert), die anderen sind **Methoden** (sie tun etwas). Methoden ruft man immer mit `()` auf.
+- Gezählt wird ab **0**. Das erste Zeichen hat die Nummer 0, das zweite die Nummer 1. Das ist beim Programmieren fast überall so.
+
+Diese Methoden verändern den ursprünglichen String nicht. Sie liefern einen neuen:
+
+```ts
+const name = "mia";
+const gross = name.toUpperCase();
+console.log(name);  // "mia" – unverändert
+console.log(gross); // "MIA"
+```
+
+## Text und Zahl sind nicht dasselbe
+
+```ts
+console.log("5" + "3"); // "53" – zwei Texte werden aneinandergehängt
+console.log(5 + 3);     // 8   – zwei Zahlen werden addiert
+```
+
+Umwandeln geht so:
+
+```ts
+const eingabe = "42";
+const zahl = Number(eingabe);  // aus Text wird Zahl
+const text = String(zahl + 1); // aus Zahl wird Text
+console.log(zahl, text);
+```
+
+Kann ein Text nicht in eine Zahl umgewandelt werden (`Number("abc")`), kommt der besondere Wert `NaN` heraus – «Not a Number».
+
+--- code strings-satz | Einen Satz zusammenbauen
+Baue aus den Variablen den Satz `Luca wohnt in Basel und ist 16 Jahre alt.` und speichere ihn in der Variable `satz`.
+
+Benutze dafür einen Template-String (mit Backticks und `${...}`).
+@starter
+const vorname = "Luca";
+const ort = "Basel";
+const alter = 16;
+
+// Baue hier den Satz
+const satz = "";
+
+console.log(satz);
+@solution
+const vorname = "Luca";
+const ort = "Basel";
+const alter = 16;
+
+// Baue hier den Satz
+const satz = `${vorname} wohnt in ${ort} und ist ${alter} Jahre alt.`;
+
+console.log(satz);
+@tests
+run satz === "Luca wohnt in Basel und ist 16 Jahre alt." :: `satz` ist genau `Luca wohnt in Basel und ist 16 Jahre alt.` ?? Vergleiche Zeichen für Zeichen: Leerzeichen, Punkt am Ende, Gross-/Kleinschreibung.
+has TemplateExpression :: Der Satz ist ein Template-String mit `${...}`
+src /\$\{\s*vorname\s*\}/ :: `vorname` wird eingesetzt, nicht abgetippt
+src /\$\{\s*alter\s*\}/ :: `alter` wird eingesetzt, nicht abgetippt
+@hints
+- Ein Template-String beginnt und endet mit einem Backtick: `` `...` ``
+- Wo ein Wert hin soll, schreibst du `${variablenName}`.
+- Der Anfang lautet: `` `${vorname} wohnt in ...` ``
+@after
+Template-Strings sind die Standardmethode, um Text und Werte zu mischen. Das `${}` wirst du in Angular-Projekten ständig sehen.
+
+--- code strings-methoden | Eine Eingabe aufräumen
+Ein Benutzer hat seinen Benutzernamen eingetippt – mit Leerzeichen davor und dahinter und gemischter Gross-/Kleinschreibung. Räume auf:
+
+- `sauber` – die Eingabe ohne Leerzeichen am Rand
+- `klein` – `sauber` komplett in Kleinbuchstaben
+- `laenge` – die Anzahl Zeichen von `sauber`
+@starter
+const eingabe = "  MaxMuster99  ";
+
+// Lege sauber, klein und laenge an
+
+console.log(sauber, klein, laenge);
+@solution
+const eingabe = "  MaxMuster99  ";
+
+// Lege sauber, klein und laenge an
+const sauber = eingabe.trim();
+const klein = sauber.toLowerCase();
+const laenge = sauber.length;
+
+console.log(sauber, klein, laenge);
+@tests
+run sauber === "MaxMuster99" :: `sauber` ist `"MaxMuster99"`
+run klein === "maxmuster99" :: `klein` ist `"maxmuster99"`
+run laenge === 11 :: `laenge` ist `11`
+src /\.trim\s*\(\s*\)/ :: Die Leerzeichen werden mit `.trim()` entfernt
+var laenge: number
+@hints
+- Leerzeichen am Rand entfernt `.trim()`: `const sauber = eingabe.trim();`
+- Kleinbuchstaben: `.toLowerCase()` – und zwar auf `sauber`, nicht auf `eingabe`.
+- `length` ist eine Eigenschaft und hat keine Klammern: `sauber.length`
+@after
+Methoden wie `.trim()` liefern einen **neuen** String zurück, `eingabe` selbst bleibt unverändert. Deshalb speicherst du das Ergebnis in einer neuen Variable.
+
+--- quiz quiz-string-plus
+Was gibt `console.log("10" + 5)` aus?
+( ) `15` :: Das wäre bei zwei Zahlen so. Hier ist aber `"10"` ein Text.
+(x) `105` :: Genau. Sobald ein Text beteiligt ist, hängt `+` die Werte aneinander. Aus `5` wird dabei der Text `"5"`.
+( ) Es gibt einen Fehler, weil man Text und Zahl nicht mischen darf. :: Bei `+` ist das Mischen erlaubt (das Ergebnis ist Text). Bei `-`, `*` oder `/` würde TypeScript tatsächlich einen Fehler melden.
+
+=== vergleiche | Vergleichen und Wahrheitswerte | 15
+Programme müssen ständig Fragen beantworten: Ist der Spieler alt genug? Ist das Passwort lang genug? Die Antwort auf so eine Frage ist immer `true` (wahr) oder `false` (falsch) – ein `boolean`.
+
+## Vergleichsoperatoren
+
+| Operator | Bedeutung | Beispiel | Ergebnis |
+| --- | --- | --- | --- |
+| `===` | ist gleich | `5 === 5` | `true` |
+| `!==` | ist ungleich | `5 !== 3` | `true` |
+| `>` | grösser als | `5 > 8` | `false` |
+| `<` | kleiner als | `5 < 8` | `true` |
+| `>=` | grösser oder gleich | `5 >= 5` | `true` |
+| `<=` | kleiner oder gleich | `5 <= 4` | `false` |
+
+Das Ergebnis eines Vergleichs kannst du in einer Variable speichern:
+
+```ts
+const alter = 15;
+const istVolljaehrig = alter >= 18;
+console.log(istVolljaehrig); // false
+```
+
+> [!WARN] Ein, zwei oder drei Gleichheitszeichen?
+> - `=` ist die **Zuweisung**: `alter = 15` legt 15 in die Variable.
+> - `===` ist der **Vergleich**: `alter === 15` fragt, ob 15 drin ist.
+> - `==` (zwei Zeichen) gibt es auch. Es vergleicht «ungefähr» und hat überraschende Regeln, zum Beispiel ist `"5" == 5` wahr. Benutze es nicht. Nimm immer `===` und `!==`.
+
+TypeScript hilft dir auch hier. Einen Text mit einer Zahl zu vergleichen, ergibt keinen Sinn – das wird als Fehler gemeldet:
+
+```ts error
+const eingabe = "5";
+console.log(eingabe === 5);
+```
+
+## Bedingungen verknüpfen
+
+Mit drei logischen Operatoren baust du aus einfachen Fragen kompliziertere:
+
+| Operator | Name | Ergebnis ist `true`, wenn … |
+| --- | --- | --- |
+| `&&` | UND | **beide** Seiten wahr sind |
+| `\|\|` | ODER | **mindestens eine** Seite wahr ist |
+| `!` | NICHT | der Wert dahinter falsch ist (dreht um) |
+
+```ts
+const alter = 14;
+const hatTicket = true;
+const istGesperrt = false;
+
+console.log(alter >= 12 && hatTicket); // true: beides stimmt
+console.log(alter >= 16 || hatTicket); // true: das zweite stimmt
+console.log(!istGesperrt);             // true: nicht gesperrt
+```
+
+Die senkrechten Striche für ODER tippst du auf der Schweizer Tastatur mit [[AltGr]] + [[7]] (Mac: [[Option]] + [[7]]).
+
+## Gute Namen für Wahrheitswerte
+
+Variablen vom Typ `boolean` bekommen Namen, die wie eine Ja/Nein-Frage klingen: `istAngemeldet`, `hatTicket`, `kannFliegen`. Dann liest sich der Code fast wie ein Satz.
+
+--- code vergleiche-kino | Wer darf in den Film?
+Ein Kino hat Regeln für einen Film ab 16:
+
+- `istAltGenug` – wahr, wenn `alter` mindestens 16 ist.
+- `darfRein` – wahr, wenn die Person alt genug ist **oder** eine erwachsene Begleitung dabei hat.
+- `bekommtRabatt` – wahr, wenn die Person Schüler ist **und** es **nicht** Wochenende ist.
+
+Schreibe keine festen `true`/`false` hin, sondern lass den Computer vergleichen.
+@starter
+const alter = 14;
+const hatBegleitung = true;
+const istSchueler = true;
+const istWochenende = false;
+
+// Lege istAltGenug, darfRein und bekommtRabatt an
+
+console.log(istAltGenug, darfRein, bekommtRabatt);
+@solution
+const alter = 14;
+const hatBegleitung = true;
+const istSchueler = true;
+const istWochenende = false;
+
+// Lege istAltGenug, darfRein und bekommtRabatt an
+const istAltGenug = alter >= 16;
+const darfRein = istAltGenug || hatBegleitung;
+const bekommtRabatt = istSchueler && !istWochenende;
+
+console.log(istAltGenug, darfRein, bekommtRabatt);
+@tests
+var istAltGenug: boolean
+run istAltGenug === false :: `istAltGenug` ist `false` (14 ist jünger als 16)
+src /alter\s*>=\s*16|alter\s*>\s*15|16\s*<=\s*alter|15\s*<\s*alter/ :: `istAltGenug` entsteht aus einem Vergleich mit `alter`
+run darfRein === true :: `darfRein` ist `true` (es gibt eine Begleitung)
+src /\|\|/ :: `darfRein` benutzt ODER (`||`)
+run bekommtRabatt === true :: `bekommtRabatt` ist `true`
+src /&&/ :: `bekommtRabatt` benutzt UND (`&&`)
+src /!\s*istWochenende/ :: «nicht Wochenende» wird mit `!istWochenende` ausgedrückt
+@hints
+- «Mindestens 16» heisst «grösser oder gleich 16»: `alter >= 16`
+- ODER schreibt man `||`: `istAltGenug || hatBegleitung`
+- «Schüler und nicht Wochenende»: `istSchueler && !istWochenende`
+@after
+Mit `&&`, `||` und `!` lassen sich beliebige Regeln aus der echten Welt ausdrücken. Sprich die Bedingung laut als deutschen Satz – «und», «oder», «nicht» verraten dir die Operatoren.
+
+--- quiz quiz-und-oder
+Gegeben: `const a = true;` und `const b = false;`. Welcher Ausdruck ergibt `true`?
+( ) `a && b` :: UND verlangt, dass **beide** wahr sind. `b` ist aber falsch.
+(x) `a && !b` :: Richtig. `!b` dreht `false` zu `true` um, und dann sind beide Seiten wahr.
+( ) `!a || b` :: `!a` ist `false`, `b` ist `false`. Bei ODER müsste mindestens eine Seite wahr sein.
+
+=== if-else | Entscheidungen: if und else | 15
+Bis jetzt lief dein Programm stur von oben nach unten. Mit `if` kann es **entscheiden**: Ein Stück Code wird nur ausgeführt, wenn eine Bedingung wahr ist.
+
+```ts
+const temperatur = 31;
+
+if (temperatur > 30) {
+  console.log("Heute ist es heiss!");
+}
+```
+
+Der Aufbau: das Wort `if`, in **runden** Klammern die Bedingung, in **geschweiften** Klammern der Code, der dann laufen soll. Die Bedingung muss ein `boolean` ergeben – also genau das, was du in der letzten Lektion gebaut hast.
+
+## Sonst: else
+
+Mit `else` legst du fest, was passiert, wenn die Bedingung **nicht** stimmt:
+
+```ts
+const alter = 15;
+
+if (alter >= 18) {
+  console.log("Du darfst wählen.");
+} else {
+  console.log("Du darfst noch nicht wählen.");
+}
+```
+
+Es wird immer genau einer der beiden Blöcke ausgeführt, nie beide.
+
+## Mehrere Fälle: else if
+
+```ts
+const punkte = 73;
+let bewertung: string;
+
+if (punkte >= 90) {
+  bewertung = "sehr gut";
+} else if (punkte >= 70) {
+  bewertung = "gut";
+} else if (punkte >= 50) {
+  bewertung = "genügend";
+} else {
+  bewertung = "ungenügend";
+}
+
+console.log(bewertung); // "gut"
+```
+
+Die Bedingungen werden **von oben nach unten** geprüft. Sobald eine stimmt, wird ihr Block ausgeführt und der Rest übersprungen. Darum reicht bei der zweiten Bedingung `punkte >= 70` – dass die Punkte unter 90 liegen, ist dort schon klar.
+
+Schau dir auch `let bewertung: string;` an: eine Variable ohne Startwert, aber **mit Typangabe**. TypeScript prüft sogar, dass in jedem Zweig ein Wert zugewiesen wird, bevor du `bewertung` benutzt.
+
+## Einrücken
+
+Der Code in den geschweiften Klammern wird um zwei Leerzeichen eingerückt. Dem Computer ist das egal, aber für Menschen ist es der Unterschied zwischen lesbar und unlesbar.
+
+> [!VSCODE] Automatisch formatieren
+> Du musst nicht von Hand einrücken. Mit der Erweiterung Prettier formatiert VS Code deine Datei auf Knopfdruck: [[Shift]] + [[Alt]] + [[F]] (Mac: [[Shift]] + [[Option]] + [[F]]). Noch bequemer: In den Einstellungen «Format On Save» einschalten, dann passiert es bei jedem Speichern.
+
+## Kurzform für einfache Fälle
+
+Wenn du je nach Bedingung nur einen von zwei Werten brauchst, gibt es eine Kurzschreibweise mit `?` und `:`:
+
+```ts
+const alter = 15;
+const tarif = alter >= 16 ? "Erwachsene" : "Kinder";
+console.log(tarif); // "Kinder"
+```
+
+Lies es so: «Ist `alter >= 16`? Dann `"Erwachsene"`, sonst `"Kinder"`.» In Angular-Templates wirst du diese Schreibweise oft sehen.
+
+--- code if-eintritt | Eintrittspreis bestimmen
+Ein Schwimmbad hat drei Preise:
+
+- unter 6 Jahren: `0` Franken
+- 6 bis 15 Jahre: `4` Franken
+- ab 16 Jahren: `7` Franken
+
+Lege eine Variable `preis` an und gib ihr mit `if` / `else if` / `else` den richtigen Wert für das gegebene `alter`.
+@starter
+const alter = 12;
+
+let preis: number;
+
+// Schreibe hier dein if / else if / else
+
+console.log(preis);
+@solution
+const alter = 12;
+
+let preis: number;
+
+// Schreibe hier dein if / else if / else
+if (alter < 6) {
+  preis = 0;
+} else if (alter < 16) {
+  preis = 4;
+} else {
+  preis = 7;
+}
+
+console.log(preis);
+@tests
+has IfStatement :: Es gibt eine `if`-Anweisung
+src /else\s+if/ :: Es gibt mindestens ein `else if`
+src /else\s*\{/ :: Es gibt einen abschliessenden `else`-Block
+run preis === 4 :: Für `alter = 12` ist `preis` gleich `4`
+src /preis\s*=\s*0/ :: Der Preis `0` kommt vor
+src /preis\s*=\s*7/ :: Der Preis `7` kommt vor
+@hints
+- Beginne mit dem kleinsten Fall: `if (alter < 6) { preis = 0; }`
+- Der zweite Fall muss nur noch nach oben abgrenzen: `else if (alter < 16) { preis = 4; }`
+- Alles, was übrig bleibt, landet im `else`: `else { preis = 7; }`
+@after
+Weil die Bedingungen der Reihe nach geprüft werden, muss jede nur noch ausschliessen, was die vorherigen nicht schon erledigt haben. Das macht `else if`-Ketten kurz und lesbar.
+
+--- code if-ternary | Die Kurzform
+`status` soll `"bestanden"` sein, wenn `punkte` mindestens 50 ist, sonst `"nicht bestanden"`.
+
+Löse das in **einer Zeile** mit der Kurzform `bedingung ? wertWennJa : wertWennNein`.
+@starter
+const punkte = 62;
+
+const status = "";
+
+console.log(status);
+@solution
+const punkte = 62;
+
+const status = punkte >= 50 ? "bestanden" : "nicht bestanden";
+
+console.log(status);
+@tests
+has ConditionalExpression :: Die Kurzform `? :` wird benutzt
+run status === "bestanden" :: Für `punkte = 62` ist `status` gleich `"bestanden"`
+src /"nicht bestanden"|'nicht bestanden'|`nicht bestanden`/ :: Der Fall `"nicht bestanden"` kommt auch vor
+hasnot IfStatement :: Kein `if` – nur die Kurzform
+@hints
+- Der Aufbau: `const status = BEDINGUNG ? "bestanden" : "nicht bestanden";`
+- Die Bedingung lautet `punkte >= 50`.
+@after
+Die Kurzform heisst offiziell «ternärer Operator» oder «Conditional». Nimm sie für einfache Entweder-oder-Werte. Sobald es komplizierter wird, ist ein normales `if` besser lesbar.
+
+=== schleifen | Wiederholen mit Schleifen | 15
+Computer sind gut darin, Dinge zu wiederholen. Statt zehnmal dasselbe hinzuschreiben, schreibst du es einmal und sagst, wie oft es laufen soll. Das ist eine **Schleife**.
+
+## Die for-Schleife
+
+```ts
+for (let i = 1; i <= 5; i++) {
+  console.log(`Runde ${i}`);
+}
+```
+
+Das gibt «Runde 1» bis «Runde 5» aus. In den runden Klammern stehen drei Teile, getrennt durch Strichpunkte:
+
+1. `let i = 1` – **Start:** Lege eine Zählvariable `i` an, beginne bei 1.
+2. `i <= 5` – **Bedingung:** Mach weiter, solange das wahr ist.
+3. `i++` – **Schritt:** Erhöhe `i` nach jedem Durchlauf um 1.
+
+Der Name `i` ist Tradition (von «Index»). Du darfst die Variable auch `runde` oder `zaehler` nennen.
+
+## Etwas aufsummieren
+
+Ein sehr häufiges Muster: Vor der Schleife eine Variable anlegen, in der Schleife etwas dazuzählen.
+
+```ts
+let summe = 0;
+
+for (let i = 1; i <= 4; i++) {
+  summe += i;
+}
+
+console.log(summe); // 1 + 2 + 3 + 4 = 10
+```
+
+## Die while-Schleife
+
+`while` wiederholt, **solange** eine Bedingung wahr ist. Man nimmt sie, wenn man vorher nicht weiss, wie viele Durchläufe es braucht.
+
+```ts
+let guthaben = 100;
+let tage = 0;
+
+while (guthaben > 0) {
+  guthaben -= 30;
+  tage++;
+}
+
+console.log(`Nach ${tage} Tagen ist das Geld weg.`);
+```
+
+> [!WARN] Endlosschleifen
+> Wenn die Bedingung nie falsch wird, läuft die Schleife für immer. Das passiert zum Beispiel, wenn du in einer `while`-Schleife vergisst, die Variable zu verändern. Hier im Kurs wird dein Programm nach ein paar Sekunden abgebrochen. Im Terminal von VS Code stoppst du ein hängendes Programm mit [[Strg]] + [[C]].
+
+## Schleifen und if kombinieren
+
+In einer Schleife darf alles stehen, auch ein `if`:
+
+```ts
+for (let zahl = 1; zahl <= 10; zahl++) {
+  if (zahl % 2 === 0) {
+    console.log(`${zahl} ist gerade`);
+  }
+}
+```
+
+Mit `break` verlässt du eine Schleife vorzeitig, mit `continue` springst du direkt zum nächsten Durchlauf.
+
+--- code schleife-countdown | Countdown
+Gib einen Countdown aus: zuerst `5`, dann `4`, `3`, `2`, `1` – jede Zahl in einer eigenen Zeile – und zum Schluss `Start!`.
+
+Benutze für die Zahlen eine Schleife. Fünfmal `console.log` untereinander gilt nicht.
+@starter
+// Schleife für 5, 4, 3, 2, 1
+
+console.log("Start!");
+@solution
+// Schleife für 5, 4, 3, 2, 1
+for (let i = 5; i >= 1; i--) {
+  console.log(i);
+}
+
+console.log("Start!");
+@tests
+has ForStatement|WhileStatement :: Es wird eine Schleife benutzt
+run __zeilen().join(",") === "5,4,3,2,1,Start!" :: Die Ausgabe ist genau `5`, `4`, `3`, `2`, `1`, `Start!` (je eine Zeile) ?? Prüfe Startwert, Bedingung und ob du herunterzählst.
+nosrc /console\.log\(\s*[1-5]\s*\)/ :: Die Zahlen kommen aus der Schleife, nicht aus einzelnen `console.log`
+@hints
+- Diesmal zählst du rückwärts: Start bei 5, und statt `i++` brauchst du `i--`.
+- Die Bedingung muss wahr sein, solange weitergezählt wird: `i >= 1`
+- Zusammen: `for (let i = 5; i >= 1; i--) { console.log(i); }`
+@after
+Eine `for`-Schleife kann in beide Richtungen zählen. Entscheidend sind immer die drei Teile: Start, Bedingung, Schritt.
+
+--- code schleife-summe | Zahlen aufsummieren
+Berechne die Summe aller Zahlen von 1 bis 100 und speichere sie in `summe`. (Das Ergebnis ist 5050 – aber lass es den Computer ausrechnen.)
+@starter
+let summe = 0;
+
+// Schleife von 1 bis 100
+
+console.log(summe);
+@solution
+let summe = 0;
+
+// Schleife von 1 bis 100
+for (let i = 1; i <= 100; i++) {
+  summe += i;
+}
+
+console.log(summe);
+@tests
+has ForStatement|WhileStatement :: Es wird eine Schleife benutzt
+run summe === 5050 :: `summe` ist `5050` ?? Läuft deine Schleife wirklich bis einschliesslich 100? `i < 100` hört bei 99 auf.
+nosrc /summe\s*=\s*5050/ :: Das Ergebnis wird berechnet, nicht eingetragen
+@hints
+- Die Schleife zählt `i` von 1 bis 100: `for (let i = 1; i <= 100; i++) { ... }`
+- In der Schleife zählst du `i` zur Summe dazu: `summe += i;`
+@after
+«Variable vor der Schleife anlegen, in der Schleife verändern» ist das Grundmuster für Summen, Zähler und Durchschnitte.
+
+--- code schleife-gerade | Nur die geraden Zahlen
+Gib alle **geraden** Zahlen von 1 bis 20 aus, jede in einer eigenen Zeile. Zähle ausserdem in `anzahl` mit, wie viele es sind.
+@starter
+let anzahl = 0;
+
+// Schleife mit if
+
+console.log(`Es sind ${anzahl} gerade Zahlen.`);
+@solution
+let anzahl = 0;
+
+// Schleife mit if
+for (let zahl = 1; zahl <= 20; zahl++) {
+  if (zahl % 2 === 0) {
+    console.log(zahl);
+    anzahl++;
+  }
+}
+
+console.log(`Es sind ${anzahl} gerade Zahlen.`);
+@tests
+has ForStatement|WhileStatement :: Es wird eine Schleife benutzt
+run anzahl === 10 :: `anzahl` ist `10`
+run __zeilen().slice(0, 10).join(",") === "2,4,6,8,10,12,14,16,18,20" :: Ausgegeben werden `2`, `4`, `6` … `20` (je eine Zeile)
+out Es sind 10 gerade Zahlen.
+@hints
+- Eine Zahl ist gerade, wenn beim Teilen durch 2 kein Rest bleibt: `zahl % 2 === 0`
+- In der Schleife: `if (zahl % 2 === 0) { console.log(zahl); anzahl++; }`
+- Es gibt auch einen zweiten Weg: bei 2 starten und immer 2 dazuzählen (`zahl += 2`).
+@after
+Schleife plus `if` ist ein Filter: Du gehst alles durch und behandelst nur, was eine Bedingung erfüllt. Später lernst du dafür eine elegantere Schreibweise mit `filter`.

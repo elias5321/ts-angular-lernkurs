@@ -1,0 +1,934 @@
+=== funktionen | Funktionen | 20
+Eine **Funktion** ist ein Stück Code mit einem Namen. Du schreibst es einmal und kannst es danach beliebig oft benutzen. Funktionen sind der wichtigste Baustein überhaupt: Jede Angular-App besteht zum grössten Teil aus Funktionen.
+
+Du kennst schon welche: `console.log(...)`, `Math.round(...)`. Jetzt schreibst du eigene.
+
+## Eine Funktion schreiben und aufrufen
+
+```ts
+function begruesse(name: string): string {
+  return `Hallo ${name}!`;
+}
+
+const text = begruesse("Mia");
+console.log(text);             // Hallo Mia!
+console.log(begruesse("Noah")); // Hallo Noah!
+```
+
+Die erste Zeile hat fünf Teile:
+
+1. `function` – das Schlüsselwort.
+2. `begruesse` – der Name. Funktionen heissen meist wie eine Tätigkeit: `berechne...`, `zeige...`, `ist...`.
+3. `(name: string)` – der **Parameter**: ein Wert, den die Funktion von aussen bekommt. Dahinter steht sein Typ.
+4. `: string` nach der Klammer – der **Rückgabetyp**: Was für einen Wert liefert die Funktion zurück?
+5. `{ ... }` – der Rumpf: der Code, der beim Aufruf läuft.
+
+`return` gibt einen Wert zurück und beendet die Funktion sofort. Der Aufruf `begruesse("Mia")` wird sozusagen durch den zurückgegebenen Wert ersetzt.
+
+> [!MERKE] Definieren ist nicht aufrufen
+> Eine Funktion zu schreiben, führt sie noch nicht aus. Sie läuft erst, wenn du sie mit Namen und runden Klammern aufrufst: `begruesse("Mia")`.
+
+## Mehrere Parameter
+
+Parameter werden durch Kommas getrennt. Jeder bekommt seinen eigenen Typ:
+
+```ts
+function rechteckFlaeche(breite: number, hoehe: number): number {
+  return breite * hoehe;
+}
+
+console.log(rechteckFlaeche(8, 5)); // 40
+```
+
+Beim Aufruf zählt die **Reihenfolge**: Der erste Wert landet im ersten Parameter, der zweite im zweiten.
+
+## TypeScript prüft jeden Aufruf
+
+Hier zeigt sich, warum die Typen so wertvoll sind. Alle diese Aufrufe sind in JavaScript erlaubt und führen zu Unsinn – TypeScript meldet sie sofort:
+
+```ts error
+function rechteckFlaeche(breite: number, hoehe: number): number {
+  return breite * hoehe;
+}
+
+rechteckFlaeche(8);        // ein Argument fehlt
+rechteckFlaeche("8", "5"); // Text statt Zahl
+rechteckFlaeche(8, 5, 2);  // eines zu viel
+```
+
+## Funktionen ohne Rückgabewert
+
+Manche Funktionen tun nur etwas, ohne ein Ergebnis zu liefern. Ihr Rückgabetyp heisst `void` («leer»):
+
+```ts
+function zeigeTrennlinie(): void {
+  console.log("--------------------");
+}
+
+zeigeTrennlinie();
+```
+
+## Ausgeben oder zurückgeben?
+
+Das verwechseln am Anfang fast alle:
+
+- `console.log(wert)` **zeigt** einen Wert an. Das Programm kann danach nichts mehr damit tun.
+- `return wert` **gibt** einen Wert an die aufrufende Stelle zurück. Dort kannst du weiterrechnen, ihn speichern oder ausgeben.
+
+Meistens ist `return` das, was du willst. Eine Funktion, die ihr Ergebnis zurückgibt, kannst du überall einsetzen.
+
+## Sichtbarkeit von Variablen
+
+Variablen, die du **in** einer Funktion anlegst, existieren nur dort. Von aussen sind sie nicht sichtbar. Dasselbe gilt für alle geschweiften Klammern (`if`, `for`):
+
+```ts error
+function berechne(): number {
+  const zwischenergebnis = 42;
+  return zwischenergebnis * 2;
+}
+
+console.log(zwischenergebnis);
+```
+
+Das ist gewollt: So können sich Funktionen nicht gegenseitig in die Quere kommen.
+
+--- code funktion-quadrat | Deine erste Funktion
+Schreibe eine Funktion `quadrat`, die eine Zahl bekommt und diese Zahl mal sich selbst zurückgibt. `quadrat(4)` soll also `16` ergeben.
+
+Gib den Typ des Parameters und den Rückgabetyp an.
+@starter
+// Schreibe hier die Funktion quadrat
+
+console.log(quadrat(4));
+@solution
+// Schreibe hier die Funktion quadrat
+function quadrat(zahl: number): number {
+  return zahl * zahl;
+}
+
+console.log(quadrat(4));
+@tests
+fn quadrat(number): number
+fnannot quadrat
+run quadrat(4) === 16 :: `quadrat(4)` ergibt `16`
+run quadrat(-3) === 9 && quadrat(0) === 0 && quadrat(1.5) === 2.25 :: Auch andere Zahlen stimmen (`-3`, `0`, `1.5`)
+@hints
+- Der Rahmen: `function quadrat(zahl: number): number { ... }`
+- In den Rumpf gehört ein `return`: `return zahl * zahl;`
+@after
+Parameter mit Typ, Rückgabetyp, `return` – das ist das Grundgerüst jeder Funktion. Beachte: Die Prüfung hat deine Funktion gerade mit mehreren verschiedenen Zahlen aufgerufen. Genau dafür sind Funktionen da.
+
+--- code funktion-rabatt | Preis mit Rabatt
+Schreibe eine Funktion `preisMitRabatt` mit zwei Parametern:
+
+- `preis` – der ursprüngliche Preis (Zahl)
+- `prozent` – der Rabatt in Prozent (Zahl)
+
+Sie gibt den reduzierten Preis zurück. Beispiel: `preisMitRabatt(200, 25)` ergibt `150`.
+@starter
+// Schreibe hier die Funktion preisMitRabatt
+
+console.log(preisMitRabatt(200, 25));
+@solution
+// Schreibe hier die Funktion preisMitRabatt
+function preisMitRabatt(preis: number, prozent: number): number {
+  const rabatt = preis * prozent / 100;
+  return preis - rabatt;
+}
+
+console.log(preisMitRabatt(200, 25));
+@tests
+fn preisMitRabatt(number, number): number
+fnannot preisMitRabatt
+run preisMitRabatt(200, 25) === 150 :: `preisMitRabatt(200, 25)` ergibt `150`
+run preisMitRabatt(80, 0) === 80 :: Bei 0 % bleibt der Preis gleich
+run preisMitRabatt(50, 100) === 0 :: Bei 100 % ist der Preis `0`
+@hints
+- 25 Prozent von 200 berechnest du so: `200 * 25 / 100`.
+- Rechne zuerst den Rabatt aus und zieh ihn dann vom Preis ab.
+- `const rabatt = preis * prozent / 100; return preis - rabatt;`
+@after
+Eine Zwischenvariable wie `rabatt` kostet nichts und macht die Rechnung lesbar. Sie existiert nur innerhalb der Funktion.
+
+--- code funktion-gerade | Eine Ja/Nein-Funktion
+Schreibe eine Funktion `istGerade`, die eine Zahl bekommt und `true` zurückgibt, wenn die Zahl gerade ist, sonst `false`.
+@starter
+// Schreibe hier die Funktion istGerade
+
+console.log(istGerade(4), istGerade(7));
+@solution
+// Schreibe hier die Funktion istGerade
+function istGerade(zahl: number): boolean {
+  return zahl % 2 === 0;
+}
+
+console.log(istGerade(4), istGerade(7));
+@tests
+fn istGerade(number): boolean
+fnannot istGerade
+run istGerade(4) === true && istGerade(0) === true && istGerade(100) === true :: Gerade Zahlen ergeben `true`
+run istGerade(7) === false && istGerade(1) === false && istGerade(99) === false :: Ungerade Zahlen ergeben `false`
+@hints
+- Der Rückgabetyp ist `boolean`.
+- Gerade heisst: Der Rest beim Teilen durch 2 ist 0 – also `zahl % 2 === 0`.
+- Ein Vergleich **ist** schon ein `boolean`. Du kannst ihn direkt zurückgeben: `return zahl % 2 === 0;`
+@after
+Ein Vergleich ergibt `true` oder `false` – du brauchst kein `if`, um daraus `true` oder `false` zu machen. `return zahl % 2 === 0;` sagt alles.
+
+--- quiz quiz-return
+Was gibt dieses Programm aus?
+
+```ts
+function verdopple(zahl: number): number {
+  return zahl * 2;
+  console.log("fertig");
+}
+
+console.log(verdopple(5));
+```
+( ) Zuerst `fertig`, dann `10` :: `return` beendet die Funktion sofort. Die Zeile danach wird nie erreicht.
+(x) Nur `10` :: Richtig. Nach `return` ist die Funktion zu Ende. Code dahinter ist «unerreichbar» – VS Code stellt ihn deshalb blasser dar.
+( ) Nur `fertig` :: Nein: Die Zeile mit `fertig` steht hinter dem `return` und läuft nie.
+
+=== pfeilfunktionen | Pfeilfunktionen und flexible Parameter | 15
+Es gibt eine zweite, kürzere Schreibweise für Funktionen: die **Pfeilfunktion** (englisch «arrow function»). In Angular begegnet sie dir auf Schritt und Tritt.
+
+## Von der Funktion zur Pfeilfunktion
+
+```ts
+// klassisch
+function verdopple(zahl: number): number {
+  return zahl * 2;
+}
+
+// als Pfeilfunktion
+const verdopplePfeil = (zahl: number): number => {
+  return zahl * 2;
+};
+
+// Pfeilfunktion in Kurzform
+const verdoppleKurz = (zahl: number): number => zahl * 2;
+
+console.log(verdopple(4), verdopplePfeil(4), verdoppleKurz(4));
+```
+
+Alle drei tun dasselbe. Bei der Pfeilfunktion fällt das Wort `function` weg, dafür steht zwischen Parametern und Rumpf ein Pfeil `=>`. Die Funktion wird in einer normalen `const`-Variable gespeichert.
+
+Die **Kurzform** in der letzten Variante: Besteht der Rumpf nur aus einem einzigen `return`, darfst du die geschweiften Klammern und das Wort `return` weglassen. Was hinter dem Pfeil steht, wird automatisch zurückgegeben.
+
+## Wozu zwei Schreibweisen?
+
+Pfeilfunktionen sind praktisch, wenn man eine kleine Funktion **an eine andere Funktion übergibt**. Das klingt jetzt seltsam, wird aber in zwei Lektionen (bei den Array-Methoden) dein tägliches Brot:
+
+```ts
+const zahlen = [1, 2, 3];
+const verdoppelt = zahlen.map((zahl) => zahl * 2);
+console.log(verdoppelt); // [ 2, 4, 6 ]
+```
+
+Als Faustregel: Für eigenständige, benannte Funktionen nimmst du `function`. Für kleine Funktionen, die du direkt irgendwo übergibst, nimmst du den Pfeil.
+
+## Optionale Parameter
+
+Manchmal soll ein Parameter freiwillig sein. Dafür setzt du ein Fragezeichen hinter den Namen:
+
+```ts
+function begruesse(name: string, titel?: string): string {
+  if (titel) {
+    return `Guten Tag, ${titel} ${name}`;
+  }
+  return `Hallo ${name}`;
+}
+
+console.log(begruesse("Mia"));              // Hallo Mia
+console.log(begruesse("Keller", "Frau"));   // Guten Tag, Frau Keller
+```
+
+Wird der Parameter weggelassen, hat er den besonderen Wert `undefined` («nicht definiert»). Mit `if (titel)` prüfst du, ob etwas übergeben wurde.
+
+## Standardwerte
+
+Oft ist es noch einfacher, einem Parameter einen **Standardwert** zu geben. Der gilt, wenn beim Aufruf nichts übergeben wird:
+
+```ts
+function potenz(basis: number, hochzahl: number = 2): number {
+  return basis ** hochzahl;
+}
+
+console.log(potenz(5));    // 25 – hochzahl ist automatisch 2
+console.log(potenz(2, 10)); // 1024
+```
+
+Optionale Parameter und Parameter mit Standardwert müssen immer **am Ende** stehen.
+
+--- code pfeil-umwandeln | In eine Pfeilfunktion umschreiben
+Hier steht eine klassische Funktion. Schreibe sie in eine **Pfeilfunktion** um, die in einer `const`-Variable mit demselben Namen `celsiusZuFahrenheit` gespeichert ist. Die Typen bleiben gleich.
+@starter
+function celsiusZuFahrenheit(celsius: number): number {
+  return celsius * 1.8 + 32;
+}
+
+console.log(celsiusZuFahrenheit(20));
+@solution
+const celsiusZuFahrenheit = (celsius: number): number => celsius * 1.8 + 32;
+
+console.log(celsiusZuFahrenheit(20));
+@tests
+kind celsiusZuFahrenheit const
+has ArrowFunction :: Es ist eine Pfeilfunktion (mit `=>`)
+hasnot FunctionDeclaration :: Das Wort `function` kommt nicht mehr vor
+fn celsiusZuFahrenheit(number): number
+run celsiusZuFahrenheit(20) === 68 && celsiusZuFahrenheit(0) === 32 && celsiusZuFahrenheit(100) === 212 :: Die Umrechnung stimmt weiterhin (20 °C → 68 °F)
+@hints
+- Der Rahmen: `const celsiusZuFahrenheit = (celsius: number): number => { ... };`
+- Du kannst den Rumpf mit `{ return ...; }` behalten oder die Kurzform nehmen: `=> celsius * 1.8 + 32;`
+@after
+`const name = (parameter) => ergebnis;` – diese Form wirst du in Angular sehr oft lesen und schreiben.
+
+--- code standard-parameter | Ein Parameter mit Standardwert
+Schreibe eine Funktion `wiederhole` mit zwei Parametern:
+
+- `text` – ein String
+- `anzahl` – eine Zahl mit dem **Standardwert** `2`
+
+Sie gibt den Text so oft hintereinander zurück, wie `anzahl` sagt. `wiederhole("ha", 3)` ergibt `"hahaha"`, `wiederhole("la")` ergibt `"lala"`.
+
+Tipp: Strings haben eine Methode `.repeat(anzahl)`.
+@starter
+// Schreibe hier die Funktion wiederhole
+
+console.log(wiederhole("ha", 3));
+console.log(wiederhole("la"));
+@solution
+// Schreibe hier die Funktion wiederhole
+function wiederhole(text: string, anzahl: number = 2): string {
+  return text.repeat(anzahl);
+}
+
+console.log(wiederhole("ha", 3));
+console.log(wiederhole("la"));
+@tests
+fn wiederhole(string, number?): string
+run wiederhole("ha", 3) === "hahaha" :: `wiederhole("ha", 3)` ergibt `"hahaha"`
+run wiederhole("la") === "lala" :: `wiederhole("la")` ergibt `"lala"` (Standardwert 2)
+run wiederhole("x", 0) === "" :: `wiederhole("x", 0)` ergibt den leeren Text
+src /anzahl\s*(:\s*number\s*)?=\s*2/ :: `anzahl` hat den Standardwert `2`
+@hints
+- Ein Standardwert steht direkt beim Parameter: `anzahl: number = 2`
+- Der Rumpf braucht nur eine Zeile: `return text.repeat(anzahl);`
+@after
+Mit einem Standardwert ist der Parameter automatisch optional. Der Aufrufer kann ihn angeben, muss aber nicht.
+
+--- quiz quiz-pfeil
+Welche Pfeilfunktion gibt die Summe von `a` und `b` zurück?
+( ) `const summe = (a: number, b: number) => { a + b };` :: Vorsicht, Falle: Mit geschweiften Klammern braucht es ein `return`. So wird `a + b` zwar berechnet, aber nicht zurückgegeben – das Ergebnis wäre `undefined`.
+(x) `const summe = (a: number, b: number) => a + b;` :: Genau. Ohne geschweifte Klammern wird der Ausdruck hinter dem Pfeil automatisch zurückgegeben.
+( ) `const summe = (a: number, b: number) -> a + b;` :: Der Pfeil besteht aus Gleichheitszeichen und Grösser-Zeichen: `=>`.
+
+=== arrays | Arrays: Listen von Werten | 20
+Ein **Array** ist eine geordnete Liste von Werten. Statt zwanzig einzelner Variablen für zwanzig Schülernamen hast du eine Variable mit einer Liste darin.
+
+## Ein Array anlegen
+
+```ts
+const farben: string[] = ["rot", "grün", "blau"];
+const punkte: number[] = [12, 7, 23, 5];
+const leer: string[] = [];
+
+console.log(farben, punkte, leer);
+```
+
+Die Werte stehen in **eckigen** Klammern, getrennt durch Kommas. Der Typ `string[]` bedeutet «Array von Strings», `number[]` «Array von Zahlen». TypeScript sorgt dafür, dass in einem `string[]` wirklich nur Strings landen.
+
+Auf der Schweizer Tastatur tippst du `[` und `]` mit [[AltGr]] + [[ü]] und [[AltGr]] + [[¨]] (Mac: [[Option]] + [[5]] und [[Option]] + [[6]]).
+
+## Auf Elemente zugreifen
+
+Jedes Element hat eine Nummer, den **Index**. Gezählt wird – wie bei Strings – ab 0.
+
+```ts
+const farben = ["rot", "grün", "blau"];
+
+console.log(farben[0]);      // "rot" – das erste Element
+console.log(farben[2]);      // "blau" – das dritte Element
+console.log(farben.length);  // 3 – Anzahl Elemente
+console.log(farben[farben.length - 1]); // "blau" – das letzte Element
+
+farben[1] = "gelb";          // ein Element ersetzen
+console.log(farben);         // [ 'rot', 'gelb', 'blau' ]
+```
+
+Moment – `farben` ist doch `const`, warum darf man es ändern? `const` heisst nur: Die Variable zeigt immer auf **dasselbe Array**. Der Inhalt des Arrays darf sich ändern. Verboten wäre nur `farben = [...]`, also ein komplett neues Array zuzuweisen.
+
+## Elemente hinzufügen und entfernen
+
+```ts
+const liste = ["Brot", "Milch"];
+
+liste.push("Käse");        // hinten anfügen
+console.log(liste);        // [ 'Brot', 'Milch', 'Käse' ]
+
+const letztes = liste.pop(); // hinten entfernen (und zurückgeben)
+console.log(letztes);      // "Käse"
+
+console.log(liste.includes("Milch")); // true – ist das enthalten?
+console.log(liste.indexOf("Milch"));  // 1 – an welcher Stelle?
+```
+
+TypeScript passt auf, was du hineinlegst:
+
+```ts error
+const punkte: number[] = [12, 7];
+punkte.push("dreizehn");
+```
+
+## Ein Array durchgehen: for...of
+
+Um mit **jedem** Element etwas zu tun, gibt es eine besonders bequeme Schleife:
+
+```ts
+const namen = ["Mia", "Noah", "Lena"];
+
+for (const name of namen) {
+  console.log(`Hallo ${name}!`);
+}
+```
+
+Lies es so: «Für jeden `name` aus `namen` …». In jedem Durchlauf steckt das nächste Element in der Variable `name`. Du brauchst keinen Zähler und keinen Index und kannst dich nicht verzählen.
+
+Die klassische `for`-Schleife mit Index brauchst du nur noch, wenn du die Position wirklich benötigst.
+
+## Arrays und Funktionen
+
+Arrays sind ganz normale Werte. Du kannst sie an Funktionen übergeben und zurückgeben:
+
+```ts
+function groesste(zahlen: number[]): number {
+  let bisherGroesste = zahlen[0];
+  for (const zahl of zahlen) {
+    if (zahl > bisherGroesste) {
+      bisherGroesste = zahl;
+    }
+  }
+  return bisherGroesste;
+}
+
+console.log(groesste([4, 19, 7])); // 19
+```
+
+--- code arrays-einkauf | Eine Einkaufsliste
+1. Lege ein Array `einkauf` vom Typ `string[]` mit den drei Einträgen `"Brot"`, `"Milch"` und `"Eier"` an.
+2. Füge danach mit `push` den Eintrag `"Käse"` hinzu.
+3. Speichere in `anzahl`, wie viele Einträge die Liste jetzt hat.
+4. Speichere in `erstes` den ersten Eintrag der Liste.
+@starter
+// 1. Array anlegen
+
+// 2. "Käse" hinzufügen
+
+// 3. und 4.
+
+console.log(einkauf, anzahl, erstes);
+@solution
+// 1. Array anlegen
+const einkauf: string[] = ["Brot", "Milch", "Eier"];
+
+// 2. "Käse" hinzufügen
+einkauf.push("Käse");
+
+// 3. und 4.
+const anzahl = einkauf.length;
+const erstes = einkauf[0];
+
+console.log(einkauf, anzahl, erstes);
+@tests
+var einkauf: string[]
+run einkauf.join(",") === "Brot,Milch,Eier,Käse" :: `einkauf` enthält am Ende Brot, Milch, Eier, Käse (in dieser Reihenfolge)
+src /\.push\s*\(/ :: `"Käse"` wird mit `push` hinzugefügt
+run anzahl === 4 :: `anzahl` ist `4`
+src /einkauf\s*\.\s*length/ :: `anzahl` wird mit `.length` bestimmt
+run erstes === "Brot" :: `erstes` ist `"Brot"`
+src /einkauf\s*\[\s*0\s*\]/ :: `erstes` wird mit dem Index `0` geholt
+@hints
+- Anlegen: `const einkauf: string[] = ["Brot", "Milch", "Eier"];`
+- Hinzufügen: `einkauf.push("Käse");`
+- `const anzahl = einkauf.length;` und `const erstes = einkauf[0];` – denk daran: gezählt wird ab 0.
+@after
+Eckige Klammern beim Anlegen, eckige Klammern beim Zugriff, `push` zum Anfügen, `length` für die Anzahl – damit kommst du bei Arrays schon sehr weit.
+
+--- code arrays-summe | Alle Zahlen zusammenzählen
+Schreibe eine Funktion `summe`, die ein Array von Zahlen bekommt und die Summe aller Zahlen zurückgibt. Für ein leeres Array soll `0` herauskommen.
+
+Benutze eine `for...of`-Schleife.
+@starter
+// Schreibe hier die Funktion summe
+
+console.log(summe([3, 5, 10]));
+@solution
+// Schreibe hier die Funktion summe
+function summe(zahlen: number[]): number {
+  let ergebnis = 0;
+  for (const zahl of zahlen) {
+    ergebnis += zahl;
+  }
+  return ergebnis;
+}
+
+console.log(summe([3, 5, 10]));
+@tests
+fn summe(number[]): number
+has ForOfStatement :: Es wird eine `for...of`-Schleife benutzt
+run summe([3, 5, 10]) === 18 :: `summe([3, 5, 10])` ergibt `18`
+run summe([]) === 0 :: `summe([])` ergibt `0`
+run summe([-2, 2, 0.5]) === 0.5 :: Auch negative Zahlen und Kommazahlen stimmen
+@hints
+- Der Parameter hat den Typ `number[]`.
+- Lege vor der Schleife `let ergebnis = 0;` an und zähle in der Schleife jede Zahl dazu.
+- Die Schleife: `for (const zahl of zahlen) { ergebnis += zahl; }` – danach `return ergebnis;`
+@after
+Das Muster «Startwert, Schleife, zurückgeben» kennst du schon von den Schleifen. Mit `for...of` ist es noch übersichtlicher.
+
+--- code arrays-zaehlen | Zählen mit Bedingung
+Schreibe eine Funktion `zaehleLange`, die ein Array von Wörtern und eine Mindestlänge bekommt. Sie gibt zurück, **wie viele** Wörter mindestens so lang sind.
+
+Beispiel: `zaehleLange(["Hund", "Elefant", "Kuh"], 4)` ergibt `2` (Hund und Elefant).
+@starter
+// Schreibe hier die Funktion zaehleLange
+
+console.log(zaehleLange(["Hund", "Elefant", "Kuh"], 4));
+@solution
+// Schreibe hier die Funktion zaehleLange
+function zaehleLange(woerter: string[], mindestLaenge: number): number {
+  let anzahl = 0;
+  for (const wort of woerter) {
+    if (wort.length >= mindestLaenge) {
+      anzahl++;
+    }
+  }
+  return anzahl;
+}
+
+console.log(zaehleLange(["Hund", "Elefant", "Kuh"], 4));
+@tests
+fn zaehleLange(string[], number): number
+run zaehleLange(["Hund", "Elefant", "Kuh"], 4) === 2 :: Das Beispiel ergibt `2`
+run zaehleLange(["a", "bb", "ccc"], 1) === 3 :: Mit Mindestlänge 1 zählen alle Wörter
+run zaehleLange(["a", "bb", "ccc"], 5) === 0 :: Ist kein Wort lang genug, kommt `0` heraus
+run zaehleLange([], 3) === 0 :: Ein leeres Array ergibt `0`
+@hints
+- Zwei Parameter: `woerter: string[]` und `mindestLaenge: number`.
+- Die Länge eines Wortes bekommst du mit `wort.length`.
+- In der Schleife: `if (wort.length >= mindestLaenge) { anzahl++; }`
+@after
+Schleife, `if`, Zähler – du hast gerade drei Grundbausteine in einer Funktion kombiniert. Die meisten Programme sind genau solche Kombinationen.
+
+=== array-methoden | Array-Methoden: map, filter und Co. | 25
+Arrays durchgehen, etwas herausfiltern, etwas umrechnen – das kommt so oft vor, dass es dafür fertige Methoden gibt. Sie ersetzen viele Schleifen und sind in Angular allgegenwärtig. Nimm dir für diese Lektion Zeit.
+
+Allen gemeinsam ist: Du übergibst ihnen eine **kleine Funktion**, und die Methode ruft diese Funktion für jedes Element auf. Dafür sind Pfeilfunktionen ideal.
+
+## map – jedes Element umwandeln
+
+`map` macht aus einem Array ein **neues Array gleicher Länge**. Deine Funktion sagt, was aus jedem Element werden soll.
+
+```ts
+const preise = [10, 20, 30];
+const mitMwst = preise.map((preis) => preis * 1.081);
+console.log(mitMwst); // drei Preise, jeweils mit 8.1 % Zuschlag
+
+const namen = ["mia", "noah"];
+const gross = namen.map((name) => name.toUpperCase());
+console.log(gross); // [ 'MIA', 'NOAH' ]
+```
+
+Den Typ von `preis` musst du nicht hinschreiben: TypeScript weiss, dass `preise` ein `number[]` ist, also ist jedes Element eine `number`.
+
+## filter – nur manche Elemente behalten
+
+`filter` liefert ein **neues Array mit den Elementen, für die deine Funktion `true` ergibt**.
+
+```ts
+const zahlen = [5, 12, 8, 21, 3];
+const grosse = zahlen.filter((zahl) => zahl > 7);
+console.log(grosse); // [ 12, 8, 21 ]
+```
+
+## find – das erste passende Element
+
+`find` liefert **ein einzelnes Element**: das erste, für das deine Funktion `true` ergibt. Passt keines, kommt `undefined` zurück.
+
+```ts
+const namen = ["Mia", "Noah", "Nina"];
+const mitN = namen.find((name) => name.startsWith("N"));
+console.log(mitN); // "Noah"
+```
+
+## some und every – Fragen an das ganze Array
+
+```ts
+const noten = [5, 4.5, 3.5, 6];
+console.log(noten.some((note) => note < 4));   // true – mindestens eine ungenügend?
+console.log(noten.every((note) => note >= 3)); // true – alle mindestens 3?
+```
+
+## reduce – alles zu einem Wert zusammenfassen
+
+`reduce` ist die anspruchsvollste Methode. Sie geht das Array durch und führt dabei einen **Zwischenstand** mit. Deine Funktion bekommt den Zwischenstand und das aktuelle Element und gibt den neuen Zwischenstand zurück. Die `0` am Ende ist der Startwert.
+
+```ts
+const zahlen = [3, 5, 10];
+const summe = zahlen.reduce((zwischenstand, zahl) => zwischenstand + zahl, 0);
+console.log(summe); // 18
+```
+
+Wenn dir das noch zu abstrakt ist: Eine `for...of`-Schleife tut dasselbe und ist völlig in Ordnung.
+
+## Weitere nützliche Methoden
+
+```ts
+const namen = ["Noah", "Mia", "Lena"];
+
+console.log(namen.join(", "));        // "Noah, Mia, Lena" – zu einem Text verbinden
+console.log(namen.slice(0, 2));       // [ 'Noah', 'Mia' ] – Ausschnitt kopieren
+console.log([...namen].sort());       // [ 'Lena', 'Mia', 'Noah' ] – sortierte Kopie
+console.log("a,b,c".split(","));      // [ 'a', 'b', 'c' ] – Text in Array zerlegen
+```
+
+`sort()` verändert das ursprüngliche Array. Mit `[...namen]` machst du vorher eine Kopie – was die drei Punkte bedeuten, lernst du in Teil 3.
+
+> [!WARN] Zahlen sortieren
+> `sort()` ohne Angabe sortiert wie im Wörterbuch – auch Zahlen. Aus `[10, 9, 1]` wird `[1, 10, 9]`. Für Zahlen übergibst du eine Vergleichsfunktion: `zahlen.sort((a, b) => a - b)`.
+
+## Methoden verketten
+
+Weil `map` und `filter` wieder Arrays liefern, kannst du sie hintereinanderhängen:
+
+```ts
+const punkte = [45, 82, 67, 91, 38];
+
+const ergebnis = punkte
+  .filter((p) => p >= 50)
+  .map((p) => `${p} Punkte`);
+
+console.log(ergebnis); // [ '82 Punkte', '67 Punkte', '91 Punkte' ]
+```
+
+> [!MERKE] Welche Methode wofür?
+> - Gleich viele Elemente, aber verändert → `map`
+> - Weniger Elemente, unverändert → `filter`
+> - Genau ein Element → `find`
+> - Eine Ja/Nein-Antwort → `some` / `every`
+> - Ein einzelner Gesamtwert → `reduce`
+
+--- code map-laengen | map: Wörter in Längen umwandeln
+Schreibe eine Funktion `laengen`, die ein Array von Wörtern bekommt und ein Array mit den **Längen** dieser Wörter zurückgibt.
+
+Beispiel: `laengen(["Hund", "Ei"])` ergibt `[4, 2]`. Benutze `map`.
+@starter
+// Schreibe hier die Funktion laengen
+
+console.log(laengen(["Hund", "Ei"]));
+@solution
+// Schreibe hier die Funktion laengen
+function laengen(woerter: string[]): number[] {
+  return woerter.map((wort) => wort.length);
+}
+
+console.log(laengen(["Hund", "Ei"]));
+@tests
+fn laengen(string[]): number[]
+src /\.map\s*\(/ :: Es wird `map` benutzt
+run laengen(["Hund", "Ei"]).join(",") === "4,2" :: `laengen(["Hund", "Ei"])` ergibt `[4, 2]`
+run laengen([]).length === 0 :: Ein leeres Array ergibt ein leeres Array
+run laengen(["TypeScript", "", "a"]).join(",") === "10,0,1" :: Auch andere Wörter stimmen
+@hints
+- Der Rückgabetyp ist `number[]`, denn heraus kommt ein Array von Zahlen.
+- `map` bekommt eine Pfeilfunktion, die aus einem Wort seine Länge macht: `(wort) => wort.length`
+- `return woerter.map((wort) => wort.length);`
+@after
+`map` ist die Methode, die du in Angular am häufigsten brauchst: aus einer Liste von Daten eine Liste von etwas anderem machen.
+
+--- code filter-volljaehrig | filter: nur die Erwachsenen
+Schreibe eine Funktion `nurErwachsene`, die ein Array von Altersangaben bekommt und nur die Werte zurückgibt, die **18 oder grösser** sind.
+
+Beispiel: `nurErwachsene([12, 18, 35, 17])` ergibt `[18, 35]`.
+@starter
+// Schreibe hier die Funktion nurErwachsene
+
+console.log(nurErwachsene([12, 18, 35, 17]));
+@solution
+// Schreibe hier die Funktion nurErwachsene
+function nurErwachsene(alter: number[]): number[] {
+  return alter.filter((a) => a >= 18);
+}
+
+console.log(nurErwachsene([12, 18, 35, 17]));
+@tests
+fn nurErwachsene(number[]): number[]
+src /\.filter\s*\(/ :: Es wird `filter` benutzt
+run nurErwachsene([12, 18, 35, 17]).join(",") === "18,35" :: Das Beispiel ergibt `[18, 35]` ?? Gehört die 18 selbst dazu? «18 oder grösser» ist `>=`.
+run nurErwachsene([1, 2, 3]).length === 0 :: Ohne Erwachsene kommt ein leeres Array heraus
+run nurErwachsene([40, 50]).join(",") === "40,50" :: Sind alle erwachsen, bleiben alle drin
+@hints
+- `filter` bekommt eine Funktion, die für jedes Element `true` oder `false` liefert.
+- Die Bedingung lautet `a >= 18`.
+- `return alter.filter((a) => a >= 18);`
+@after
+`filter` verändert das ursprüngliche Array nicht. Du bekommst ein neues – das alte bleibt vollständig erhalten.
+
+--- code kette-durchschnitt | Alles zusammen: Notendurchschnitt
+Schreibe eine Funktion `durchschnitt`, die ein Array von Noten bekommt und den Durchschnitt zurückgibt.
+
+- Ungültige Noten (kleiner als 1 oder grösser als 6) sollen **ignoriert** werden.
+- Gibt es keine gültige Note, soll `0` zurückkommen.
+
+Beispiel: `durchschnitt([4, 5, 99, 6])` ergibt `5` (die 99 zählt nicht).
+@starter
+// Schreibe hier die Funktion durchschnitt
+
+console.log(durchschnitt([4, 5, 99, 6]));
+@solution
+// Schreibe hier die Funktion durchschnitt
+function durchschnitt(noten: number[]): number {
+  const gueltige = noten.filter((note) => note >= 1 && note <= 6);
+  if (gueltige.length === 0) {
+    return 0;
+  }
+  const summe = gueltige.reduce((zwischenstand, note) => zwischenstand + note, 0);
+  return summe / gueltige.length;
+}
+
+console.log(durchschnitt([4, 5, 99, 6]));
+@tests
+fn durchschnitt(number[]): number
+run durchschnitt([4, 5, 99, 6]) === 5 :: `durchschnitt([4, 5, 99, 6])` ergibt `5`
+run durchschnitt([6, 6]) === 6 && durchschnitt([4, 5]) === 4.5 :: Normale Noten werden richtig gemittelt
+run durchschnitt([0, 7, -3]) === 0 :: Nur ungültige Noten ergeben `0`
+run durchschnitt([]) === 0 :: Ein leeres Array ergibt `0` ?? Teilst du durch die Anzahl, ohne zu prüfen, ob sie 0 ist? `0 / 0` ergibt `NaN`.
+@hints
+- Schritt 1: die gültigen Noten herausfiltern: `noten.filter((note) => note >= 1 && note <= 6)`
+- Schritt 2: Wenn das gefilterte Array leer ist (`length === 0`), sofort `return 0;`
+- Schritt 3: Summe bilden (mit `reduce` oder einer `for...of`-Schleife) und durch die Anzahl der gültigen Noten teilen.
+@after
+Das ist schon ein richtiges kleines Programm: Daten bereinigen, Sonderfall abfangen, rechnen. Der Sonderfall «leere Liste» ist ein Klassiker – gewöhn dir an, immer daran zu denken.
+
+--- quiz quiz-map-filter
+Du hast ein Array mit 10 Produktnamen und brauchst ein Array mit denselben 10 Namen in Grossbuchstaben. Welche Methode passt?
+(x) `map` :: Richtig. Gleich viele Elemente, aber jedes umgewandelt – das ist `map`.
+( ) `filter` :: `filter` wählt Elemente aus, verändert sie aber nicht. Du bekämst höchstens weniger Namen, nie andere.
+( ) `find` :: `find` liefert nur ein einziges Element zurück, kein Array.
+
+=== objekte | Objekte: zusammengehörige Daten | 20
+Ein Array ist eine Liste gleichartiger Dinge. Oft gehören aber **verschiedene** Angaben zusammen: Ein Buch hat einen Titel, eine Seitenzahl und einen Autor. Dafür gibt es **Objekte**.
+
+## Ein Objekt anlegen
+
+```ts
+const buch = {
+  titel: "Momo",
+  autor: "Michael Ende",
+  seiten: 304,
+  gelesen: true,
+};
+
+console.log(buch.titel);  // "Momo"
+console.log(buch.seiten); // 304
+```
+
+Ein Objekt steht in **geschweiften** Klammern und besteht aus **Eigenschaften** (englisch «properties»). Jede Eigenschaft hat einen Namen und einen Wert, getrennt durch einen Doppelpunkt. Zwischen den Eigenschaften stehen Kommas.
+
+Auf eine Eigenschaft greifst du mit einem **Punkt** zu: `buch.titel`. Diese Schreibweise kennst du schon von `wort.length` und `console.log` – auch das sind Objekte mit Eigenschaften.
+
+Auf der Schweizer Tastatur tippst du `{` und `}` mit [[AltGr]] + [[ä]] und [[AltGr]] + [[$]] (Mac: [[Option]] + [[8]] und [[Option]] + [[9]]).
+
+## Eigenschaften ändern
+
+```ts
+const buch = { titel: "Momo", seiten: 304, gelesen: false };
+
+buch.gelesen = true;
+buch.seiten += 10;
+console.log(buch);
+```
+
+## TypeScript kennt die Form deines Objekts
+
+TypeScript merkt sich, welche Eigenschaften ein Objekt hat und welche Typen sie haben. Tippfehler und falsche Werte fallen sofort auf:
+
+```ts error
+const buch = { titel: "Momo", seiten: 304 };
+
+console.log(buch.title);  // Tippfehler: heisst "titel"
+buch.seiten = "viele";    // seiten ist eine Zahl
+```
+
+In JavaScript würde `buch.title` einfach `undefined` ergeben – ohne Warnung. Solche Fehler sucht man manchmal stundenlang. In TypeScript siehst du sie sofort.
+
+> [!VSCODE] Vorschläge beim Tippen
+> Tippe in VS Code `buch.` – also den Namen und einen Punkt. Sofort erscheint eine Liste aller Eigenschaften. Mit den Pfeiltasten und [[Enter]] oder [[Tab]] wählst du aus. Das heisst **IntelliSense** und funktioniert nur so gut, weil TypeScript die Typen kennt.
+
+## Den Typ eines Objekts hinschreiben
+
+Auch für Objekte kannst du den Typ angeben. Er sieht fast aus wie das Objekt selbst, nur stehen Typen statt Werte da, und die Eigenschaften werden durch **Strichpunkte** getrennt:
+
+```ts
+const spieler: { name: string; punkte: number } = {
+  name: "Alex",
+  punkte: 0,
+};
+console.log(spieler);
+```
+
+Besonders wichtig ist das bei Funktionsparametern:
+
+```ts
+function beschreibe(buch: { titel: string; seiten: number }): string {
+  return `${buch.titel} hat ${buch.seiten} Seiten.`;
+}
+
+console.log(beschreibe({ titel: "Momo", seiten: 304 }));
+```
+
+Das wird schnell lang und unübersichtlich. Im nächsten Teil lernst du, solchen Typen mit `interface` einen Namen zu geben – dann schreibst du nur noch `buch: Buch`.
+
+## Objekte in Arrays
+
+Richtig nützlich wird es, wenn du beides kombinierst. Ein Array von Objekten ist die häufigste Datenform in jeder Web-App: eine Liste von Produkten, Nachrichten, Aufgaben …
+
+```ts
+const buecher = [
+  { titel: "Momo", seiten: 304 },
+  { titel: "Krabat", seiten: 256 },
+  { titel: "Tintenherz", seiten: 576 },
+];
+
+const dicke = buecher.filter((buch) => buch.seiten > 300);
+const titel = dicke.map((buch) => buch.titel);
+
+console.log(titel); // [ 'Momo', 'Tintenherz' ]
+```
+
+Hier arbeiten die Array-Methoden aus der letzten Lektion mit Objekten zusammen. Genau so sieht später der Code in deinen Angular-Apps aus.
+
+--- code objekt-anlegen | Ein Objekt anlegen und ändern
+1. Lege ein Objekt `film` an mit den Eigenschaften `titel` (ein Text deiner Wahl), `jahr` (eine Zahl) und `gesehen` (zuerst `false`).
+2. Du hast den Film inzwischen geschaut: Setze `gesehen` danach in einer eigenen Zeile auf `true`.
+3. Speichere in `info` einen Text der Form `Titel (Jahr)`, zum Beispiel `Shrek (2001)`. Benutze dafür die Eigenschaften des Objekts.
+@starter
+// 1. Objekt film anlegen
+
+// 2. gesehen ändern
+
+// 3. info zusammenbauen
+
+console.log(film, info);
+@solution
+// 1. Objekt film anlegen
+const film = {
+  titel: "Shrek",
+  jahr: 2001,
+  gesehen: false,
+};
+
+// 2. gesehen ändern
+film.gesehen = true;
+
+// 3. info zusammenbauen
+const info = `${film.titel} (${film.jahr})`;
+
+console.log(film, info);
+@tests
+var film: { titel: string; jahr: number; gesehen: boolean }
+run film.gesehen === true :: `film.gesehen` ist am Ende `true`
+src /film\s*\.\s*gesehen\s*=\s*true/ :: `gesehen` wird nachträglich mit `film.gesehen = true` geändert
+run info === film.titel + " (" + film.jahr + ")" :: `info` hat die Form `Titel (Jahr)`
+src /\$\{\s*film\s*\.\s*titel\s*\}/ :: `info` benutzt `film.titel`
+@hints
+- Das Objekt: `const film = { titel: "Shrek", jahr: 2001, gesehen: false };`
+- Ändern mit Punkt: `film.gesehen = true;`
+- Der Text: `` `${film.titel} (${film.jahr})` ``
+@after
+Punkt zum Lesen, Punkt zum Ändern. Und wieder: Das Objekt ist `const`, sein Inhalt darf sich trotzdem ändern.
+
+--- code objekt-funktion | Eine Funktion mit Objekt-Parameter
+Schreibe eine Funktion `gesamtpreis`. Sie bekommt **ein Objekt** mit den Eigenschaften `preis` (Zahl) und `menge` (Zahl) und gibt Preis mal Menge zurück.
+
+Beispiel: `gesamtpreis({ preis: 2.5, menge: 4 })` ergibt `10`.
+@starter
+// Schreibe hier die Funktion gesamtpreis
+
+console.log(gesamtpreis({ preis: 2.5, menge: 4 }));
+@solution
+// Schreibe hier die Funktion gesamtpreis
+function gesamtpreis(posten: { preis: number; menge: number }): number {
+  return posten.preis * posten.menge;
+}
+
+console.log(gesamtpreis({ preis: 2.5, menge: 4 }));
+@tests
+fn gesamtpreis({ preis: number; menge: number }): number
+run gesamtpreis({ preis: 2.5, menge: 4 }) === 10 :: Das Beispiel ergibt `10`
+run gesamtpreis({ preis: 100, menge: 0 }) === 0 && gesamtpreis({ preis: 3, menge: 3 }) === 9 :: Auch andere Werte stimmen
+@hints
+- Die Funktion hat nur **einen** Parameter. Sein Typ ist `{ preis: number; menge: number }`.
+- Gib dem Parameter einen Namen, zum Beispiel `posten`. Dann greifst du mit `posten.preis` und `posten.menge` zu.
+- `function gesamtpreis(posten: { preis: number; menge: number }): number { return posten.preis * posten.menge; }`
+@after
+Der Typ eines Objekts beschreibt seine Form. Wer die Funktion mit einem Objekt ohne `menge` aufruft, bekommt sofort einen Fehler.
+
+--- code objekte-array | Objekte im Array
+Gegeben ist eine Liste von Produkten. Berechne mit den Array-Methoden:
+
+- `guenstige` – ein Array mit allen Produkten, die **weniger als 10** kosten
+- `namen` – ein Array mit den **Namen** aller Produkte (nur die Namen, als Strings)
+- `gesamt` – die **Summe** aller Preise
+@starter
+const produkte = [
+  { name: "Heft", preis: 3 },
+  { name: "Rucksack", preis: 45 },
+  { name: "Stift", preis: 2 },
+  { name: "Taschenrechner", preis: 25 },
+];
+
+// Lege guenstige, namen und gesamt an
+
+console.log(guenstige, namen, gesamt);
+@solution
+const produkte = [
+  { name: "Heft", preis: 3 },
+  { name: "Rucksack", preis: 45 },
+  { name: "Stift", preis: 2 },
+  { name: "Taschenrechner", preis: 25 },
+];
+
+// Lege guenstige, namen und gesamt an
+const guenstige = produkte.filter((produkt) => produkt.preis < 10);
+const namen = produkte.map((produkt) => produkt.name);
+const gesamt = produkte.reduce((summe, produkt) => summe + produkt.preis, 0);
+
+console.log(guenstige, namen, gesamt);
+@tests
+var guenstige: { name: string; preis: number }[]
+run guenstige.length === 2 && guenstige[0].name === "Heft" && guenstige[1].name === "Stift" :: `guenstige` enthält genau Heft und Stift
+var namen: string[]
+run namen.join(",") === "Heft,Rucksack,Stift,Taschenrechner" :: `namen` enthält die vier Namen
+run gesamt === 75 :: `gesamt` ist `75`
+nosrc /gesamt\s*=\s*75\b/ :: Die Summe wird berechnet, nicht eingetragen
+@hints
+- `guenstige`: `produkte.filter((produkt) => produkt.preis < 10)`
+- `namen`: `produkte.map((produkt) => produkt.name)`
+- `gesamt`: mit `reduce` – `produkte.reduce((summe, produkt) => summe + produkt.preis, 0)` – oder mit einer `for...of`-Schleife (dann brauchst du `let gesamt = 0;`).
+@after
+Filtern, umwandeln, zusammenfassen – auf einem Array von Objekten. Wenn du das verstanden hast, hast du die wichtigste Fähigkeit für die Arbeit mit Daten in Angular.
+
+--- quiz quiz-objekt-const
+Was passiert hier?
+
+```ts
+const hund = { name: "Rex", alter: 3 };
+hund.alter = 4;
+console.log(hund.alter);
+```
+( ) Fehler, weil `hund` mit `const` angelegt wurde. :: `const` verbietet nur, der Variable `hund` ein komplett anderes Objekt zuzuweisen. Die Eigenschaften im Objekt dürfen sich ändern.
+(x) Es wird `4` ausgegeben. :: Richtig. Die Variable zeigt weiterhin auf dasselbe Objekt, nur sein Inhalt hat sich geändert. Das ist erlaubt.
+( ) Es wird `3` ausgegeben, weil die Änderung ignoriert wird. :: Nein, die Änderung wirkt ganz normal.
