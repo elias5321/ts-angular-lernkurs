@@ -1,0 +1,1656 @@
+#part angular-app | Angular: eine App aus Bausteinen | Eigene Komponenten, Daten zwischen ihnen austauschen, Services, Formulare, mehrere Seiten und Daten aus dem Internet.
+
+=== eigene-komponenten | Eigene Komponenten erstellen | 20
+Bis jetzt stand alles in der Wurzelkomponente `App`. Eine echte App teilt man in viele kleine Komponenten auf. Jede hat eine klare Aufgabe, und man kann sie mehrfach verwenden.
+
+## Eine Komponente erzeugen lassen
+
+Die CLI nimmt dir die Schreibarbeit ab. Im Terminal deines Projekts:
+
+```bash
+ng generate component begruessung
+```
+
+Kurzform: `ng g c begruessung`. Es entsteht ein neuer Ordner mit vier Dateien:
+
+```text
+src/app/begruessung/
+  begruessung.ts        die Klasse
+  begruessung.html      das Template
+  begruessung.css       die Styles
+  begruessung.spec.ts   Tests
+```
+
+Die erzeugte Klasse sieht so aus:
+
+```ts ng
+import { Component } from '@angular/core';
+
+@Component({
+  imports: [],
+  selector: 'app-begruessung',
+  styleUrl: './begruessung.css',
+  templateUrl: './begruessung.html',
+})
+export class Begruessung {}
+```
+
+Der Selektor ist `app-begruessung`. Die Vorsilbe `app-` setzt die CLI automatisch davor, damit sich eigene Komponenten nicht mit echten HTML-Elementen verwechseln lassen.
+
+> [!NOTE] Namen mit mehreren Wörtern
+> Im Befehl schreibst du mehrere Wörter mit Bindestrich: `ng g c todo-liste`. Daraus werden der Ordner `todo-liste`, die Datei `todo-liste.ts`, der Selektor `app-todo-liste` und die Klasse `TodoListe`.
+
+## Eine Komponente verwenden
+
+Damit `App` die neue Komponente anzeigen kann, braucht es **zwei Schritte**:
+
+**1. Importieren und eintragen** – in `app.ts`:
+
+```ts nocheck
+import { Component } from '@angular/core';
+import { Begruessung } from './begruessung/begruessung';
+
+@Component({
+  selector: 'app-root',
+  imports: [Begruessung],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {}
+```
+
+Die `import`-Zeile oben ist normales TypeScript: Sie macht die Klasse in dieser Datei bekannt. Der Eintrag im Array `imports` des Decorators sagt Angular zusätzlich: «Im Template dieser Komponente darf `<app-begruessung>` vorkommen.»
+
+**2. Im Template einsetzen** – in `app.html`:
+
+```html
+<h1>Meine App</h1>
+<app-begruessung />
+<app-begruessung />
+```
+
+Jedes `<app-begruessung />` erzeugt eine **eigene Instanz** der Komponente, mit eigenen Daten. Hätte die Komponente einen Zähler, würden die beiden unabhängig voneinander zählen.
+
+> [!WARN] Die häufigste Fehlermeldung bei Komponenten
+> *«'app-begruessung' is not a known element»* bedeutet fast immer: Die Komponente fehlt im `imports`-Array der Komponente, in deren Template sie benutzt wird. In VS Code hilft [[Strg]] + [[.]] auf dem rot markierten Element – die Erweiterung «Angular Language Service» bietet an, den Import einzufügen.
+
+## Wie schneidet man eine App in Komponenten?
+
+Eine gute Komponente hat **eine** Aufgabe. Anhaltspunkte für eine eigene Komponente:
+
+- Etwas kommt **mehrfach** vor (jede Karte in einer Liste).
+- Ein Teil der Seite ist **in sich abgeschlossen** (Kopfzeile, Suchfeld, Formular).
+- Eine Datei wird **zu lang** und unübersichtlich.
+
+--- code ng-eigene-komponente | Eine Komponente einbinden
+Es gibt eine neue Komponente `Wuerfel`. Ihre Dateien liegen im Ordner `wuerfel`.
+
+1. **In `wuerfel/wuerfel.ts`:** Gib der Komponente den Selektor `app-wuerfel`.
+2. **In `app.ts`:** Importiere die Klasse `Wuerfel` und trage sie im `imports`-Array des Decorators ein.
+3. **In `app.html`:** Zeige unter der Überschrift **zwei** Würfel an.
+@flags angular norun
+@starter wuerfel/wuerfel.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: '',
+  templateUrl: './wuerfel.html',
+})
+export class Wuerfel {
+  readonly augen = signal(1);
+
+  wuerfle(): void {
+    this.augen.set(Math.floor(Math.random() * 6) + 1);
+  }
+}
+@starter wuerfel/wuerfel.html
+<button (click)="wuerfle()">Würfeln</button>
+<strong>{{ augen() }}</strong>
+@starter app.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  imports: [],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {}
+@starter app.html
+<h1>Zwei Würfel</h1>
+@solution wuerfel/wuerfel.ts
+import { Component, signal } from '@angular/core';
+
+@Component({
+  selector: 'app-wuerfel',
+  templateUrl: './wuerfel.html',
+})
+export class Wuerfel {
+  readonly augen = signal(1);
+
+  wuerfle(): void {
+    this.augen.set(Math.floor(Math.random() * 6) + 1);
+  }
+}
+@solution wuerfel/wuerfel.html
+<button (click)="wuerfle()">Würfeln</button>
+<strong>{{ augen() }}</strong>
+@solution app.ts
+import { Component } from '@angular/core';
+import { Wuerfel } from './wuerfel/wuerfel';
+
+@Component({
+  selector: 'app-root',
+  imports: [Wuerfel],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {}
+@solution app.html
+<h1>Zwei Würfel</h1>
+<app-wuerfel />
+<app-wuerfel />
+@tests
+src /selector\s*:\s*['"]app-wuerfel['"]/ :: `Wuerfel` hat den Selektor `app-wuerfel`
+src /import\s*\{\s*Wuerfel\s*\}\s*from\s*['"]\.\/wuerfel\/wuerfel['"]/ :: `app.ts` importiert `Wuerfel` aus `./wuerfel/wuerfel`
+src /imports\s*:\s*\[[^\]]*\bWuerfel\b[^\]]*\]/ :: `Wuerfel` steht im `imports`-Array von `App`
+tpl /(<app-wuerfel\s*\/>|<app-wuerfel\s*>\s*<\/app-wuerfel>)[\s\S]*(<app-wuerfel\s*\/>|<app-wuerfel\s*>\s*<\/app-wuerfel>)/ :: `app.html` zeigt zwei Würfel: `<app-wuerfel />`
+@hints
+- In `wuerfel.ts`: `selector: 'app-wuerfel',`
+- In `app.ts` oben: `import { Wuerfel } from './wuerfel/wuerfel';` – und im Decorator: `imports: [Wuerfel],`
+- In `app.html` zweimal: `<app-wuerfel />`
+@after
+Selektor festlegen, importieren, ins `imports`-Array eintragen, im Template einsetzen. Die zwei Würfel sind unabhängig: Jede Instanz hat ihr eigenes Signal `augen`.
+
+--- task ng-generate-task | Mit der CLI eine Komponente erzeugen
+Probiere den Generator in deinem Projekt `erste-app` aus.
+[ ] `ng generate component wuerfel` hat den Ordner `src/app/wuerfel` mit vier Dateien erzeugt.
+[ ] Du hast Klasse und Template des Würfels von oben übernommen.
+[ ] `App` importiert `Wuerfel` und zeigt zwei Würfel an.
+[ ] Im Browser würfeln beide Würfel unabhängig voneinander.
+
+=== inputs | Daten an Komponenten übergeben: input() | 20
+Eine Komponente, die immer dasselbe anzeigt, ist wenig nützlich. Eine Produktkarte soll jedes Mal ein anderes Produkt zeigen. Dafür bekommt die Komponente Daten **von aussen** – von der Komponente, die sie verwendet. Man spricht von Eltern- und Kindkomponente.
+
+## Ein Input anlegen
+
+In der Kindkomponente legst du mit `input()` fest, welche Daten sie annimmt:
+
+```ts ng
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-karte',
+  template: `
+    <h3>{{ titel() }}</h3>
+    <p>{{ preis() }} Franken</p>
+  `,
+})
+export class Karte {
+  readonly titel = input.required<string>();
+  readonly preis = input(0);
+}
+```
+
+Es gibt zwei Varianten:
+
+- `input.required<string>()` – ein **Pflicht-Input**. Wer die Komponente verwendet, muss einen Wert übergeben, sonst gibt es einen Fehler. Der Typ steht in spitzen Klammern.
+- `input(0)` – ein **optionaler Input** mit Standardwert. Wird nichts übergeben, gilt die `0`. Den Typ erkennt TypeScript am Standardwert.
+
+Ein Input ist ein Signal. Du liest ihn wie gewohnt mit Klammern: `titel()`. Ändern kann ihn die Kindkomponente nicht – er gehört der Elternkomponente.
+
+## Einen Input befüllen
+
+Die Elternkomponente übergibt die Werte mit eckigen Klammern – das ist Property Binding, genau wie bei `[disabled]`:
+
+```html
+<app-karte [titel]="'Rucksack'" [preis]="45" />
+<app-karte [titel]="produktName()" />
+```
+
+Achte beim ersten Beispiel auf die doppelten Anführungszeichen: `[titel]="'Rucksack'"`. Zwischen den äusseren steht ein Ausdruck, und ein fester Text braucht darin seine eigenen (einfachen) Anführungszeichen. Für festen Text geht es auch einfacher, ohne eckige Klammern: `titel="Rucksack"`.
+
+## Zusammen mit @for
+
+Der typische Fall: eine Liste von Daten, für jedes Element eine Komponente.
+
+```html
+@for (produkt of produkte(); track produkt.id) {
+  <app-karte [titel]="produkt.name" [preis]="produkt.preis" />
+}
+```
+
+## Ganze Objekte übergeben
+
+Statt jede Eigenschaft einzeln kannst du auch das ganze Objekt übergeben. Dafür legst du das Interface in eine eigene Datei, damit beide Komponenten es importieren können:
+
+```ts title=produkt.ts
+export interface Produkt {
+  id: number;
+  name: string;
+  preis: number;
+}
+```
+
+```ts nocheck title=karte/karte.ts
+import { Component, input } from '@angular/core';
+import { Produkt } from '../produkt';
+
+@Component({
+  selector: 'app-karte',
+  template: `<h3>{{ produkt().name }}</h3>`,
+})
+export class Karte {
+  readonly produkt = input.required<Produkt>();
+}
+```
+
+Im Template der Elternkomponente: `<app-karte [produkt]="produkt" />`.
+
+Beachte den Pfad `'../produkt'`: Die Karte liegt im Unterordner `karte`, das Interface einen Ordner weiter oben.
+
+## Abgeleitete Werte
+
+Weil Inputs Signale sind, funktionieren sie mit `computed`:
+
+```ts ng
+import { Component, computed, input } from '@angular/core';
+
+@Component({
+  selector: 'app-preis',
+  template: `<span [class.teuer]="istTeuer()">{{ betrag() }} Franken</span>`,
+})
+export class Preis {
+  readonly betrag = input.required<number>();
+  readonly istTeuer = computed(() => this.betrag() > 100);
+}
+```
+
+> [!NOTE] Älterer Code: @Input()
+> Früher schrieb man `@Input() titel = '';` mit einem Decorator. Das war kein Signal und wurde ohne Klammern gelesen. In neuem Code verwendest du `input()`.
+
+--- code ng-input | Eine Karte mit Inputs
+Die Komponente `Spielerkarte` soll einen Spieler anzeigen.
+
+**In `spielerkarte/spielerkarte.ts`:** Lege zwei Inputs an:
+
+- `name` – Pflicht, ein Text
+- `punkte` – optional, Standardwert `0`
+
+**In `spielerkarte/spielerkarte.html`:** Zeige den Namen in einem `<h3>` und die Punkte in einem `<p>` an.
+
+**In `app.html`:** Zeige mit `@for` für jeden Spieler aus `spieler()` eine `<app-spielerkarte>` an und übergib Name und Punkte.
+@flags angular norun
+@starter spielerkarte/spielerkarte.ts
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-spielerkarte',
+  templateUrl: './spielerkarte.html',
+})
+export class Spielerkarte {
+  // Inputs name und punkte
+}
+@starter spielerkarte/spielerkarte.html
+<!-- Name als h3, Punkte als p -->
+@starter app.ts
+import { Component, signal } from '@angular/core';
+import { Spielerkarte } from './spielerkarte/spielerkarte';
+
+interface Spieler {
+  id: number;
+  name: string;
+  punkte: number;
+}
+
+@Component({
+  selector: 'app-root',
+  imports: [Spielerkarte],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly spieler = signal<Spieler[]>([
+    { id: 1, name: 'Mia', punkte: 120 },
+    { id: 2, name: 'Noah', punkte: 95 },
+    { id: 3, name: 'Lena', punkte: 140 },
+  ]);
+}
+@starter app.html
+<h1>Rangliste</h1>
+
+<!-- @for mit app-spielerkarte -->
+@solution spielerkarte/spielerkarte.ts
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-spielerkarte',
+  templateUrl: './spielerkarte.html',
+})
+export class Spielerkarte {
+  // Inputs name und punkte
+  readonly name = input.required<string>();
+  readonly punkte = input(0);
+}
+@solution spielerkarte/spielerkarte.html
+<!-- Name als h3, Punkte als p -->
+<h3>{{ name() }}</h3>
+<p>{{ punkte() }} Punkte</p>
+@solution app.ts
+import { Component, signal } from '@angular/core';
+import { Spielerkarte } from './spielerkarte/spielerkarte';
+
+interface Spieler {
+  id: number;
+  name: string;
+  punkte: number;
+}
+
+@Component({
+  selector: 'app-root',
+  imports: [Spielerkarte],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly spieler = signal<Spieler[]>([
+    { id: 1, name: 'Mia', punkte: 120 },
+    { id: 2, name: 'Noah', punkte: 95 },
+    { id: 3, name: 'Lena', punkte: 140 },
+  ]);
+}
+@solution app.html
+<h1>Rangliste</h1>
+
+<!-- @for mit app-spielerkarte -->
+@for (person of spieler(); track person.id) {
+  <app-spielerkarte [name]="person.name" [punkte]="person.punkte" />
+}
+@tests
+shape Spielerkarte { name: InputSignal<string>; punkte: InputSignal<number> }
+src /name\s*=\s*input\s*\.\s*required\s*<\s*string\s*>\s*\(/ :: `name` ist ein Pflicht-Input: `input.required<string>()`
+src /punkte\s*=\s*input\s*(<\s*number\s*>)?\s*\(\s*0\s*\)/ :: `punkte` ist ein Input mit Standardwert `0`
+tpl /<h3[^>]*>\s*\{\{\s*name\(\)\s*\}\}/ :: Die Karte zeigt `{{ name() }}` in einem `<h3>`
+tpl /<p[^>]*>[^<]*\{\{\s*punkte\(\)\s*\}\}/ :: Die Karte zeigt `{{ punkte() }}` in einem `<p>`
+tpl /@for\s*\(\s*(\w+)\s+of\s+spieler\(\)\s*;\s*track\s+\1\.id\s*\)\s*\{[\s\S]*?<app-spielerkarte\b[^>]*\[name\]\s*=\s*"\1\.name"/ :: In der Schleife wird `[name]` an `<app-spielerkarte>` übergeben
+tpl /<app-spielerkarte\b[^>]*\[punkte\]\s*=\s*"\w+\.punkte"/ :: `[punkte]` wird ebenfalls übergeben
+@hints
+- Die Inputs: `readonly name = input.required<string>();` und `readonly punkte = input(0);`
+- Im Template der Karte: `<h3>{{ name() }}</h3>` – Inputs sind Signale, also mit Klammern.
+- In `app.html`: `@for (person of spieler(); track person.id) { <app-spielerkarte [name]="person.name" [punkte]="person.punkte" /> }`
+@after
+Die Elternkomponente besitzt die Daten und reicht sie mit eckigen Klammern nach unten. Die Kindkomponente nimmt sie mit `input()` entgegen und zeigt sie an. Daten fliessen in Angular immer von oben nach unten.
+
+--- quiz quiz-ng-input
+Die Komponente `Karte` hat `readonly titel = input.required<string>();`. Was passiert bei `<app-karte />` ohne Angabe von `titel`?
+( ) Der Titel ist einfach ein leerer Text. :: Das wäre bei `input('')` so. `required` verlangt ausdrücklich einen Wert.
+(x) Angular meldet einen Fehler, weil ein Pflicht-Input fehlt. :: Richtig. Schon beim Bauen der App – und in VS Code als rote Linie.
+( ) Die Karte wird nicht angezeigt, aber es gibt keinen Fehler. :: Nein, Angular lässt das nicht stillschweigend durchgehen.
+
+=== outputs | Ereignisse nach oben melden: output() | 20
+Daten fliessen von der Eltern- zur Kindkomponente. Aber was, wenn in der Kindkomponente etwas passiert, wovon die Elternkomponente wissen muss – etwa ein Klick auf «Löschen»?
+
+Die Kindkomponente darf die Daten der Eltern nicht selbst ändern. Stattdessen **meldet** sie ein Ereignis, und die Elternkomponente entscheidet, was geschieht.
+
+## Ein Output anlegen
+
+```ts ng
+import { Component, input, output } from '@angular/core';
+
+@Component({
+  selector: 'app-eintrag',
+  template: `
+    <span>{{ titel() }}</span>
+    <button (click)="loeschen.emit()">Löschen</button>
+  `,
+})
+export class Eintrag {
+  readonly titel = input.required<string>();
+  readonly loeschen = output<void>();
+}
+```
+
+`output<void>()` legt ein Ereignis ohne mitgeschickten Wert an. Mit `loeschen.emit()` wird es ausgelöst («emit» = aussenden).
+
+## Auf einen Output reagieren
+
+Die Elternkomponente hört mit runden Klammern zu – genau wie bei `(click)`:
+
+```html
+<app-eintrag [titel]="aufgabe.titel" (loeschen)="entferne(aufgabe.id)" />
+```
+
+Dein eigenes Ereignis `loeschen` verhält sich wie ein eingebautes Ereignis. Die Kindkomponente weiss nichts von der Liste oder von `entferne` – sie meldet nur: «Jemand will mich löschen.»
+
+## Einen Wert mitschicken
+
+Ein Output kann einen Wert transportieren. Den Typ gibst du in spitzen Klammern an:
+
+```ts ng
+import { Component, output } from '@angular/core';
+
+@Component({
+  selector: 'app-farbwahl',
+  template: `
+    <button (click)="gewaehlt.emit('rot')">Rot</button>
+    <button (click)="gewaehlt.emit('blau')">Blau</button>
+  `,
+})
+export class Farbwahl {
+  readonly gewaehlt = output<string>();
+}
+```
+
+In der Elternkomponente steht der mitgeschickte Wert in der besonderen Variable `$event`:
+
+```html
+<app-farbwahl (gewaehlt)="farbe.set($event)" />
+<p>Gewählt: {{ farbe() }}</p>
+```
+
+## Das Zusammenspiel
+
+| Richtung | In der Kindkomponente | In der Elternkomponente |
+| --- | --- | --- |
+| Daten hinein | `name = input<string>()` | `[name]="wert()"` |
+| Ereignis heraus | `geklickt = output<number>()` | `(geklickt)="methode($event)"` |
+
+> [!MERKE] Daten runter, Ereignisse rauf
+> Die Elternkomponente besitzt die Daten. Kinder bekommen sie über Inputs und melden Wünsche über Outputs. So gibt es für jede Information genau einen Ort, an dem sie geändert wird – und Fehler lassen sich leicht finden.
+
+Benenne Outputs nach dem, was passiert ist (`geloescht`, `gewaehlt`, `gespeichert`) oder was gewünscht wird (`loeschen`, `schliessen`). Vermeide Namen eingebauter Ereignisse wie `click` oder `change`.
+
+--- code ng-output | Sterne vergeben
+Die Komponente `Bewertung` zeigt fünf Knöpfe. Ein Klick meldet der Elternkomponente, wie viele Sterne gewählt wurden.
+
+**In `bewertung/bewertung.ts`:** Lege einen Output `gewaehlt` an, der eine Zahl mitschickt.
+
+**In `bewertung/bewertung.html`:** Jeder Knopf löst `gewaehlt` mit seiner Zahl aus (`stufe`).
+
+**In `app.html`:** Reagiere auf das Ereignis `gewaehlt` von `<app-bewertung>` und rufe `setze(...)` mit dem mitgeschickten Wert auf.
+@flags angular norun
+@starter bewertung/bewertung.ts
+import { Component, output } from '@angular/core';
+
+@Component({
+  selector: 'app-bewertung',
+  templateUrl: './bewertung.html',
+})
+export class Bewertung {
+  readonly stufen = [1, 2, 3, 4, 5];
+
+  // Output gewaehlt
+}
+@starter bewertung/bewertung.html
+@for (stufe of stufen; track stufe) {
+  <button>{{ stufe }} ★</button>
+}
+@starter app.ts
+import { Component, signal } from '@angular/core';
+import { Bewertung } from './bewertung/bewertung';
+
+@Component({
+  selector: 'app-root',
+  imports: [Bewertung],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly sterne = signal(0);
+
+  setze(anzahl: number): void {
+    this.sterne.set(anzahl);
+  }
+}
+@starter app.html
+<h1>Wie gefällt dir der Kurs?</h1>
+
+<app-bewertung />
+
+<p>Deine Bewertung: {{ sterne() }} von 5</p>
+@solution bewertung/bewertung.ts
+import { Component, output } from '@angular/core';
+
+@Component({
+  selector: 'app-bewertung',
+  templateUrl: './bewertung.html',
+})
+export class Bewertung {
+  readonly stufen = [1, 2, 3, 4, 5];
+
+  // Output gewaehlt
+  readonly gewaehlt = output<number>();
+}
+@solution bewertung/bewertung.html
+@for (stufe of stufen; track stufe) {
+  <button (click)="gewaehlt.emit(stufe)">{{ stufe }} ★</button>
+}
+@solution app.ts
+import { Component, signal } from '@angular/core';
+import { Bewertung } from './bewertung/bewertung';
+
+@Component({
+  selector: 'app-root',
+  imports: [Bewertung],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly sterne = signal(0);
+
+  setze(anzahl: number): void {
+    this.sterne.set(anzahl);
+  }
+}
+@solution app.html
+<h1>Wie gefällt dir der Kurs?</h1>
+
+<app-bewertung (gewaehlt)="setze($event)" />
+
+<p>Deine Bewertung: {{ sterne() }} von 5</p>
+@tests
+shape Bewertung { gewaehlt: OutputEmitterRef<number> }
+src /gewaehlt\s*=\s*output\s*<\s*number\s*>\s*\(\s*\)/ :: `gewaehlt` ist ein `output<number>()`
+tpl /<button[^>]*\(click\)\s*=\s*"gewaehlt\.emit\(\s*stufe\s*\)"/ :: Jeder Knopf löst `gewaehlt.emit(stufe)` aus
+tpl /<app-bewertung\b[^>]*\(gewaehlt\)\s*=\s*"(setze\(\s*\$event\s*\)|sterne\.set\(\s*\$event\s*\))"/ :: `app.html` reagiert mit `(gewaehlt)="setze($event)"`
+@hints
+- Der Output: `readonly gewaehlt = output<number>();`
+- Im Template der Bewertung: `<button (click)="gewaehlt.emit(stufe)">`
+- In `app.html`: `<app-bewertung (gewaehlt)="setze($event)" />` – `$event` ist die mitgeschickte Zahl.
+@after
+Die Bewertung weiss nicht, was mit den Sternen geschieht. Sie meldet nur die Wahl. Deshalb kannst du dieselbe Komponente überall einsetzen: für Filme, Bücher, Restaurants.
+
+--- quiz quiz-ng-event
+In der Elternkomponente steht `(gewaehlt)="merke($event)"`. Was ist `$event`?
+( ) Das Klick-Ereignis des Browsers mit Mausposition. :: Das wäre bei `(click)` so. Bei einem eigenen Output ist es etwas anderes.
+(x) Der Wert, den die Kindkomponente bei `gewaehlt.emit(...)` mitgeschickt hat. :: Genau. Was in `emit(...)` steht, kommt bei den Eltern als `$event` an.
+( ) Die Kindkomponente selbst. :: Nein, nur der mitgeschickte Wert.
+
+=== services | Services: Daten und Logik teilen | 25
+Inputs und Outputs verbinden Eltern und Kinder. Aber was, wenn zwei Komponenten an ganz verschiedenen Stellen der App dieselben Daten brauchen – etwa der Warenkorb in der Kopfzeile und auf der Produktseite?
+
+Die Daten durch viele Ebenen hindurchzureichen, wäre mühsam. Die Lösung ist ein **Service**: eine Klasse ausserhalb der Komponenten, die Daten und Logik für die ganze App bereithält.
+
+## Einen Service schreiben
+
+Erzeugen lässt er sich mit der CLI:
+
+```bash
+ng generate service warenkorb
+```
+
+Ein Service ist eine gewöhnliche Klasse mit dem Decorator `@Service()`:
+
+```ts ng
+import { Service, computed, signal } from '@angular/core';
+
+@Service()
+export class Warenkorb {
+  private readonly artikel = signal<string[]>([]);
+
+  readonly liste = this.artikel.asReadonly();
+  readonly anzahl = computed(() => this.artikel().length);
+
+  hinzufuegen(name: string): void {
+    this.artikel.update((alt) => [...alt, name]);
+  }
+
+  leeren(): void {
+    this.artikel.set([]);
+  }
+}
+```
+
+Hier siehst du Kapselung in Aktion, wie du sie bei den Klassen gelernt hast:
+
+- Das schreibbare Signal `artikel` ist `private`. Von aussen kann niemand `set` oder `update` aufrufen.
+- `asReadonly()` gibt eine **nur lesbare** Sicht auf dasselbe Signal heraus. Komponenten können die Liste anzeigen, aber nicht verändern.
+- Änderungen gehen ausschliesslich über die Methoden `hinzufuegen` und `leeren`.
+
+## Einen Service verwenden: inject()
+
+Eine Komponente holt sich den Service mit `inject`:
+
+```ts nocheck
+import { Component, inject } from '@angular/core';
+import { Warenkorb } from './warenkorb';
+
+@Component({
+  selector: 'app-kopfzeile',
+  template: `<p>Im Warenkorb: {{ warenkorb.anzahl() }}</p>`,
+})
+export class Kopfzeile {
+  protected readonly warenkorb = inject(Warenkorb);
+}
+```
+
+Du schreibst **nicht** `new Warenkorb()`. `inject(Warenkorb)` bittet Angular: «Gib mir den Warenkorb.» Angular erzeugt beim ersten Mal ein Objekt und gibt danach **immer dasselbe** zurück – an jede Komponente, die danach fragt.
+
+Das ist der entscheidende Punkt: Alle Komponenten teilen sich ein und dieselbe Instanz. Fügt die Produktseite einen Artikel hinzu, aktualisiert sich die Zahl in der Kopfzeile automatisch, weil beide dasselbe Signal lesen.
+
+Dieses Prinzip heisst **Dependency Injection** («Abhängigkeiten hineinreichen»). Du musst dir nur merken: Services bekommt man mit `inject(...)`, nie mit `new`.
+
+## Was gehört in einen Service?
+
+- **Daten, die mehrere Komponenten brauchen** (Warenkorb, angemeldeter Benutzer, Aufgabenliste).
+- **Logik, die nichts mit der Anzeige zu tun hat** (rechnen, speichern, Daten vom Server holen).
+
+Komponenten bleiben dadurch schlank: Sie zeigen an und leiten Klicks weiter. Die eigentliche Arbeit macht der Service.
+
+> [!NOTE] Älterer Code
+> In älteren Projekten steht statt `@Service()` der Decorator `@Injectable({ providedIn: 'root' })`, und der Service wird über den Constructor geholt: `constructor(private warenkorb: Warenkorb) {}`. Das bedeutet dasselbe. Du erkennst darin die Kurzschreibweise für Constructor-Parameter aus der Lektion über Sichtbarkeit wieder.
+
+--- code ng-service | Ein Punktestand für die ganze App
+Schreibe einen Service und verwende ihn.
+
+**In `punktestand.ts`** – die Klasse `Punktestand`:
+
+- ein **privates** Signal `stand` mit dem Startwert `0`
+- eine öffentliche, **nur lesbare** Eigenschaft `punkte` (mit `asReadonly()`)
+- ein `computed` namens `level`: `Math.floor(punkte / 100) + 1`
+- eine Methode `gewinne(anzahl)`, die den Stand um `anzahl` erhöht
+
+**In `app.ts`:** Hole den Service mit `inject` in eine Eigenschaft `punktestand`.
+
+**In `app.html`:** Zeige Punkte und Level an. Der Knopf ruft `gewinne(50)` auf dem Service auf.
+@flags angular norun
+@starter punktestand.ts
+import { Service, computed, signal } from '@angular/core';
+
+@Service()
+export class Punktestand {
+  // stand, punkte, level, gewinne
+}
+@starter app.ts
+import { Component, inject } from '@angular/core';
+import { Punktestand } from './punktestand';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // Service holen
+}
+@starter app.html
+<h1>Spiel</h1>
+<p>Punkte: </p>
+<p>Level: </p>
+<button>50 Punkte gewinnen</button>
+@solution punktestand.ts
+import { Service, computed, signal } from '@angular/core';
+
+@Service()
+export class Punktestand {
+  // stand, punkte, level, gewinne
+  private readonly stand = signal(0);
+
+  readonly punkte = this.stand.asReadonly();
+  readonly level = computed(() => Math.floor(this.stand() / 100) + 1);
+
+  gewinne(anzahl: number): void {
+    this.stand.update((alt) => alt + anzahl);
+  }
+}
+@solution app.ts
+import { Component, inject } from '@angular/core';
+import { Punktestand } from './punktestand';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // Service holen
+  readonly punktestand = inject(Punktestand);
+}
+@solution app.html
+<h1>Spiel</h1>
+<p>Punkte: {{ punktestand.punkte() }}</p>
+<p>Level: {{ punktestand.level() }}</p>
+<button (click)="punktestand.gewinne(50)">50 Punkte gewinnen</button>
+@tests
+src /@Service\s*\(\s*\)\s*export\s+class\s+Punktestand/ :: `Punktestand` ist mit `@Service()` gekennzeichnet
+src /private\s+(readonly\s+)?stand\s*=\s*signal\s*(<\s*number\s*>)?\s*\(\s*0\s*\)/ :: `stand` ist ein privates Signal mit Startwert `0`
+shape Punktestand { punkte: Signal<number>; level: Signal<number>; gewinne: (anzahl: number) => void }
+src /\.asReadonly\s*\(\s*\)/ :: `punkte` entsteht mit `asReadonly()`
+src /level\s*=\s*computed\s*\(/ :: `level` ist ein `computed`
+shape App { punktestand: Punktestand }
+src /punktestand\s*=\s*inject\s*\(\s*Punktestand\s*\)/ :: `App` holt den Service mit `inject(Punktestand)`
+nosrc /new\s+Punktestand\s*\(/ :: Kein `new Punktestand()`
+tpl /\{\{\s*punktestand\.punkte\(\)\s*\}\}/ :: Das Template zeigt `{{ punktestand.punkte() }}`
+tpl /\{\{\s*punktestand\.level\(\)\s*\}\}/ :: Das Template zeigt `{{ punktestand.level() }}`
+tpl /\(click\)\s*=\s*"punktestand\.gewinne\(\s*50\s*\)"/ :: Der Knopf ruft `punktestand.gewinne(50)` auf
+@hints
+- Im Service: `private readonly stand = signal(0);` und `readonly punkte = this.stand.asReadonly();`
+- `readonly level = computed(() => Math.floor(this.stand() / 100) + 1);` und `gewinne(anzahl: number): void { this.stand.update((alt) => alt + anzahl); }`
+- In `App`: `readonly punktestand = inject(Punktestand);` – im Template dann `punktestand.punkte()`.
+@after
+Der Service besitzt die Daten und bestimmt, wie sie sich ändern dürfen. Die Komponente zeigt nur an und leitet den Klick weiter. Jede weitere Komponente, die `inject(Punktestand)` aufruft, sieht denselben Stand.
+
+--- quiz quiz-ng-inject
+Zwei verschiedene Komponenten rufen beide `inject(Warenkorb)` auf. Was bekommen sie?
+( ) Jede bekommt einen eigenen, leeren Warenkorb. :: Das wäre bei `new Warenkorb()` so. `inject` verhält sich anders.
+(x) Beide bekommen dasselbe Warenkorb-Objekt. :: Genau. Angular erzeugt einen Service nur einmal und teilt ihn. Deshalb eignen sich Services für gemeinsame Daten.
+( ) Die erste bekommt den Warenkorb, die zweite einen Fehler. :: Nein, beliebig viele Komponenten können denselben Service holen.
+
+=== formulare | Formulare | 25
+Für einzelne Eingabefelder reicht die Technik mit `#feld`. Sobald ein Formular mehrere Felder hat und Eingaben geprüft werden sollen, nimmst du Angulars **Signal Forms**. Die Idee: Die Daten des Formulars liegen in einem Signal, und Angular verbindet es in beide Richtungen mit den Feldern.
+
+## Schritt 1: Das Datenmodell
+
+```ts ng
+import { Component, signal } from '@angular/core';
+
+@Component({ selector: 'app-anmeldung', template: '' })
+export class Anmeldung {
+  readonly daten = signal({ name: '', email: '', alter: 0 });
+}
+```
+
+Ein gewöhnliches Signal mit einem Objekt. Jede Eigenschaft entspricht einem Feld.
+
+## Schritt 2: Daraus ein Formular machen
+
+```ts ng
+import { Component, signal } from '@angular/core';
+import { form, FormField } from '@angular/forms/signals';
+
+@Component({
+  selector: 'app-anmeldung',
+  imports: [FormField],
+  templateUrl: './anmeldung.html',
+})
+export class Anmeldung {
+  readonly daten = signal({ name: '', email: '', alter: 0 });
+  readonly formular = form(this.daten);
+}
+```
+
+`form(this.daten)` baut um das Signal herum ein Formular. Für jede Eigenschaft gibt es darin ein **Feld**: `formular.name`, `formular.email`, `formular.alter`. `FormField` muss ins `imports`-Array, damit das Template die Felder verbinden kann.
+
+## Schritt 3: Die Felder im Template verbinden
+
+```html
+<label>Name <input type="text" [formField]="formular.name" /></label>
+<label>E-Mail <input type="email" [formField]="formular.email" /></label>
+<label>Alter <input type="number" [formField]="formular.alter" /></label>
+
+<p>Hallo {{ daten().name }}!</p>
+```
+
+`[formField]="formular.name"` verbindet das Eingabefeld **in beide Richtungen** mit `daten().name`: Tippt der Benutzer, ändert sich das Signal. Ändert sich das Signal, ändert sich das Feld. Du brauchst weder `#feld` noch `(input)`.
+
+Beim Zahlenfeld bekommst du sogar automatisch eine `number` statt eines Texts.
+
+## Schritt 4: Eingaben prüfen
+
+Als zweites Argument übergibst du `form` eine Funktion mit Regeln:
+
+```ts ng
+import { Component, signal } from '@angular/core';
+import { form, FormField, required, minLength, email, min } from '@angular/forms/signals';
+
+@Component({
+  selector: 'app-anmeldung',
+  imports: [FormField],
+  templateUrl: './anmeldung.html',
+})
+export class Anmeldung {
+  readonly daten = signal({ name: '', email: '', alter: 0 });
+
+  readonly formular = form(this.daten, (pfad) => {
+    required(pfad.name, { message: 'Bitte gib deinen Namen an.' });
+    minLength(pfad.name, 2, { message: 'Mindestens 2 Zeichen.' });
+    email(pfad.email, { message: 'Das ist keine gültige E-Mail-Adresse.' });
+    min(pfad.alter, 12, { message: 'Du musst mindestens 12 sein.' });
+  });
+}
+```
+
+Jede Regel bekommt den Pfad zum Feld und – freiwillig – eine Meldung. Die wichtigsten Regeln:
+
+| Regel | Prüft |
+| --- | --- |
+| `required(pfad.x)` | Feld darf nicht leer sein |
+| `minLength(pfad.x, n)` / `maxLength(pfad.x, n)` | Länge des Texts |
+| `min(pfad.x, n)` / `max(pfad.x, n)` | Grösse der Zahl |
+| `email(pfad.x)` | sieht aus wie eine E-Mail-Adresse |
+| `pattern(pfad.x, /.../)` | passt auf ein Muster |
+
+## Schritt 5: Den Zustand anzeigen
+
+Ein Feld ist selbst ein Signal. Rufst du es auf, bekommst du seinen **Zustand** – mit weiteren Signalen:
+
+| Ausdruck | Bedeutung |
+| --- | --- |
+| `formular.name().valid()` | alle Regeln erfüllt? |
+| `formular.name().invalid()` | mindestens eine Regel verletzt? |
+| `formular.name().touched()` | hat der Benutzer das Feld schon besucht? |
+| `formular.name().errors()` | Liste der Fehler, jeder mit `message` |
+| `formular().valid()` | ist das **ganze** Formular gültig? |
+
+Achte auf die Klammern: `formular.name` ist das Feld, `formular.name()` sein Zustand, `formular.name().valid()` der Wert.
+
+```html
+<label>Name <input type="text" [formField]="formular.name" /></label>
+
+@if (formular.name().touched() && formular.name().invalid()) {
+  @for (fehler of formular.name().errors(); track fehler.kind) {
+    <p class="fehler">{{ fehler.message }}</p>
+  }
+}
+```
+
+Die Prüfung auf `touched()` sorgt dafür, dass die Meldung erst erscheint, wenn der Benutzer das Feld wieder verlassen hat – und nicht schon beim leeren Formular.
+
+## Schritt 6: Abschicken
+
+```html
+<form (submit)="absenden($event)">
+  <!-- Felder -->
+  <button type="submit" [disabled]="formular().invalid()">Anmelden</button>
+</form>
+```
+
+```ts nocheck
+absenden(ereignis: Event): void {
+  ereignis.preventDefault();
+  if (this.formular().invalid()) {
+    return;
+  }
+  console.log('Abgeschickt:', this.daten());
+}
+```
+
+`ereignis.preventDefault()` verhindert, dass der Browser die Seite neu lädt – das wäre sein Standardverhalten bei Formularen. Die eingegebenen Daten liest du einfach aus dem Signal `daten()`.
+
+> [!NOTE] Andere Formular-Arten
+> In älteren Anleitungen findest du «Template-driven Forms» (mit `[(ngModel)]`) und «Reactive Forms» (mit `FormGroup` und `FormControl`). Beide funktionieren weiterhin. Signal Forms sind der neueste Weg und passen am besten zu allem, was du in diesem Kurs gelernt hast.
+
+--- code ng-formular | Ein Kontaktformular
+Vervollständige das Formular.
+
+**In `app.ts`:**
+
+- Erzeuge `formular` mit `form(...)` aus dem Signal `nachricht`.
+- Regeln: `absender` ist Pflicht. `text` ist Pflicht und braucht mindestens 10 Zeichen.
+- Trage `FormField` im `imports`-Array ein.
+
+**In `app.html`:**
+
+- Verbinde das Textfeld mit `formular.absender` und die `<textarea>` mit `formular.text`.
+- Der Knopf ist deaktiviert, solange das Formular ungültig ist.
+@flags angular norun
+@starter app.ts
+import { Component, signal } from '@angular/core';
+import { form, FormField, required, minLength } from '@angular/forms/signals';
+
+@Component({
+  selector: 'app-root',
+  imports: [],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly nachricht = signal({ absender: '', text: '' });
+  readonly gesendet = signal(false);
+
+  // formular
+
+  absenden(ereignis: Event): void {
+    ereignis.preventDefault();
+    this.gesendet.set(true);
+  }
+}
+@starter app.html
+<h1>Kontakt</h1>
+
+<form (submit)="absenden($event)">
+  <label>Dein Name <input type="text" /></label>
+  <label>Nachricht <textarea></textarea></label>
+  <button type="submit">Senden</button>
+</form>
+
+@if (gesendet()) {
+  <p>Danke, {{ nachricht().absender }}!</p>
+}
+@solution app.ts
+import { Component, signal } from '@angular/core';
+import { form, FormField, required, minLength } from '@angular/forms/signals';
+
+@Component({
+  selector: 'app-root',
+  imports: [FormField],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly nachricht = signal({ absender: '', text: '' });
+  readonly gesendet = signal(false);
+
+  // formular
+  readonly formular = form(this.nachricht, (pfad) => {
+    required(pfad.absender);
+    required(pfad.text);
+    minLength(pfad.text, 10);
+  });
+
+  absenden(ereignis: Event): void {
+    ereignis.preventDefault();
+    this.gesendet.set(true);
+  }
+}
+@solution app.html
+<h1>Kontakt</h1>
+
+<form (submit)="absenden($event)">
+  <label>Dein Name <input type="text" [formField]="formular.absender" /></label>
+  <label>Nachricht <textarea [formField]="formular.text"></textarea></label>
+  <button type="submit" [disabled]="formular().invalid()">Senden</button>
+</form>
+
+@if (gesendet()) {
+  <p>Danke, {{ nachricht().absender }}!</p>
+}
+@tests
+src /formular\s*=\s*form\s*\(\s*this\s*\.\s*nachricht\s*,/ :: `formular` entsteht mit `form(this.nachricht, ...)`
+src /required\s*\(\s*\w+\s*\.\s*absender\b/ :: `absender` ist Pflicht: `required(pfad.absender)`
+src /required\s*\(\s*\w+\s*\.\s*text\b/ :: `text` ist Pflicht: `required(pfad.text)`
+src /minLength\s*\(\s*\w+\s*\.\s*text\s*,\s*10\b/ :: `text` braucht mindestens 10 Zeichen: `minLength(pfad.text, 10)`
+src /imports\s*:\s*\[[^\]]*\bFormField\b[^\]]*\]/ :: `FormField` steht im `imports`-Array
+tpl /<input[^>]*\[formField\]\s*=\s*"formular\.absender"/ :: Das Textfeld ist mit `formular.absender` verbunden
+tpl /<textarea[^>]*\[formField\]\s*=\s*"formular\.text"/ :: Die `<textarea>` ist mit `formular.text` verbunden
+tpl /<button[^>]*\[disabled\]\s*=\s*"\s*(formular\(\)\.invalid\(\)|!\s*formular\(\)\.valid\(\))\s*"/ :: Der Knopf ist deaktiviert, solange das Formular ungültig ist
+@hints
+- `readonly formular = form(this.nachricht, (pfad) => { required(pfad.absender); required(pfad.text); minLength(pfad.text, 10); });`
+- Im Decorator: `imports: [FormField],`
+- Im Template: `[formField]="formular.absender"` und am Knopf `[disabled]="formular().invalid()"`
+@after
+Datenmodell als Signal, `form(...)` mit Regeln, `[formField]` im Template, Zustand über `formular().invalid()`: Das Formular kümmert sich selbst um die Verbindung zwischen Feldern und Daten.
+
+--- quiz quiz-ng-form
+Was liefert `formular.email().touched()`?
+( ) Den Text, der im E-Mail-Feld steht. :: Den Text bekommst du aus dem Datenmodell, zum Beispiel `daten().email`.
+( ) Ob die E-Mail-Adresse gültig ist. :: Dafür gibt es `valid()` und `invalid()`.
+(x) Ob der Benutzer das Feld schon einmal besucht und wieder verlassen hat. :: Genau. Damit zeigt man Fehlermeldungen erst an, wenn jemand das Feld wirklich bearbeitet hat.
+
+=== routing | Mehrere Seiten: Routing | 25
+Eine Web-App hat meist mehrere Ansichten: Startseite, Detailseite, Einstellungen. In Angular lädt der Browser dabei **keine neue Seite** – Angular tauscht nur die angezeigte Komponente aus und passt die Adresse an. Das heisst **Routing**, und die App nennt man eine «Single Page Application».
+
+## Routen festlegen
+
+In `src/app/app.routes.ts` steht die Tabelle «Adresse → Komponente»:
+
+```ts nocheck title=app.routes.ts
+import { Routes } from '@angular/router';
+import { Start } from './start/start';
+import { Ueber } from './ueber/ueber';
+
+export const routes: Routes = [
+  { path: '', component: Start },
+  { path: 'ueber', component: Ueber },
+  { path: '**', redirectTo: '' },
+];
+```
+
+- `path: ''` ist die Startseite (`http://localhost:4200/`).
+- `path: 'ueber'` ist `http://localhost:4200/ueber`. Der Pfad steht **ohne** Schrägstrich am Anfang.
+- `path: '**'` passt auf alles, was sonst nicht passt, und leitet hier zur Startseite um. Diese Route steht immer zuletzt.
+
+## Wo die Seite erscheint: router-outlet
+
+Im Template der Wurzelkomponente markierst du die Stelle, an der die jeweilige Seite angezeigt wird:
+
+```html title=app.html
+<nav>
+  <a routerLink="/">Start</a>
+  <a routerLink="/ueber">Über uns</a>
+</nav>
+
+<router-outlet />
+```
+
+Alles ausserhalb von `<router-outlet />` – hier die Navigation – bleibt auf jeder Seite stehen.
+
+## Links: routerLink statt href
+
+Für Links innerhalb der App nimmst du `routerLink`. Ein gewöhnliches `href` würde die ganze Seite neu laden und alle Daten in deinen Signals wären weg.
+
+Damit das Template `routerLink` und `<router-outlet>` kennt, müssen sie ins `imports`-Array:
+
+```ts nocheck title=app.ts
+import { Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {}
+```
+
+Mit `routerLinkActive` bekommt der Link der aktuellen Seite automatisch eine CSS-Klasse:
+
+```html
+<a routerLink="/ueber" routerLinkActive="aktiv">Über uns</a>
+```
+
+## Seiten mit Parametern
+
+Eine Detailseite soll je nach Adresse etwas anderes zeigen: `/buch/1`, `/buch/2`. Dafür gibt es Platzhalter mit Doppelpunkt:
+
+```ts nocheck
+{ path: 'buch/:id', component: BuchDetail },
+```
+
+Am bequemsten kommt der Wert als **Input** in der Komponente an. Dazu wird das einmalig in `app.config.ts` eingeschaltet:
+
+```ts nocheck title=app.config.ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes, withComponentInputBinding()),
+  ],
+};
+```
+
+Danach genügt in der Komponente ein Input mit **demselben Namen** wie der Platzhalter:
+
+```ts ng
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-buch-detail',
+  template: `<h1>Buch Nummer {{ id() }}</h1>`,
+})
+export class BuchDetail {
+  readonly id = input.required<string>();
+}
+```
+
+Parameter aus der Adresse sind immer **Strings**. Brauchst du eine Zahl, wandelst du um: `Number(this.id())`.
+
+Links mit Parameter baust du mit einem Array aus den Teilen der Adresse:
+
+```html
+@for (buch of buecher(); track buch.id) {
+  <a [routerLink]="['/buch', buch.id]">{{ buch.titel }}</a>
+}
+```
+
+## Aus dem Code heraus navigieren
+
+Manchmal soll nach einer Aktion automatisch die Seite wechseln, etwa nach dem Speichern. Dafür holst du dir den `Router`:
+
+```ts nocheck
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
+
+export class Formular {
+  private readonly router = inject(Router);
+
+  speichern(): void {
+    // ... speichern ...
+    this.router.navigate(['/']);
+  }
+}
+```
+
+`Router` ist ein Service, der von Angular mitgeliefert wird – und du holst ihn mit `inject`, wie deine eigenen.
+
+--- code ng-routing | Zwei Seiten und eine Navigation
+Die Komponenten `Start` und `Hilfe` gibt es schon. Verbinde sie zu einer App mit zwei Seiten.
+
+**In `app.routes.ts`:** Lege zwei Routen an: der leere Pfad zeigt `Start`, der Pfad `hilfe` zeigt `Hilfe`.
+
+**In `app.ts`:** Trage `RouterOutlet` und `RouterLink` im `imports`-Array ein.
+
+**In `app.html`:** Ergänze zwei Links mit `routerLink` (zu `/` und zu `/hilfe`) und darunter das `<router-outlet />`.
+@flags angular norun
+@starter app.routes.ts
+import { Routes } from '@angular/router';
+import { Start } from './start/start';
+import { Hilfe } from './hilfe/hilfe';
+
+export const routes: Routes = [];
+@starter app.ts
+import { Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  imports: [],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {}
+@starter app.html
+<nav>
+  <!-- zwei Links -->
+</nav>
+
+<!-- Platz für die Seite -->
+@starter start/start.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-start',
+  template: `<h1>Willkommen</h1>`,
+})
+export class Start {}
+@starter hilfe/hilfe.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-hilfe',
+  template: `<h1>Hilfe</h1>`,
+})
+export class Hilfe {}
+@solution app.routes.ts
+import { Routes } from '@angular/router';
+import { Start } from './start/start';
+import { Hilfe } from './hilfe/hilfe';
+
+export const routes: Routes = [
+  { path: '', component: Start },
+  { path: 'hilfe', component: Hilfe },
+];
+@solution app.ts
+import { Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet, RouterLink],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {}
+@solution app.html
+<nav>
+  <!-- zwei Links -->
+  <a routerLink="/">Start</a>
+  <a routerLink="/hilfe">Hilfe</a>
+</nav>
+
+<!-- Platz für die Seite -->
+<router-outlet />
+@solution start/start.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-start',
+  template: `<h1>Willkommen</h1>`,
+})
+export class Start {}
+@solution hilfe/hilfe.ts
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-hilfe',
+  template: `<h1>Hilfe</h1>`,
+})
+export class Hilfe {}
+@tests
+src /\{\s*path\s*:\s*['"]{2}\s*,\s*component\s*:\s*Start\s*,?\s*\}/ :: Der leere Pfad zeigt `Start`: `{ path: '', component: Start }`
+src /\{\s*path\s*:\s*['"]hilfe['"]\s*,\s*component\s*:\s*Hilfe\s*,?\s*\}/ :: Der Pfad `hilfe` zeigt `Hilfe` ?? Der Pfad steht ohne Schrägstrich: `'hilfe'`, nicht `'/hilfe'`.
+src /imports\s*:\s*\[[^\]]*\bRouterOutlet\b[^\]]*\]/ :: `RouterOutlet` steht im `imports`-Array
+src /imports\s*:\s*\[[^\]]*\bRouterLink\b[^\]]*\]/ :: `RouterLink` steht im `imports`-Array
+tpl /<a[^>]*routerLink\s*=\s*"\/"/ :: Es gibt einen Link mit `routerLink="/"`
+tpl /<a[^>]*routerLink\s*=\s*"\/hilfe"/ :: Es gibt einen Link mit `routerLink="/hilfe"`
+tpl /<router-outlet\s*\/>|<router-outlet\s*>\s*<\/router-outlet>/ :: Das Template enthält `<router-outlet />`
+notpl /<a[^>]*\shref\s*=/ :: Kein `href` – Links in der App benutzen `routerLink`
+@hints
+- Die Routen: `{ path: '', component: Start },` und `{ path: 'hilfe', component: Hilfe },`
+- In `app.ts`: `imports: [RouterOutlet, RouterLink],`
+- In `app.html`: `<a routerLink="/">Start</a>`, `<a routerLink="/hilfe">Hilfe</a>` und `<router-outlet />`
+@after
+Routen-Tabelle, `routerLink` für die Navigation, `<router-outlet />` als Platz für die Seite. In einem frisch erzeugten Projekt sind `app.routes.ts` und das Outlet schon vorbereitet – du musst nur noch Routen eintragen.
+
+--- quiz quiz-ng-href
+Warum benutzt man für Links innerhalb einer Angular-App `routerLink` statt `href`?
+( ) `href` funktioniert in Angular gar nicht. :: Doch, es funktioniert – aber mit einem unerwünschten Nebeneffekt.
+(x) Weil `href` die ganze Seite neu lädt und dabei der Zustand der App verloren geht. :: Genau. Mit `routerLink` tauscht Angular nur die Komponente aus. Das ist schneller, und alle Daten in Signals und Services bleiben erhalten.
+( ) Weil `routerLink` automatisch prüft, ob der Benutzer angemeldet ist. :: Nein, das tut es nicht von selbst.
+
+=== http | Daten aus dem Internet laden | 25
+Die meisten Apps zeigen Daten, die von einem Server kommen. Der Server stellt sie über eine **API** bereit: eine Adresse, die statt einer Webseite reine Daten liefert, fast immer im Format **JSON**.
+
+JSON sieht aus wie Objekte und Arrays in TypeScript – nur dass alle Namen in doppelten Anführungszeichen stehen:
+
+```json
+[
+  { "id": 1, "name": "Leanne Graham", "email": "leanne@example.com" },
+  { "id": 2, "name": "Ervin Howell", "email": "ervin@example.com" }
+]
+```
+
+Zum Üben gibt es öffentliche Test-APIs. In dieser Lektion verwenden wir `https://jsonplaceholder.typicode.com/users` – sie liefert zehn erfundene Benutzer. Öffne die Adresse ruhig einmal im Browser.
+
+## Vorbereitung: HTTP einschalten
+
+Einmalig in `app.config.ts`:
+
+```ts nocheck title=app.config.ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideRouter(routes),
+    provideHttpClient(),
+  ],
+};
+```
+
+## Daten laden mit httpResource
+
+```ts ng
+import { Component } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+
+interface Benutzer {
+  id: number;
+  name: string;
+  email: string;
+}
+
+@Component({
+  selector: 'app-benutzer',
+  templateUrl: './benutzer.html',
+})
+export class BenutzerListe {
+  readonly benutzer = httpResource<Benutzer[]>(() => 'https://jsonplaceholder.typicode.com/users');
+}
+```
+
+`httpResource` bekommt eine Funktion, die die Adresse liefert, und in spitzen Klammern den Typ der erwarteten Daten. Es startet die Anfrage von selbst und stellt das Ergebnis als Signale bereit:
+
+| Signal | Bedeutung |
+| --- | --- |
+| `benutzer.isLoading()` | läuft die Anfrage gerade? |
+| `benutzer.error()` | der Fehler, falls etwas schiefging |
+| `benutzer.value()` | die Daten – oder `undefined`, solange keine da sind |
+| `benutzer.hasValue()` | sind Daten da? |
+
+## Die drei Zustände anzeigen
+
+Erinnerst du dich an das Dreierpaket «Laden, Erfolg, Fehler» aus der Lektion über Fehlerbehandlung? Hier ist es wieder – diesmal im Template:
+
+```html
+@if (benutzer.isLoading()) {
+  <p>Daten werden geladen …</p>
+} @else if (benutzer.error()) {
+  <p>Die Daten konnten nicht geladen werden.</p>
+  <button (click)="benutzer.reload()">Nochmal versuchen</button>
+} @else {
+  <ul>
+    @for (person of benutzer.value(); track person.id) {
+      <li>{{ person.name }} – {{ person.email }}</li>
+    }
+  </ul>
+}
+```
+
+Eine App, die während des Ladens nichts anzeigt oder bei einem Fehler einfach leer bleibt, wirkt kaputt. Behandle immer alle drei Fälle.
+
+## Die Adresse hängt von einem Signal ab
+
+Weil die Adresse aus einer Funktion kommt, darf sie Signale lesen. Ändert sich das Signal, lädt `httpResource` **automatisch neu**:
+
+```ts ng
+import { Component, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+
+interface Benutzer {
+  id: number;
+  name: string;
+}
+
+@Component({ selector: 'app-profil', template: '' })
+export class Profil {
+  readonly id = signal(1);
+  readonly person = httpResource<Benutzer>(() => `https://jsonplaceholder.typicode.com/users/${this.id()}`);
+
+  naechster(): void {
+    this.id.update((alt) => alt + 1);
+  }
+}
+```
+
+Ein Klick auf «Nächster» ändert nur `id` – das Laden passiert von selbst.
+
+> [!WARN] Der Typ ist ein Versprechen, keine Prüfung
+> `httpResource<Benutzer[]>` sagt TypeScript: «Vertrau mir, da kommen Benutzer.» Ob der Server wirklich solche Daten schickt, prüft niemand – Typen gibt es im laufenden Programm ja nicht. Schau dir die Antwort der API deshalb immer zuerst im Browser an und schreibe dein Interface danach.
+
+## Daten senden
+
+Zum Speichern, Ändern und Löschen auf einem Server gibt es den Service `HttpClient` mit den Methoden `post`, `put` und `delete`. Er arbeitet mit sogenannten Observables, einer weiteren Art, mit Asynchronem umzugehen. Das führt über diesen Kurs hinaus – die Anleitung dazu findest du auf [angular.dev](https://angular.dev/guide/http).
+
+--- code ng-http | Eine Liste vom Server
+Lade eine Liste von Aufgaben und zeige sie an.
+
+**In `app.config.ts`:** Schalte HTTP ein (`provideHttpClient()`).
+
+**In `app.ts`:** Lege `aufgaben` mit `httpResource` an. Die Adresse ist `https://jsonplaceholder.typicode.com/todos?_limit=10`, erwartet wird ein Array von `Aufgabe`.
+
+**In `app.html`:** Zeige alle drei Zustände:
+
+- während des Ladens einen Hinweis,
+- bei einem Fehler eine Meldung,
+- sonst mit `@for` die Titel der Aufgaben als `<li>`.
+@flags angular norun
+@starter app.config.ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideBrowserGlobalErrorListeners(), provideRouter(routes)],
+};
+@starter app.ts
+import { Component } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+
+interface Aufgabe {
+  id: number;
+  title: string;
+  completed: boolean;
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // aufgaben
+}
+@starter app.html
+<h1>Aufgaben vom Server</h1>
+
+<!-- Laden / Fehler / Liste -->
+@solution app.config.ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideBrowserGlobalErrorListeners(), provideRouter(routes), provideHttpClient()],
+};
+@solution app.ts
+import { Component } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+
+interface Aufgabe {
+  id: number;
+  title: string;
+  completed: boolean;
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  // aufgaben
+  readonly aufgaben = httpResource<Aufgabe[]>(() => 'https://jsonplaceholder.typicode.com/todos?_limit=10');
+}
+@solution app.html
+<h1>Aufgaben vom Server</h1>
+
+<!-- Laden / Fehler / Liste -->
+@if (aufgaben.isLoading()) {
+  <p>Aufgaben werden geladen …</p>
+} @else if (aufgaben.error()) {
+  <p>Die Aufgaben konnten nicht geladen werden.</p>
+} @else {
+  <ul>
+    @for (aufgabe of aufgaben.value(); track aufgabe.id) {
+      <li>{{ aufgabe.title }}</li>
+    }
+  </ul>
+}
+@tests
+src /providers\s*:\s*\[[\s\S]*provideHttpClient\s*\(\s*\)[\s\S]*\]/ :: `provideHttpClient()` steht bei den `providers`
+shape App { aufgaben: HttpResourceRef<Aufgabe[] | undefined> }
+src /httpResource\s*<\s*Aufgabe\s*\[\s*\]\s*>\s*\(\s*\(\s*\)\s*=>\s*['"`]https:\/\/jsonplaceholder\.typicode\.com\/todos\?_limit=10['"`]/ :: `aufgaben` lädt mit `httpResource<Aufgabe[]>(() => '…/todos?_limit=10')`
+tpl /@if\s*\(\s*aufgaben\.isLoading\(\)\s*\)\s*\{/ :: Der Ladezustand wird mit `aufgaben.isLoading()` geprüft
+tpl /@else\s+if\s*\(\s*aufgaben\.error\(\)\s*\)\s*\{|@if\s*\(\s*aufgaben\.error\(\)\s*\)\s*\{/ :: Der Fehlerfall wird mit `aufgaben.error()` geprüft
+tpl /@for\s*\(\s*(\w+)\s+of\s+aufgaben\.value\(\)\s*;\s*track\s+\1\.id\s*\)\s*\{[\s\S]*?<li[\s>][\s\S]*?\{\{\s*\1\.title\s*\}\}/ :: Die Titel werden mit `@for` über `aufgaben.value()` als `<li>` angezeigt
+@hints
+- In `app.config.ts` kommt `provideHttpClient()` ins Array `providers`.
+- `readonly aufgaben = httpResource<Aufgabe[]>(() => 'https://jsonplaceholder.typicode.com/todos?_limit=10');`
+- Das Template: `@if (aufgaben.isLoading()) { ... } @else if (aufgaben.error()) { ... } @else { <ul> @for (aufgabe of aufgaben.value(); track aufgabe.id) { <li>{{ aufgabe.title }}</li> } </ul> }`
+@after
+Eine Zeile lädt die Daten, drei Zweige im Template decken alle Zustände ab. Die Eigenschaften heissen hier `title` und `completed`, weil die API sie so liefert – dein Interface richtet sich nach den Daten, nicht umgekehrt.
+
+--- task ng-http-task | Im Browser ausprobieren
+Baue die Übung in `erste-app` nach – erst dort siehst du echte Daten.
+[ ] `provideHttpClient()` ist in `app.config.ts` eingetragen.
+[ ] Die App zeigt zehn Aufgaben vom Server.
+[ ] Du hast in der Adresse absichtlich einen Tippfehler gemacht und die Fehlermeldung in der App gesehen.
+[ ] Du hast im Browser [[F12]] gedrückt und im Reiter «Netzwerk» (Network) die Anfrage gefunden.
+
+=== pipes-styling | Werte formatieren und gestalten | 20
+Zwei Themen, die deine App ansehnlich machen: **Pipes** bringen Werte in eine lesbare Form, und mit **CSS** gestaltest du deine Komponenten.
+
+## Pipes
+
+Eine Pipe formatiert einen Wert direkt im Template. Sie steht hinter einem senkrechten Strich:
+
+```html
+<p>{{ name() | uppercase }}</p>
+<p>{{ heute | date: 'dd.MM.yyyy' }}</p>
+<p>{{ preis() | currency: 'CHF' }}</p>
+<p>{{ anteil() | percent }}</p>
+<p>{{ durchschnitt() | number: '1.1-2' }}</p>
+```
+
+Hinter dem Doppelpunkt stehen Einstellungen. Die Daten selbst bleiben unverändert – nur die Anzeige ändert sich.
+
+| Pipe | Beispiel | Ergebnis |
+| --- | --- | --- |
+| `uppercase` / `lowercase` | `'Hallo' \| uppercase` | `HALLO` |
+| `titlecase` | `'guten tag' \| titlecase` | `Guten Tag` |
+| `date` | `datum \| date: 'dd.MM.yyyy'` | `09.11.2026` |
+| `date` | `datum \| date: 'HH:mm'` | `14:05` |
+| `number` | `3.14159 \| number: '1.0-2'` | `3.14` |
+| `currency` | `12.5 \| currency: 'CHF'` | `CHF12.50` |
+| `percent` | `0.25 \| percent` | `25%` |
+| `json` | `objekt \| json` | das Objekt als Text – praktisch zum Nachschauen |
+
+Die Angabe bei `number` bedeutet `'mindestStellenVorKomma.minNachkomma-maxNachkomma'`. `'1.0-2'` heisst also: mindestens eine Stelle vor dem Komma, null bis zwei danach.
+
+Jede Pipe, die du verwendest, muss ins `imports`-Array der Komponente:
+
+```ts ng
+import { Component, signal } from '@angular/core';
+import { CurrencyPipe, DatePipe, UpperCasePipe } from '@angular/common';
+
+@Component({
+  selector: 'app-beleg',
+  imports: [CurrencyPipe, DatePipe, UpperCasePipe],
+  template: `
+    <h2>{{ laden | uppercase }}</h2>
+    <p>{{ datum | date: 'dd.MM.yyyy' }}</p>
+    <p>{{ betrag() | currency: 'CHF' }}</p>
+  `,
+})
+export class Beleg {
+  readonly laden = 'Kiosk';
+  readonly datum = new Date();
+  readonly betrag = signal(12.5);
+}
+```
+
+Die Klassen heissen wie die Pipe plus `Pipe`: `DatePipe`, `CurrencyPipe`, `DecimalPipe` (für `number`), `PercentPipe`, `UpperCasePipe`, `LowerCasePipe`, `TitleCasePipe`, `JsonPipe`.
+
+> [!TIP] json zum Nachschauen
+> `<pre>{{ daten() | json }}</pre>` zeigt ein beliebiges Objekt direkt auf der Seite an. Das ist das `console.log` für Templates – ideal, um schnell zu prüfen, was in einem Signal wirklich steckt.
+
+## Styles pro Komponente
+
+Jede Komponente hat ihre eigene CSS-Datei. Das Besondere: Diese Styles gelten **nur für diese Komponente**.
+
+```css
+h2 {
+  color: darkblue;
+}
+
+.karte {
+  border: 1px solid lightgray;
+  border-radius: 8px;
+  padding: 16px;
+}
+```
+
+Das `h2` in `karte.css` färbt nur Überschriften im Template der Karte – nicht die in anderen Komponenten. Du kannst also überall einfache Klassennamen wie `.titel` oder `.liste` verwenden, ohne dass sie sich in die Quere kommen.
+
+## Styles für die ganze App
+
+Was überall gelten soll – Schriftart, Grundfarben, Abstände der Seite –, gehört in `src/styles.css`:
+
+```css
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  padding: 24px;
+  max-width: 640px;
+}
+
+button {
+  font: inherit;
+  padding: 6px 12px;
+}
+```
+
+## Die Komponente selbst gestalten
+
+Das Element einer Komponente (`<app-karte>`) ist für den Browser zunächst ein Element ohne Eigenschaften. Mit `:host` sprichst du es in der CSS-Datei der Komponente an:
+
+```css
+:host {
+  display: block;
+  margin-bottom: 12px;
+}
+```
+
+`display: block` sorgt dafür, dass sich die Komponente wie ein Absatz oder ein `<div>` verhält und Abstände wirken.
+
+--- code ng-pipes | Einen Kassenzettel formatieren
+Die Daten sind da, aber sie sehen roh aus. Formatiere sie im **Template** mit Pipes:
+
+- den Namen des Ladens in **Grossbuchstaben**
+- das Datum im Format `dd.MM.yyyy`
+- jeden Preis und das Total als **Währung** in `CHF`
+
+Trage ausserdem in `app.ts` die drei nötigen Pipes im `imports`-Array ein.
+@flags angular norun
+@starter app.ts
+import { Component, computed, signal } from '@angular/core';
+import { CurrencyPipe, DatePipe, UpperCasePipe } from '@angular/common';
+
+interface Posten {
+  id: number;
+  name: string;
+  preis: number;
+}
+
+@Component({
+  selector: 'app-root',
+  imports: [],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly laden = 'Kiosk am See';
+  readonly datum = new Date();
+  readonly posten = signal<Posten[]>([
+    { id: 1, name: 'Sandwich', preis: 7.5 },
+    { id: 2, name: 'Eistee', preis: 3.2 },
+  ]);
+  readonly total = computed(() => this.posten().reduce((summe, p) => summe + p.preis, 0));
+}
+@starter app.html
+<h1>{{ laden }}</h1>
+<p>{{ datum }}</p>
+
+<ul>
+  @for (eintrag of posten(); track eintrag.id) {
+    <li>{{ eintrag.name }}: {{ eintrag.preis }}</li>
+  }
+</ul>
+
+<p>Total: {{ total() }}</p>
+@solution app.ts
+import { Component, computed, signal } from '@angular/core';
+import { CurrencyPipe, DatePipe, UpperCasePipe } from '@angular/common';
+
+interface Posten {
+  id: number;
+  name: string;
+  preis: number;
+}
+
+@Component({
+  selector: 'app-root',
+  imports: [CurrencyPipe, DatePipe, UpperCasePipe],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
+})
+export class App {
+  readonly laden = 'Kiosk am See';
+  readonly datum = new Date();
+  readonly posten = signal<Posten[]>([
+    { id: 1, name: 'Sandwich', preis: 7.5 },
+    { id: 2, name: 'Eistee', preis: 3.2 },
+  ]);
+  readonly total = computed(() => this.posten().reduce((summe, p) => summe + p.preis, 0));
+}
+@solution app.html
+<h1>{{ laden | uppercase }}</h1>
+<p>{{ datum | date: 'dd.MM.yyyy' }}</p>
+
+<ul>
+  @for (eintrag of posten(); track eintrag.id) {
+    <li>{{ eintrag.name }}: {{ eintrag.preis | currency: 'CHF' }}</li>
+  }
+</ul>
+
+<p>Total: {{ total() | currency: 'CHF' }}</p>
+@tests
+src /imports\s*:\s*\[[^\]]*\bCurrencyPipe\b[^\]]*\]/ :: `CurrencyPipe` steht im `imports`-Array
+src /imports\s*:\s*\[[^\]]*\bDatePipe\b[^\]]*\]/ :: `DatePipe` steht im `imports`-Array
+src /imports\s*:\s*\[[^\]]*\bUpperCasePipe\b[^\]]*\]/ :: `UpperCasePipe` steht im `imports`-Array
+tpl /\{\{\s*laden\s*\|\s*uppercase\s*\}\}/ :: Der Laden wird mit `| uppercase` angezeigt
+tpl /\{\{\s*datum\s*\|\s*date\s*:\s*'dd\.MM\.yyyy'\s*\}\}/ :: Das Datum wird mit `| date: 'dd.MM.yyyy'` formatiert
+tpl /\{\{\s*\w+\.preis\s*\|\s*currency\s*:\s*'CHF'\s*\}\}/ :: Jeder Preis wird mit `| currency: 'CHF'` formatiert
+tpl /\{\{\s*total\(\)\s*\|\s*currency\s*:\s*'CHF'\s*\}\}/ :: Das Total wird mit `| currency: 'CHF'` formatiert
+@hints
+- In `app.ts`: `imports: [CurrencyPipe, DatePipe, UpperCasePipe],`
+- `{{ laden | uppercase }}` und `{{ datum | date: 'dd.MM.yyyy' }}` – achte auf das grosse `MM` (Monat). Kleines `mm` wären Minuten.
+- `{{ eintrag.preis | currency: 'CHF' }}` und `{{ total() | currency: 'CHF' }}`
+@after
+Pipes trennen sauber zwischen Daten und Darstellung: In der Klasse steht `7.5`, auf der Seite `CHF7.50`. Rechnen kannst du weiterhin mit der Zahl.
+
+--- quiz quiz-ng-css
+In `karte.css` steht `p { color: red; }`. Welche Absätze werden rot?
+( ) Alle Absätze der ganzen App. :: Das wäre bei `src/styles.css` so. Die CSS-Datei einer Komponente wirkt nur auf diese Komponente.
+(x) Nur die Absätze im Template der Komponente `Karte`. :: Genau. Angular sorgt dafür, dass die Styles einer Komponente nicht nach aussen wirken.
+( ) Die Absätze in `Karte` und in allen Komponenten, die `Karte` verwenden. :: Nein, auch die Elternkomponente bleibt unberührt.
